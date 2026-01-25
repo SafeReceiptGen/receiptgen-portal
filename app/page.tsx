@@ -34,58 +34,58 @@ export default function LandingPage() {
   }, []);
 
   const features = [
-    {
-      icon: Clock,
-      title: "Live Preview",
-      description: "See your receipt update in real-time as you enter information with instant validation and error highlighting."
-    },
-    {
-      icon: QrCode,
-      title: "QR Code Integration",
-      description: "Each receipt includes a unique QR code for verification. Scan to access digital version instantly."
-    },
-    {
-      icon: Download,
-      title: "Professional Export",
-      description: "Download as PDF for printing or email. Export multiple receipts as CSV for accounting purposes."
-    },
-    {
-      icon: FileText,
-      title: "Optional Account",
-      description: "Create an account to access receipt history and download previously generated receipts anytime."
-    },
-    {
-      icon: Shield,
-      title: "Secure & Private",
-      description: "HTTPS encryption on all connections. No data sold to third parties. Optional authentication for enhanced privacy."
-    },
-    {
-      icon: Zap,
-      title: "Lightning Fast",
-      description: "Built with Next.js for optimal performance. Global CDN ensures fast loading times worldwide."
-    }
+     {
+    icon: Clock,
+    title: "Live Receipt Preview",
+    description: "See the receipt update as you type."
+  },
+  {
+    icon: FileText,
+    title: "Return Terms Included",
+    description: "Add return windows and refund/exchange conditions."
+  },
+  {
+    icon: QrCode,
+    title: "QR Verification",
+    description: "Each receipt has a scannable digital link."
+  },
+  {
+    icon: Zap,
+    title: "Share Instantly",
+    description: "Send via WhatsApp or SMS."
+  },
+  {
+    icon: Shield,
+    title: "No Signup Required",
+    description: "Generate your first receipt instantly."
+  },
+  {
+    icon: Store,
+    title: "Made For Ghana Ecommerce",
+    description: "Built for mobile money and local merchants, no POS (point of sale) system required."
+  }
   ];
 
   const steps = [
     {
       number: "01",
       title: "Enter Receipt Details",
-      description: "Fill in merchant information, items, quantities, prices and payment details through an intuitive form."
+      description: "Fill in store, item, price and payment"
     },
     {
       number: "02",
-      title: "Preview & Customize",
-      description: "Watch your receipt take shape in real-time. Adjust formatting, add your logo and choose color schemes."
+      title: "Add return terms",
+      description: "Choose return window and refund/exchange conditions"
     },
     {
       number: "03",
-      title: "Generate & Share",
-      description: "Click generate to create your receipt with a unique QR code. Download as PDF or share the public link."
+      title: "Preview receipt",
+      description: "See receipt update live"
     },
     {
       number: "04",
-      title: "Track & Manage",
-      description: "Sign in to access your receipt history, bulk export and saved templates for faster creation."
+      title: "Share with customer",
+      description: "Send link or QE/PDF instantly"
     }
   ];
 
@@ -114,28 +114,36 @@ export default function LandingPage() {
 
   const faqs = [
     {
-      question: "Do I need an account to generate receipts?",
-      answer: "No, you can generate and download receipts without creating an account. Accounts are optional and provide access to receipt history and management features."
+      question: "Do I need an account to create a receipt?",
+      answer: "No. You can generate and share receipts instantly without creating an account."
     },
     {
-      question: "Are the QR codes secure?",
-      answer: "Yes, each QR code links to a unique, randomly generated ID that prevents guessing. You can also disable public links if you prefer private receipts."
+      question: "Can I include return terms?",
+      answer: "Yes. Each receipt shows agreed return windows and refund/exchange conditions."
     },
     {
-      question: "Can I customize the receipt design?",
-      answer: "Yes, you can add your logo, adjust colors and choose from multiple templates. Pro accounts offer additional customization options."
+      question: " How does my customer receive the receipt?",
+      answer: "You can share the receipt link via WhatsApp, SMS, or export as a PDF."
     },
     {
-      question: "What data do you store?",
-      answer: "Without an account, we only store receipt metadata temporarily. With an account, we store your receipt history and merchant information securely with encryption."
+      question: "Are the receipts stored online?",
+      answer: "Yes. Each receipt gets a secure public link that can be viewed anytime."
     },
     {
-      question: "Can I use this for my business?",
-      answer: "Absolutely! Our receipt generator is suitable for freelancers, small businesses and enterprises. Pro accounts offer additional business features like bulk export and API access."
+      question: "Is this valid for my business in Ghana?",
+      answer: "Yes. SafeReceipts is built for Ghanaian merchants and works on mobile phones."
     },
     {
-      question: "How do I download my receipts?",
-      answer: "Once generated, you can instantly download receipts as PDF files. With an account, you can also export multiple receipts as CSV for accounting purposes."
+      question: "What happens if I lose the receipt link?",
+      answer: "For now, links stay active. Optional accounts for receipt history will be added later."
+    },
+     {
+      question: "Does my customer need an app?",
+      answer: "No. Customers only need a web browser."
+    },
+    {
+      question: " Is SafeReceipts free to use?",
+      answer: "Yes. During early access, you can generate unlimited receipts for free."
     }
   ];
 
@@ -156,28 +164,19 @@ export default function LandingPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
               <FileText className="w-8 h-8 text-slate-900" />
-              <span className="text-xl font-bold text-slate-900">ReceiptGen</span>
+              <span className="text-xl font-bold text-slate-900">SafeReceipts</span>
             </div>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
-              <button onClick={() => scrollToSection('features')} className="text-slate-600 hover:text-slate-900 transition-colors">
-                Features
-              </button>
               <button onClick={() => scrollToSection('how-it-works')} className="text-slate-600 hover:text-slate-900 transition-colors">
                 How It Works
-              </button>
-              <button onClick={() => scrollToSection('use-cases')} className="text-slate-600 hover:text-slate-900 transition-colors">
-                Use Cases
-              </button>
-              <button onClick={() => scrollToSection('pricing')} className="text-slate-600 hover:text-slate-900 transition-colors">
-                Pricing
               </button>
               <button onClick={() => scrollToSection('faq')} className="text-slate-600 hover:text-slate-900 transition-colors">
                 FAQ
               </button>
               <button className="px-6 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium">
-                Get Started
+               Create Receipt
               </button>
             </div>
 
@@ -236,10 +235,7 @@ export default function LandingPage() {
           <div className="flex-1 flex flex-col justify-center px-8 py-12 overflow-y-auto">
             <nav className="space-y-2">
               {[
-                { label: 'Features', id: 'features', delay: '100ms' },
                 { label: 'How It Works', id: 'how-it-works', delay: '150ms' },
-                { label: 'Use Cases', id: 'use-cases', delay: '200ms' },
-                { label: 'Pricing', id: 'pricing', delay: '250ms' },
                 { label: 'FAQ', id: 'faq', delay: '300ms' }
               ].map((item, index) => (
                 <button
@@ -274,7 +270,7 @@ export default function LandingPage() {
                 animation: mobileMenuOpen ? 'slideInRight 0.4s ease-out 350ms both' : 'none'
               }}
             >
-              <button className="w-full px-6 py-2 bg-slate-900 text-white rounded-xl hover:bg-blue-700 transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl hover:scale-105">
+              <button className="w-full px-6 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl hover:scale-105">
                 Create a Receipt
               </button>
              
@@ -316,40 +312,31 @@ export default function LandingPage() {
       <section className="relative py-16 sm:py-20 lg:py-28 overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            {/* Left side - Image */}
             <div className="order-2 lg:order-1">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl">
                 <img 
-                  src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80"
+                  src="./hero.jpg"
                   alt="Professional accounting workspace with laptop and documents"
                   className="w-full h-auto object-cover"
                 />
               </div>
             </div>
-
-            {/* Right side - Content with CTA */}
             <div className="order-1 lg:order-2">
               <div className="relative">
-                {/* Blurred background */}
                 <div className="absolute inset-0 bg-white/60 backdrop-blur-sm rounded-2xl -z-10"></div>
                 
                 <div className="p-8 sm:p-10">
-                  {/* Small text */}
                   <p className="text-sm sm:text-base text-blue-600 font-medium mb-3 uppercase tracking-wide">
                    Receipt generation for Small Businesses
                   </p>
-                  
-                  {/* Medium text - Main heading */}
                   <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-6 leading-tight">
-                   Generate Professional Receipts in Seconds
+                   Instant Digital Receipts with Clear Return Terms
                   </h1>
                   
-                  {/* Description */}
                   <p className="text-base sm:text-lg text-slate-600 mb-8">
-                    Create professional receipts in seconds with QR codes, live preview and instant PDF export.
+                    Give customers proof-of-purchase and agreed return windows in under 60 seconds. No signup required.
                   </p>
-                  
-                  {/* CTA Button */}
+
                   <button className="inline-flex items-center px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium shadow-lg hover:shadow-xl">
                     Create a Receipt
                   </button>
@@ -360,7 +347,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Features Section */}
       <section id="features" className="py-16 sm:py-20 lg:py-24">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
@@ -393,7 +379,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How It Works Section */}
       <section ref={howItWorksRef} id="how-it-works" className="py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-white to-slate-50 overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16 sm:mb-20">
@@ -406,7 +391,6 @@ export default function LandingPage() {
           </div>
 
           <div className="relative max-w-4xl mx-auto">
-            {/* Animated vertical line with scroll progress */}
             <div className="absolute left-8 top-0 bottom-0 w-1 bg-slate-200 hidden md:block rounded-full overflow-hidden">
               <div 
                 className="absolute top-0 left-0 w-full bg-gradient-to-b from-blue-400 via-blue-500 to-blue-600 transition-all duration-300 ease-out"
@@ -415,7 +399,7 @@ export default function LandingPage() {
                   boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)'
                 }}
               >
-                {/* Glowing dot at the end of progress */}
+  
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-blue-500 rounded-full shadow-lg shadow-blue-500/50">
                   <div className="absolute inset-0 bg-blue-400 rounded-full animate-ping"></div>
                 </div>
@@ -436,7 +420,6 @@ export default function LandingPage() {
                       animation: `fadeInUp 0.6s ease-out ${index * 0.2}s both`
                     }}
                   >
-                    {/* Number circle with blue background */}
                     <div className="flex items-start gap-6 md:gap-8">
                       <div className="relative flex-shrink-0 z-10">
                         <div 
@@ -454,17 +437,13 @@ export default function LandingPage() {
                             {index + 1}
                           </span>
                         </div>
-                        {/* Animated pulse ring - only shows when active */}
                         {isActive && (
                           <div className="absolute inset-0 rounded-full bg-blue-400 animate-ping opacity-30"></div>
                         )}
-                        {/* Completion glow */}
                         {isCompleted && (
                           <div className="absolute inset-0 rounded-full bg-blue-500 opacity-20 blur-xl"></div>
                         )}
                       </div>
-
-                      {/* Content card */}
                       <div 
                         className={`flex-1 bg-white rounded-2xl p-6 md:p-8 border transition-all duration-500 ${
                           isCompleted
@@ -518,7 +497,6 @@ export default function LandingPage() {
         `}</style>
       </section>
 
-      {/* Use Cases Section */}
       <section id="use-cases" className="py-16 sm:py-20 lg:py-24">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
@@ -554,98 +532,35 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-16 sm:py-20 lg:py-24 bg-slate-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
-              Simple, Transparent Pricing
-            </h2>
-            <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto">
-              Start free, upgrade when you need more
+<section className="py-8 sm:py-12 bg-white border-y border-blue-100">
+  <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="max-w-4xl mx-auto">
+      <div className="bg-blue-50 rounded-xl shadow-sm border border-blue-200 p-6 sm:p-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex-shrink-0">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white uppercase tracking-wide">
+              New
+            </span>
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">
+              Free during early access.
+            </h3>
+            <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
+              We're currently testing SafeReceipts with early merchants. Generate unlimited receipts for free by signing up for an account!
             </p>
           </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
-            {/* Free Tier */}
-            <div className="bg-white p-8 sm:p-10 rounded-xl border-2 border-slate-200">
-              <h3 className="text-2xl font-bold text-slate-900 mb-2">Free</h3>
-              <div className="mb-6">
-                <span className="text-4xl font-bold text-slate-900">$0</span>
-                <span className="text-slate-600"> / forever</span>
-              </div>
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-start">
-                  <Check className="w-5 h-5 text-slate-900 mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-slate-600">Unlimited receipt generation</span>
-                </li>
-                <li className="flex items-start">
-                  <Check className="w-5 h-5 text-slate-900 mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-slate-600">QR code on every receipt</span>
-                </li>
-                <li className="flex items-start">
-                  <Check className="w-5 h-5 text-slate-900 mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-slate-600">PDF download</span>
-                </li>
-                <li className="flex items-start">
-                  <Check className="w-5 h-5 text-slate-900 mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-slate-600">Public receipt links</span>
-                </li>
-                <li className="flex items-start">
-                  <Check className="w-5 h-5 text-slate-900 mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-slate-600">No credit card required</span>
-                </li>
-              </ul>
-              <button className="w-full px-6 py-3 border-2 border-slate-300 text-slate-700 rounded-lg hover:border-slate-400 hover:bg-slate-50 transition-colors font-medium">
-                Get Started Free
-              </button>
-            </div>
-
-            {/* Pro Tier */}
-            <div className="bg-slate-900 p-8 sm:p-10 rounded-xl border-2 border-slate-900 relative">
-              <div className="absolute top-0 right-8 bg-white text-slate-900 text-sm font-semibold px-4 py-1 rounded-b-lg">
-                POPULAR
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Pro</h3>
-              <div className="mb-6">
-                <span className="text-4xl font-bold text-white">$12</span>
-                <span className="text-slate-400"> / month</span>
-              </div>
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-start">
-                  <Check className="w-5 h-5 text-white mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-slate-300">Everything in Free, plus:</span>
-                </li>
-                <li className="flex items-start">
-                  <Check className="w-5 h-5 text-white mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-slate-300">Receipt history & management</span>
-                </li>
-                <li className="flex items-start">
-                  <Check className="w-5 h-5 text-white mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-slate-300">Bulk CSV export</span>
-                </li>
-                <li className="flex items-start">
-                  <Check className="w-5 h-5 text-white mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-slate-300">Custom branding & logos</span>
-                </li>
-                <li className="flex items-start">
-                  <Check className="w-5 h-5 text-white mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-slate-300">Priority support</span>
-                </li>
-                <li className="flex items-start">
-                  <Check className="w-5 h-5 text-white mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-slate-300">API access for integration</span>
-                </li>
-              </ul>
-              <button className="w-full px-6 py-3 bg-white text-slate-900 rounded-lg hover:bg-slate-100 transition-colors font-medium">
-                Start Pro Trial
-              </button>
-            </div>
+          <div className="flex-shrink-0 w-full sm:w-auto">
+            <button className="w-full sm:w-auto px-6 py-2.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium text-sm whitespace-nowrap">
+              Sign Up Now
+            </button>
           </div>
         </div>
-      </section>
+      </div>
+    </div>
+  </div>
+</section>
 
-      {/* FAQ Section */}
       <section id="faq" className="py-16 sm:py-20 lg:py-24">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
@@ -689,22 +604,47 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-16 sm:py-20 lg:py-24 bg-slate-900">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
-            Ready to Get Started?
-          </h2>
-          <p className="text-lg sm:text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
-            Join thousands of business owners creating beautiful receipts every day
-          </p>
-          <button className="px-6 py-2 bg-white text-slate-900 rounded-lg hover:bg-slate-100 transition-colors font-medium text-lg">
-            CREATE FREE ACCOUNT
-          </button>
-        </div>
-      </section>
+<section className="py-16 sm:py-20 lg:py-24 bg-slate-900">
+  <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="max-w-3xl mx-auto text-center">
+      {/* Heading */}
+      <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-10">
+       Create Free Account
+      </h2>
 
-      {/* Footer */}
+      {/* Benefits List */}
+      <div className="mb-10 space-y-3 text-left max-w-xl mx-auto">
+        {[
+          'Save your shop details for quick receipt creation',
+          'Access past receipts anytime',
+          'Add your shop logo',
+          'Reissue receipts if needed',
+          'Share receipts via WhatsApp',
+        ].map((benefit, index) => (
+          <div 
+            key={index}
+            className="flex items-center gap-3 text-slate-200"
+          >
+            <svg className="w-5 h-5 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+            <span className="text-base sm:text-lg">
+              {benefit}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div>
+        <button className="px-6 py-2 bg-white text-black rounded-lg hover:bg-slate-800 transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl hover:scale-105 mb-3">
+          Sign Up
+        </button>
+        <p className="text-slate-400 text-sm">
+          No credit card required
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
       <footer className="bg-slate-50 border-t border-slate-200 py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
@@ -747,10 +687,10 @@ export default function LandingPage() {
           <div className="border-t border-slate-200 pt-8 flex flex-col sm:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 mb-4 sm:mb-0">
               <FileText className="w-6 h-6 text-slate-900" />
-              <span className="font-bold text-slate-900">ReceiptGen</span>
+              <span className="font-bold text-slate-900">SafeReceipts</span>
             </div>
             <p className="text-slate-600 text-sm">
-              © 2026 ReceiptGen. All rights reserved.
+              © 2026 SafeReceipts. All rights reserved.
             </p>
           </div>
         </div>

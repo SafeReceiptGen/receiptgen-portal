@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://receiptgen.com';
+  const baseUrl = 'https://safereceipts.com';
   
   return [
     {

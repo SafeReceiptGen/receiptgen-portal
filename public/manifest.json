@@ -1,6 +1,6 @@
 {
-  "name": "ReceiptGen - Professional Receipt Generator",
-  "short_name": "ReceiptGen",
+  "name": "SafeReceipts - Professional Receipt Generator",
+  "short_name": "SafeReceipts",
   "description": "Generate professional digital receipts with QR codes",
   "start_url": "/",
   "display": "standalone",

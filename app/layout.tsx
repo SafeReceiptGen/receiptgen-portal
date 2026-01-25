@@ -9,10 +9,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://receiptgen.com'), // Update with your domain
+  metadataBase: new URL('https://safereceipts.com'), // Update with your domain
   title: {
-    default: 'ReceiptGen - Professional Receipt Generator with QR Codes',
-    template: '%s | ReceiptGen'
+    default: 'SafeReceipts - Professional Receipt Generator with QR Codes',
+    template: '%s | SafeReceipts'
   },
   description: 'Generate professional digital receipts in seconds with QR codes, PDF export and live preview. Perfect for freelancers, small businesses and event organizers. Free to start.',
   keywords: [
@@ -26,9 +26,9 @@ export const metadata: Metadata = {
     'invoice generator',
     'free receipt generator'
   ],
-  authors: [{ name: 'ReceiptGen Team' }],
-  creator: 'ReceiptGen',
-  publisher: 'ReceiptGen',
+  authors: [{ name: 'SafeReceipts Team' }],
+  creator: 'SafeReceipts',
+  publisher: 'SafeReceipts',
   robots: {
     index: true,
     follow: true,
@@ -43,31 +43,31 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://receiptgen.com',
-    title: 'ReceiptGen - Professional Receipt Generator with QR Codes',
+    url: 'https://safereceipts.com',
+    title: 'SafeReceipts - Professional Receipt Generator with QR Codes',
     description: 'Generate professional digital receipts in seconds with QR codes, PDF export and live preview. Free to start.',
-    siteName: 'ReceiptGen',
+    siteName: 'SafeReceipts',
     images: [
       {
         url: '/og-image.jpg', // Create this image (1200x630px)
         width: 1200,
         height: 630,
-        alt: 'ReceiptGen - Professional Receipt Generator',
+        alt: 'SafeReceipts - Professional Receipt Generator',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ReceiptGen - Professional Receipt Generator',
+    title: 'SafeReceipts - Professional Receipt Generator',
     description: 'Generate professional digital receipts in seconds with QR codes and PDF export.',
-    creator: '@receiptgen', // Update with your Twitter handle
+    creator: '@safereceipts', // Update with your Twitter handle
     images: ['/twitter-image.jpg'], // Create this image (1200x600px)
   },
   verification: {
     google: 'your-google-verification-code', // Add after Google Search Console setup
   },
   alternates: {
-    canonical: 'https://receiptgen.com',
+    canonical: 'https://SafeReceipts.com',
   },
 };
 
