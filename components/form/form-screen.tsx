@@ -4,7 +4,7 @@ import {
   ExpandableScreenContent,
   ExpandableScreenTrigger,
 } from "@/components/ui/expandable-screen";
-import { Download, LayoutDashboard, Share2 } from "lucide-react";
+import { Download, LayoutDashboard, Share2, Sparkles } from "lucide-react";
 import { ReceiptPreview } from "./receipt-preview";
 import { INITIAL_RECEIPT_DATA, ReceiptData } from "@/types";
 import { useRef, useState } from "react";
@@ -12,13 +12,15 @@ import { ReceiptForm } from "./receipt-form";
 import html2canvas from "html2canvas-pro";
 import ConversionDialog from "./conversion-dialog";
 import { MobileWizard } from "./form-mobile";
+import Image from "next/image";
 
 export default function ReceiptFormScreen() {
   const [data, setData] = useState<ReceiptData>(INITIAL_RECEIPT_DATA);
   const [showConversionDialog, setShowConversionDialog] = useState(false);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string>("");
   const receiptRef = useRef<HTMLDivElement>(null);
 
-  const handleDownload = async () => {
+  const handleGenerate = async () => {
     if (!receiptRef.current || !html2canvas) {
       console.error("Capture target or library not found");
       return;
@@ -32,13 +34,9 @@ export default function ReceiptFormScreen() {
         useCORS: true,
       });
 
-      const link = document.createElement("a");
-      link.download = `SafeReceipt-${data.receiptNumber}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-
-      // Show dialog after a short delay
-      setTimeout(() => setShowConversionDialog(true), 1500);
+      const imgData = canvas.toDataURL("image/png");
+      setGeneratedImageUrl(imgData);
+      setShowConversionDialog(true);
     } catch (err) {
       console.error("Download failed:", err);
       alert("Could not generate image. Please try again.");
@@ -66,7 +64,7 @@ export default function ReceiptFormScreen() {
             data={data}
             ref={receiptRef}
             onChange={setData}
-            onDownload={handleDownload}
+            onGenerate={handleGenerate}
           />
           <div className="relative hidden h-full w-full overflow-hidden md:flex">
             {/* Background atmosphere */}
@@ -86,9 +84,13 @@ export default function ReceiptFormScreen() {
                 {/* Header */}
                 <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 px-5">
                   <div className="flex items-center gap-2.5">
-                    <div className="rounded-xl bg-blue-600/90 p-2 shadow-[0_12px_30px_rgba(37,99,235,0.25)] ring-1 ring-white/10">
-                      <LayoutDashboard size={18} className="text-white" />
-                    </div>
+                    <Image
+                      src="/logo.jpg"
+                      alt="SafeReceipt Logo"
+                      width={24}
+                      height={24}
+                    />
+
                     <div className="leading-tight">
                       <div className="text-sm font-semibold tracking-tight text-white">
                         SafeReceipt
@@ -99,7 +101,7 @@ export default function ReceiptFormScreen() {
                     </div>
                   </div>
                   <div className="rounded-full bg-white/5 px-3 py-1 text-[11px] font-medium text-white/60 ring-1 ring-white/10">
-                    v1.0.0
+                    v0.1.0
                   </div>
                 </header>
 
@@ -112,11 +114,11 @@ export default function ReceiptFormScreen() {
                 <div className="shrink-0 border-t border-white/10 p-4">
                   <div className="flex gap-3">
                     <button
-                      onClick={handleDownload}
+                      onClick={handleGenerate}
                       className="group flex flex-1 items-center justify-center gap-2 rounded-xl bg-linear-to-b from-blue-500 to-blue-700 py-2.5 text-sm font-semibold text-white shadow-[0_18px_45px_rgba(37,99,235,0.28)] ring-1 ring-white/10 transition-all hover:from-blue-400 hover:to-blue-700 active:scale-[0.99]"
                     >
-                      <Download size={16} className="opacity-95" />
-                      Download PNG
+                      <Sparkles size={16} className="opacity-95" />
+                      Generate Receipt
                     </button>
                     <button className="flex items-center justify-center rounded-xl bg-white/5 px-4 text-white/80 ring-1 ring-white/10 transition-colors hover:bg-white/10">
                       <Share2 size={18} />
@@ -138,7 +140,10 @@ export default function ReceiptFormScreen() {
             </div>
           </div>
           {showConversionDialog && (
-            <ConversionDialog onClose={() => setShowConversionDialog(false)} />
+            <ConversionDialog
+              onClose={() => setShowConversionDialog(false)}
+              imgUrl={generatedImageUrl}
+            />
           )}
         </>
       </ExpandableScreenContent>

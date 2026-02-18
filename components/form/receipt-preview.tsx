@@ -25,7 +25,7 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
 
   // Format currency helper
   const formatPrice = (price: number) => {
-    return price.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    return price.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
   const formatDate = (isoString: string) => {
@@ -56,40 +56,35 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
           {/* TOP SECTION: HEADER */}
           {/* We mask the bottom corners to create the top half of the notches */}
           <div
-            className="bg-white text-zinc-900 w-full rounded-t-[20px] p-8 pb-6 relative transition-all"
+            className="text-zinc-900 w-full rounded-t-[20px] p-8 pb-6 relative transition-all"
             style={{
-              maskImage: `radial-gradient(circle at bottom left, transparent 12px, black 12.5px), radial-gradient(circle at bottom right, transparent 12px, black 12.5px)`,
-              maskComposite: "intersect",
-              WebkitMaskImage: `radial-gradient(circle at bottom left, transparent 12px, black 12.5px), radial-gradient(circle at bottom right, transparent 12px, black 12.5px)`,
-              WebkitMaskComposite: "source-in",
+              background:
+                "radial-gradient(circle at bottom left, transparent 12px, #ffffff 12.5px) top left / 51% 100% no-repeat, radial-gradient(circle at bottom right, transparent 12px, #ffffff 12.5px) top right / 51% 100% no-repeat",
             }}
           >
             <div className="flex justify-between items-start mb-6">
               <div className="flex items-center gap-3">
-                <div className="p-1.5 bg-zinc-100 rounded-lg text-zinc-900">
+                {/* <div className="p-1.5 bg-zinc-100 rounded-lg text-zinc-900">
                   <Grip size={24} strokeWidth={2.5} />
+                </div> */}
+                <div className="flex flex-col">
+                  <h1 className="text-xl font-bold tracking-tight text-zinc-900">
+                    {data.storeName}
+                  </h1>
+                  <p className="text-zinc-500 text-sm">{data.storePhone}</p>
                 </div>
-                <h1 className="text-xl font-bold tracking-tight text-zinc-900">
-                  {data.storeName}
-                </h1>
               </div>
               <div className="text-[10px] text-zinc-500 text-right leading-tight">
-                <p className="mb-0.5">Cashier Receipt {data.receiptNumber}</p>
+                <p className="mb-0.5">Receipt {data.receiptNumber}</p>
                 <p>{formatDate(data.date)}</p>
               </div>
             </div>
 
             <div>
-              <h2 className="text-xl font-bold mb-2">
-                Thank you for your purchase!
+              <h2 className="text-xl text-center font-bold mb-2">
+                Thank you for your purchase
+                {data.customerName ? `, ${data.customerName}` : ""}!
               </h2>
-              <p className="text-xs text-zinc-500 leading-relaxed">
-                Your order №{" "}
-                <span className="font-semibold text-blue-500">
-                  {data.orderId}
-                </span>{" "}
-                {data.orderStatus}
-              </p>
             </div>
 
             {/* Dashed Separator Line - positioned at bottom to align with notch center */}
@@ -99,12 +94,10 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
           {/* BOTTOM SECTION: BODY */}
           {/* We mask the top corners to create the bottom half of the notches */}
           <div
-            className="bg-white text-zinc-900 w-full rounded-b-[20px] p-8 pt-6 relative flex flex-col transition-all"
+            className="text-zinc-900 w-full rounded-b-[20px] p-8 pt-6 relative flex flex-col transition-all"
             style={{
-              maskImage: `radial-gradient(circle at top left, transparent 12px, black 12.5px), radial-gradient(circle at top right, transparent 12px, black 12.5px)`,
-              maskComposite: "intersect",
-              WebkitMaskImage: `radial-gradient(circle at top left, transparent 12px, black 12.5px), radial-gradient(circle at top right, transparent 12px, black 12.5px)`,
-              WebkitMaskComposite: "source-in",
+              background:
+                "radial-gradient(circle at top left, transparent 12px, #ffffff 12.5px) bottom left / 51% 100% no-repeat, radial-gradient(circle at top right, transparent 12px, #ffffff 12.5px) bottom right / 51% 100% no-repeat",
             }}
           >
             {/* Line Items */}
@@ -148,12 +141,6 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
               <div className="flex justify-between text-xs text-zinc-600 mb-1">
                 <span>Payment method</span>
                 <span className="font-medium">{data.paymentMethod}</span>
-              </div>
-              <div className="flex justify-between text-xs text-zinc-600">
-                <span>VAT {data.vatRate}%</span>
-                <span>
-                  {formatPrice(vatAmount)} {data.currency}
-                </span>
               </div>
             </div>
 
@@ -209,7 +196,7 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
             <div className="flex justify-between items-end text-[9px] text-zinc-400 uppercase tracking-wide border-t border-zinc-100 pt-4 mt-auto">
               <div>
                 <p>{data.companyName}</p>
-                <p>TIN: {data.tin}</p>
+                {/* <p>TIN: {data.tin}</p> */}
               </div>
               <div className="text-right">
                 <p>Check receipt</p>

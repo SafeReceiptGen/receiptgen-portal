@@ -4,23 +4,32 @@ import {
   ChevronLeft,
   Plus,
   Trash2,
-  Download,
+  Sparkles,
 } from "lucide-react";
 import { ReceiptData, LineItem } from "@/types";
 import { ReceiptPreview } from "./receipt-preview";
 import { useExpandableScreen } from "@/components/ui/expandable-screen";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface MobileWizardProps {
   data: ReceiptData;
   ref: RefObject<HTMLDivElement | null>;
   onChange: (data: ReceiptData) => void;
-  onDownload: () => void;
+  onGenerate: () => void;
 }
 
 const STEPS = [
-  { id: "store", title: "Store Details" },
+  { id: "general", title: "General Info" },
   { id: "items", title: "Add Items" },
-  { id: "financials", title: "Financials" },
   { id: "policy", title: "Policy" },
   { id: "preview", title: "Preview" },
 ];
@@ -62,7 +71,7 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
   ref,
   data,
   onChange,
-  onDownload,
+  onGenerate,
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const { isExiting, isOpening } = useExpandableScreen();
@@ -138,39 +147,70 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
             className={`space-y-6 ${!isExiting && !isOpening ? "animate-in slide-in-from-right fade-in duration-300" : ""}`}
           >
             <div className="space-y-2">
-              <label className="text-sm text-white/70">Store Name</label>
-              <input
+              <Label className="text-sm text-white/70">Store Name</Label>
+              <Input
                 type="text"
                 value={data.storeName}
                 onChange={(e) => handleChange("storeName", e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-white/5 p-4 text-lg text-white placeholder-white/35 outline-none transition-colors focus:border-blue-400"
+                className="w-full rounded-xl bg-white/5 border-white/10 p-4 text-lg text-white placeholder:text-white/35 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm text-white/70">Order ID</label>
-              <input
+              <Label className="text-sm text-white/70">Store Phone</Label>
+              <Input
                 type="text"
-                value={data.orderId}
-                onChange={(e) => handleChange("orderId", e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-white/5 p-4 text-lg text-white placeholder-white/35 outline-none transition-colors focus:border-blue-400"
+                value={data.storePhone}
+                onChange={(e) => handleChange("storePhone", e.target.value)}
+                className="w-full rounded-xl bg-white/5 border-white/10 p-4 text-lg text-white placeholder:text-white/35 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm text-white/70">Receipt Number</label>
-              <input
+              <Label className="text-sm text-white/70">
+                Customer Name <span className="text-white/30">(Optional)</span>
+              </Label>
+              <Input
                 type="text"
-                value={data.receiptNumber}
-                onChange={(e) => handleChange("receiptNumber", e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-white/5 p-4 text-lg text-white placeholder-white/35 outline-none transition-colors focus:border-blue-400"
+                value={data.customerName || ""}
+                onChange={(e) => handleChange("customerName", e.target.value)}
+                placeholder="e.g. John Doe"
+                className="w-full rounded-xl bg-white/5 border-white/10 p-4 text-lg text-white placeholder:text-white/35 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm text-white/70">Status Message</label>
-              <textarea
-                value={data.orderStatus}
-                onChange={(e) => handleChange("orderStatus", e.target.value)}
-                className="h-24 w-full resize-none rounded-xl border border-white/10 bg-white/5 p-4 text-base text-white placeholder-white/35 outline-none transition-colors focus:border-blue-400"
-              />
+              <Label className="text-sm text-white/70">Currency</Label>
+              <Select
+                value={data.currency}
+                onValueChange={(value) => handleChange("currency", value)}
+              >
+                <SelectTrigger className="w-full rounded-xl bg-white/5 border-white/10 p-4 text-lg text-white h-auto focus:ring-blue-400 focus:ring-offset-0 focus:border-blue-400">
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CURRENCIES.map((c) => (
+                    <SelectItem key={c.value} value={c.value}>
+                      {c.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm text-white/70">Payment Method</Label>
+              <Select
+                value={data.paymentMethod}
+                onValueChange={(value) => handleChange("paymentMethod", value)}
+              >
+                <SelectTrigger className="w-full rounded-xl bg-white/5 border-white/10 p-4 text-lg text-white h-auto focus:ring-blue-400 focus:ring-offset-0 focus:border-blue-400">
+                  <SelectValue placeholder="Select payment method" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_METHODS.map((m) => (
+                    <SelectItem key={m} value={m}>
+                      {m}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         )}
@@ -191,30 +231,30 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                   <Trash2 size={16} />
                 </button>
                 <div className="space-y-3">
-                  <input
+                  <Input
                     type="text"
                     placeholder="Item Name"
                     value={item.name}
                     onChange={(e) =>
                       handleItemChange(item.id, "name", e.target.value)
                     }
-                    className="w-full border-b border-white/10 bg-transparent pb-2 text-lg font-medium text-white outline-none placeholder-white/30 focus:border-blue-400"
+                    className="w-full border-b border-white/10 bg-transparent pb-2 text-lg font-medium text-white placeholder:text-white/30 focus-visible:border-blue-400 border-0 rounded-none px-0 focus-visible:ring-0"
                   />
-                  <input
+                  <Input
                     type="text"
                     placeholder="Details (e.g. 200g, Medium Roast)"
                     value={item.detail}
                     onChange={(e) =>
                       handleItemChange(item.id, "detail", e.target.value)
                     }
-                    className="w-full border-b border-white/10 bg-transparent pb-2 text-sm text-white/60 outline-none placeholder-white/25 focus:border-blue-400"
+                    className="w-full border-b border-white/10 bg-transparent pb-2 text-sm text-white/60 placeholder:text-white/25 focus-visible:border-blue-400 border-0 rounded-none px-0 focus-visible:ring-0"
                   />
                   <div className="flex gap-4">
                     <div className="flex-1">
-                      <label className="text-xs text-white/50 uppercase">
+                      <Label className="text-xs text-white/50 uppercase">
                         Qty
-                      </label>
-                      <input
+                      </Label>
+                      <Input
                         type="number"
                         value={item.quantity}
                         onChange={(e) =>
@@ -224,14 +264,14 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                             parseInt(e.target.value) || 0,
                           )
                         }
-                        className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 p-2 text-center text-white outline-none focus:border-blue-400"
+                        className="mt-1 w-full rounded-lg bg-white/5 border-white/10 p-2 text-center text-white focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400"
                       />
                     </div>
                     <div className="flex-2">
-                      <label className="text-xs text-white/50 uppercase">
+                      <Label className="text-xs text-white/50 uppercase">
                         Price
-                      </label>
-                      <input
+                      </Label>
+                      <Input
                         type="number"
                         value={item.price}
                         onChange={(e) =>
@@ -241,7 +281,7 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                             parseFloat(e.target.value) || 0,
                           )
                         }
-                        className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 p-2 text-white outline-none focus:border-blue-400"
+                        className="mt-1 w-full rounded-lg bg-white/5 border-white/10 p-2 text-white focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400"
                       />
                     </div>
                   </div>
@@ -262,191 +302,90 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
             className={`space-y-6 ${!isExiting && !isOpening ? "animate-in slide-in-from-right fade-in duration-300" : ""}`}
           >
             <div className="space-y-2">
-              <label className="text-sm text-white/70">Currency</label>
-              <div className="relative">
-                <select
-                  value={data.currency}
-                  onChange={(e) => handleChange("currency", e.target.value)}
-                  className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 p-4 text-lg text-white outline-none focus:border-blue-400"
-                >
-                  {CURRENCIES.map((c) => (
-                    <option key={c.value} value={c.value}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-white/45">
-                  <svg
-                    className="fill-current h-4 w-4"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm text-white/70">Payment Method</label>
-              <div className="relative">
-                <select
-                  value={data.paymentMethod}
-                  onChange={(e) =>
-                    handleChange("paymentMethod", e.target.value)
-                  }
-                  className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 p-4 text-lg text-white outline-none focus:border-blue-400"
-                >
-                  {PAYMENT_METHODS.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-white/45">
-                  <svg
-                    className="fill-current h-4 w-4"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm text-white/70">VAT (%)</label>
-              <input
-                type="number"
-                value={data.vatRate}
-                onChange={(e) =>
-                  handleChange("vatRate", parseFloat(e.target.value) || 0)
-                }
-                className="w-full rounded-xl border border-white/10 bg-white/5 p-4 text-lg text-white outline-none focus:border-blue-400"
-              />
-            </div>
-          </div>
-        )}
-
-        {currentStep === 3 && (
-          <div
-            className={`space-y-6 ${!isExiting && !isOpening ? "animate-in slide-in-from-right fade-in duration-300" : ""}`}
-          >
-            <div className="space-y-2">
-              <label className="text-sm text-white/70">Return Window</label>
-              <div className="relative">
-                <select
-                  value={data.returnWindow}
-                  onChange={(e) => handleChange("returnWindow", e.target.value)}
-                  className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 p-4 text-white outline-none focus:border-blue-400"
-                >
-                  <option>No returns</option>
-                  <option>3 days</option>
-                  <option>7 days</option>
-                  <option>14 days</option>
-                  <option>30 days</option>
-                  <option>Custom</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-white/45">
-                  <svg
-                    className="fill-current h-4 w-4"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                  </svg>
-                </div>
-              </div>
+              <Label className="text-sm text-white/70">Return Window</Label>
+              <Select
+                value={data.returnWindow}
+                onValueChange={(value) => handleChange("returnWindow", value)}
+              >
+                <SelectTrigger className="w-full rounded-xl bg-white/5 border-white/10 p-4 text-white h-auto focus:ring-blue-400 focus:ring-offset-0 focus:border-blue-400">
+                  <SelectValue placeholder="Select return window" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="No returns">No returns</SelectItem>
+                  <SelectItem value="3 days">3 days</SelectItem>
+                  <SelectItem value="7 days">7 days</SelectItem>
+                  <SelectItem value="14 days">14 days</SelectItem>
+                  <SelectItem value="30 days">30 days</SelectItem>
+                  <SelectItem value="Custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             {data.returnWindow === "Custom" && (
-              <input
+              <Input
                 type="text"
                 placeholder="e.g. 45 days"
                 value={data.customReturnWindow}
                 onChange={(e) =>
                   handleChange("customReturnWindow", e.target.value)
                 }
-                className="w-full rounded-xl border border-white/10 bg-white/5 p-4 text-white outline-none focus:border-blue-400"
+                className="w-full rounded-xl bg-white/5 border-white/10 p-4 text-white focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400"
               />
             )}
 
             <div className="space-y-2">
-              <label className="text-sm text-white/70">Return Condition</label>
-              <div className="relative">
-                <select
-                  value={data.returnCondition}
-                  onChange={(e) =>
-                    handleChange("returnCondition", e.target.value)
-                  }
-                  className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 p-4 text-white outline-none focus:border-blue-400"
-                >
+              <Label className="text-sm text-white/70">Return Condition</Label>
+              <Select
+                value={data.returnCondition}
+                onValueChange={(value) =>
+                  handleChange("returnCondition", value)
+                }
+              >
+                <SelectTrigger className="w-full rounded-xl bg-white/5 border-white/10 p-4 text-white h-auto focus:ring-blue-400 focus:ring-offset-0 focus:border-blue-400">
+                  <SelectValue placeholder="Select return condition" />
+                </SelectTrigger>
+                <SelectContent>
                   {RETURN_CONDITIONS.map((c) => (
-                    <option key={c} value={c}>
+                    <SelectItem key={c} value={c}>
                       {c}
-                    </option>
+                    </SelectItem>
                   ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-white/45">
-                  <svg
-                    className="fill-current h-4 w-4"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                  </svg>
-                </div>
-              </div>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm text-white/70">Refund Type</label>
-              <div className="relative">
-                <select
-                  value={data.refundType}
-                  onChange={(e) => handleChange("refundType", e.target.value)}
-                  className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 p-4 text-white outline-none focus:border-blue-400"
-                >
+              <Label className="text-sm text-white/70">Refund Type</Label>
+              <Select
+                value={data.refundType}
+                onValueChange={(value) => handleChange("refundType", value)}
+              >
+                <SelectTrigger className="w-full rounded-xl bg-white/5 border-white/10 p-4 text-white h-auto focus:ring-blue-400 focus:ring-offset-0 focus:border-blue-400">
+                  <SelectValue placeholder="Select refund type" />
+                </SelectTrigger>
+                <SelectContent>
                   {REFUND_TYPES.map((r) => (
-                    <option key={r} value={r}>
+                    <SelectItem key={r} value={r}>
                       {r}
-                    </option>
+                    </SelectItem>
                   ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-white/45">
-                  <svg
-                    className="fill-current h-4 w-4"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                  </svg>
-                </div>
-              </div>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm text-white/70">QR Code URL</label>
-              <input
-                type="text"
-                value={data.qrUrl}
-                onChange={(e) => handleChange("qrUrl", e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-white/5 p-4 text-base text-white outline-none transition-colors focus:border-blue-400"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm text-white/70">
+              <Label className="text-sm text-white/70">
                 Marketing / Additional Note
-              </label>
-              <textarea
+              </Label>
+              <Textarea
                 value={data.marketingText}
                 onChange={(e) => handleChange("marketingText", e.target.value)}
-                className="h-24 w-full resize-none rounded-xl border border-white/10 bg-white/5 p-4 text-white outline-none transition-colors focus:border-blue-400"
+                className="h-24 w-full resize-none rounded-xl bg-white/5 border-white/10 p-4 text-white focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400"
               />
             </div>
           </div>
         )}
 
-        {currentStep === 4 && (
+        {currentStep === 3 && (
           <div className="h-full -mx-6 -mt-6">
             <ReceiptPreview data={data} ref={ref} />
           </div>
@@ -472,10 +411,10 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
           </button>
         ) : (
           <button
-            onClick={onDownload}
+            onClick={onGenerate}
             className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-white py-4 text-lg font-bold text-[#071427] shadow-lg ring-1 ring-black/5"
           >
-            <Download size={20} /> Download Receipt
+            <Sparkles size={20} /> Generate Receipt
           </button>
         )}
       </div>

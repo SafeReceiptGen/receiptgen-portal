@@ -9,6 +9,16 @@ import {
   TabsTrigger,
 } from "@/components/animated/components/animate/tabs";
 import { useExpandableScreen } from "@/components/ui/expandable-screen";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface ReceiptFormProps {
   data: ReceiptData;
@@ -123,51 +133,53 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-white/60">
+                  <Label className="text-xs font-medium text-white/60">
                     Store Name
-                  </label>
-                  <input
+                  </Label>
+                  <Input
                     type="text"
                     value={data.storeName}
                     onChange={(e) => handleChange("storeName", e.target.value)}
-                    className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-blue-400"
+                    className="w-full bg-white/5 border-white/10 text-white placeholder:text-white/20 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-white/60">
-                    Receipt No.
-                  </label>
-                  <input
+                  <Label className="text-xs font-medium text-white/60">
+                    Store Phone
+                  </Label>
+                  <Input
                     type="text"
-                    value={data.receiptNumber}
-                    onChange={(e) =>
-                      handleChange("receiptNumber", e.target.value)
-                    }
-                    className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-blue-400"
+                    value={data.storePhone}
+                    onChange={(e) => handleChange("storePhone", e.target.value)}
+                    className="w-full bg-white/5 border-white/10 text-white placeholder:text-white/20 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400"
                   />
                 </div>
               </div>
+
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-white/60">
-                  Order ID
-                </label>
-                <input
+                <Label className="text-xs font-medium text-white/60">
+                  Customer Name{" "}
+                  <span className="text-white/30">(Optional)</span>
+                </Label>
+                <Input
                   type="text"
-                  value={data.orderId}
-                  onChange={(e) => handleChange("orderId", e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-blue-400"
+                  value={data.customerName || ""}
+                  onChange={(e) => handleChange("customerName", e.target.value)}
+                  placeholder="e.g. John Doe"
+                  className="w-full bg-white/5 border-white/10 text-white placeholder:text-white/20 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400"
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-white/60">
+
+              {/* <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-white/60">
                   Status Message
-                </label>
-                <textarea
+                </Label>
+                <Textarea
                   value={data.orderStatus}
                   onChange={(e) => handleChange("orderStatus", e.target.value)}
-                  className="h-20 w-full resize-none rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-blue-400"
+                  className="h-20 w-full resize-none bg-white/5 border-white/10 text-white placeholder:text-white/20 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400"
                 />
-              </div>
+              </div> */}
             </section>
             <section className="space-y-4">
               <h3 className="border-b border-white/10 pb-2 text-xs font-bold uppercase tracking-wider text-white/50">
@@ -175,73 +187,60 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-white/60">
+                  <Label className="text-xs font-medium text-white/60">
                     Currency
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={data.currency}
-                      onChange={(e) => handleChange("currency", e.target.value)}
-                      className="w-full appearance-none rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-blue-400"
-                    >
+                  </Label>
+                  <Select
+                    value={data.currency}
+                    onValueChange={(value) => handleChange("currency", value)}
+                  >
+                    <SelectTrigger className="w-full bg-white/5 border-white/10 text-white focus:ring-blue-400 focus:ring-offset-0 focus:border-blue-400">
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent>
                       {CURRENCIES.map((c) => (
-                        <option key={c.value} value={c.value}>
+                        <SelectItem key={c.value} value={c.value}>
                           {c.label}
-                        </option>
+                        </SelectItem>
                       ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white/45">
-                      <svg
-                        className="fill-current h-4 w-4"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                      >
-                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                      </svg>
-                    </div>
-                  </div>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-white/60">
+                {/* <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-white/60">
                     VAT Rate (%)
-                  </label>
-                  <input
+                  </Label>
+                  <Input
                     type="number"
+                    
                     value={data.vatRate}
                     onChange={(e) =>
                       handleChange("vatRate", parseFloat(e.target.value) || 0)
                     }
-                    className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-blue-400"
+                    className="w-full bg-white/5 border-white/10 text-white placeholder:text-white/20 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400"
                   />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-white/60">
-                  Payment Method
-                </label>
-                <div className="relative">
-                  <select
+                </div> */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-white/60">
+                    Payment Method
+                  </Label>
+                  <Select
                     value={data.paymentMethod}
-                    onChange={(e) =>
-                      handleChange("paymentMethod", e.target.value)
+                    onValueChange={(value) =>
+                      handleChange("paymentMethod", value)
                     }
-                    className="w-full appearance-none rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-blue-400"
                   >
-                    {PAYMENT_METHODS.map((m) => (
-                      <option key={m} value={m}>
-                        {m}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white/45">
-                    <svg
-                      className="fill-current h-4 w-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                    </svg>
-                  </div>
+                    <SelectTrigger className="w-full bg-white/5 border-white/10 text-white focus:ring-blue-400 focus:ring-offset-0 focus:border-blue-400">
+                      <SelectValue placeholder="Select payment method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PAYMENT_METHODS.map((m) => (
+                        <SelectItem key={m} value={m}>
+                          {m}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </section>
@@ -350,33 +349,24 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
 
               {/* Return Window */}
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-white/60">
+                <Label className="text-xs font-medium text-white/60">
                   Return Window
-                </label>
-                <div className="relative">
-                  <select
-                    value={data.returnWindow}
-                    onChange={(e) =>
-                      handleChange("returnWindow", e.target.value)
-                    }
-                    className="w-full appearance-none rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-blue-400"
-                  >
+                </Label>
+                <Select
+                  value={data.returnWindow}
+                  onValueChange={(value) => handleChange("returnWindow", value)}
+                >
+                  <SelectTrigger className="w-full bg-white/5 border-white/10 text-white focus:ring-blue-400 focus:ring-offset-0 focus:border-blue-400">
+                    <SelectValue placeholder="Select return window" />
+                  </SelectTrigger>
+                  <SelectContent>
                     {RETURN_WINDOWS.map((w) => (
-                      <option key={w} value={w}>
+                      <SelectItem key={w} value={w}>
                         {w}
-                      </option>
+                      </SelectItem>
                     ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white/45">
-                    <svg
-                      className="fill-current h-4 w-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                    </svg>
-                  </div>
-                </div>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Custom Window Input - conditionally rendered */}
@@ -388,107 +378,93 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
                       : "space-y-1.5"
                   }
                 >
-                  <label className="text-xs font-medium text-white/60">
+                  <Label className="text-xs font-medium text-white/60">
                     Specify Custom Duration
-                  </label>
-                  <input
+                  </Label>
+                  <Input
                     type="text"
                     value={data.customReturnWindow}
                     onChange={(e) =>
                       handleChange("customReturnWindow", e.target.value)
                     }
                     placeholder="e.g. 45 days, 3 months..."
-                    className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-blue-400"
+                    className="w-full bg-white/5 border-white/10 text-white placeholder:text-white/20 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400"
                   />
                 </div>
               )}
 
               {/* Return Condition */}
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-white/60">
+                <Label className="text-xs font-medium text-white/60">
                   Return Condition
-                </label>
-                <div className="relative">
-                  <select
-                    value={data.returnCondition}
-                    onChange={(e) =>
-                      handleChange("returnCondition", e.target.value)
-                    }
-                    className="w-full appearance-none rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-blue-400"
-                  >
+                </Label>
+                <Select
+                  value={data.returnCondition}
+                  onValueChange={(value) =>
+                    handleChange("returnCondition", value)
+                  }
+                >
+                  <SelectTrigger className="w-full bg-white/5 border-white/10 text-white focus:ring-blue-400 focus:ring-offset-0 focus:border-blue-400">
+                    <SelectValue placeholder="Select return condition" />
+                  </SelectTrigger>
+                  <SelectContent>
                     {RETURN_CONDITIONS.map((c) => (
-                      <option key={c} value={c}>
+                      <SelectItem key={c} value={c}>
                         {c}
-                      </option>
+                      </SelectItem>
                     ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white/45">
-                    <svg
-                      className="fill-current h-4 w-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                    </svg>
-                  </div>
-                </div>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Refund Type */}
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-white/60">
+                <Label className="text-xs font-medium text-white/60">
                   Refund Type
-                </label>
-                <div className="relative">
-                  <select
-                    value={data.refundType}
-                    onChange={(e) => handleChange("refundType", e.target.value)}
-                    className="w-full appearance-none rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-blue-400"
-                  >
+                </Label>
+                <Select
+                  value={data.refundType}
+                  onValueChange={(value) => handleChange("refundType", value)}
+                >
+                  <SelectTrigger className="w-full bg-white/5 border-white/10 text-white focus:ring-blue-400 focus:ring-offset-0 focus:border-blue-400">
+                    <SelectValue placeholder="Select refund type" />
+                  </SelectTrigger>
+                  <SelectContent>
                     {REFUND_TYPES.map((r) => (
-                      <option key={r} value={r}>
+                      <SelectItem key={r} value={r}>
                         {r}
-                      </option>
+                      </SelectItem>
                     ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white/45">
-                    <svg
-                      className="fill-current h-4 w-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                    </svg>
-                  </div>
-                </div>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Extra Details */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-white/60">
+              {/* <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-white/60">
                   QR Code URL (Returns Page)
-                </label>
-                <input
+                </Label>
+                <Input
                   type="text"
                   value={data.qrUrl}
                   onChange={(e) => handleChange("qrUrl", e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-blue-400"
+                  className="w-full bg-white/5 border-white/10 text-white placeholder:text-white/20 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400"
                 />
                 <p className="text-[10px] text-white/45">
                   The QR code on the receipt will link to this URL.
                 </p>
-              </div>
+              </div> */}
 
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-white/60">
+                <Label className="text-xs font-medium text-white/60">
                   Marketing / Additional Note
-                </label>
-                <textarea
+                </Label>
+                <Textarea
                   value={data.marketingText}
                   onChange={(e) =>
                     handleChange("marketingText", e.target.value)
                   }
-                  className="h-16 w-full resize-none rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-blue-400"
+                  className="h-16 w-full resize-none bg-white/5 border-white/10 text-white placeholder:text-white/20 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400"
                   placeholder="Optional extra text..."
                 />
               </div>
