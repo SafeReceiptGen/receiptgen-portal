@@ -120,9 +120,6 @@ export default function ReceiptFormScreen() {
                       <Sparkles size={16} className="opacity-95" />
                       Generate Receipt
                     </button>
-                    <button className="flex items-center justify-center rounded-xl bg-slate-100 px-4 text-slate-600 ring-1 ring-slate-200 transition-colors hover:bg-slate-200 dark:bg-white/5 dark:text-white/80 dark:ring-white/10 dark:hover:bg-white/10">
-                      <Share2 size={18} />
-                    </button>
                   </div>
                 </div>
               </div>

@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -124,7 +130,6 @@
   }
 }
 
-
 @keyframes slideInRight {
   from {
     opacity: 0;
@@ -156,9 +161,8 @@
   }
 }
 
-
- /* Custom scrollbar for a cleaner UI */
- ::-webkit-scrollbar {
+/* Custom scrollbar for a cleaner UI */
+::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }

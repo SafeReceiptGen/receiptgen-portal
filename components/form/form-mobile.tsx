@@ -179,7 +179,7 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                 type="text"
                 value={data.customerName || ""}
                 onChange={(e) => handleChange("customerName", e.target.value)}
-                placeholder="e.g. John Doe"
+                placeholder="e.g. Emma Doe"
                 className="w-full rounded-xl bg-slate-50 border-slate-200 p-4 text-lg text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/35"
               />
             </div>
