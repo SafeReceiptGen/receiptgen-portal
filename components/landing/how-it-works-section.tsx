@@ -59,7 +59,7 @@ export function HowItWorksSection() {
     <section
       ref={howItWorksRef}
       id="how-it-works"
-      className="py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-white to-slate-50 overflow-hidden"
+      className="py-16 sm:py-20 lg:py-24 bg-linear-to-b from-white to-slate-50 overflow-hidden"
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16 sm:mb-20">
@@ -74,7 +74,7 @@ export function HowItWorksSection() {
         <div className="relative max-w-4xl mx-auto">
           <div className="absolute left-8 top-0 bottom-0 w-1 bg-slate-200 hidden md:block rounded-full overflow-hidden">
             <div
-              className="absolute top-0 left-0 w-full bg-gradient-to-b from-blue-400 via-blue-500 to-blue-600 transition-all duration-300 ease-out"
+              className="absolute top-0 left-0 w-full bg-linear-to-b from-blue-400 via-blue-500 to-blue-600 transition-all duration-300 ease-out"
               style={{
                 height: `${scrollProgress * 100}%`,
                 boxShadow: "0 0 20px rgba(59, 130, 246, 0.5)",
@@ -104,13 +104,13 @@ export function HowItWorksSection() {
                   }}
                 >
                   <div className="flex items-start gap-6 md:gap-8">
-                    <div className="relative flex-shrink-0 z-10">
+                    <div className="relative shrink-0 z-10">
                       <div
                         className={`w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center shadow-lg transition-all duration-500 ${
                           isCompleted
-                            ? "bg-gradient-to-br from-blue-500 to-blue-600 scale-110 shadow-blue-500/50"
+                            ? "bg-linear-to-br from-blue-500 to-blue-600 scale-110 shadow-blue-500/50"
                             : isActive
-                              ? "bg-gradient-to-br from-blue-400 to-blue-500 scale-105 shadow-blue-400/40"
+                              ? "bg-linear-to-br from-blue-400 to-blue-500 scale-105 shadow-blue-400/40"
                               : "bg-gradient-to-br from-slate-300 to-slate-400"
                         }`}
                       >
@@ -159,7 +159,7 @@ export function HowItWorksSection() {
                   {index < steps.length - 1 && (
                     <div className="md:hidden ml-8 h-12 w-0.5 bg-slate-200 my-4 relative overflow-hidden">
                       <div
-                        className="absolute top-0 left-0 w-full bg-gradient-to-b from-blue-400 to-blue-600 transition-all duration-300"
+                        className="absolute top-0 left-0 w-full bg-linear-to-b from-blue-400 to-blue-600 transition-all duration-300"
                         style={{
                           height: `${
                             Math.max(
@@ -180,19 +180,6 @@ export function HowItWorksSection() {
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
     </section>
   );
 }

@@ -22,7 +22,7 @@ export function SignUpSection() {
                 className="flex items-center gap-3 text-slate-200"
               >
                 <svg
-                  className="w-5 h-5 text-blue-400 flex-shrink-0"
+                  className="w-5 h-5 text-blue-400 shrink-0"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
