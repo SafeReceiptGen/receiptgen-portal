@@ -85,8 +85,8 @@ export default function ConversionDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="border-white/10 bg-[#071427] text-white shadow-2xl sm:max-w-md">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/25 to-transparent" />
+      <DialogContent className="border-slate-200 bg-white text-slate-900 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-[#071427] dark:text-white">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent dark:via-white/25" />
 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -95,7 +95,7 @@ export default function ConversionDialog({
             </span>
             Receipt Ready!
           </DialogTitle>
-          <DialogDescription className="text-white/70">
+          <DialogDescription className="text-slate-500 dark:text-white/70">
             What would you like to do with it?
           </DialogDescription>
         </DialogHeader>
@@ -105,7 +105,7 @@ export default function ConversionDialog({
             <Button
               onClick={handleShare}
               variant="outline"
-              className="h-auto flex-col gap-2 py-4 border-white/10 bg-white/5 hover:bg-white/10 text-white"
+              className="h-auto flex-col gap-2 py-4 border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white"
             >
               <Share2 className="size-5 mb-1" />
               Share
@@ -113,7 +113,7 @@ export default function ConversionDialog({
             <Button
               onClick={handleDownload}
               variant="outline"
-              className="h-auto flex-col gap-2 py-4 border-white/10 bg-white/5 hover:bg-white/10 text-white"
+              className="h-auto flex-col gap-2 py-4 border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white"
             >
               <Download className="size-5 mb-1" />
               Download
@@ -130,32 +130,32 @@ export default function ConversionDialog({
              </Button> */}
         </div>
 
-        <div className="mt-2 rounded-xl bg-blue-500/10 p-5 ring-1 ring-blue-500/20">
+        <div className="mt-2 rounded-xl bg-blue-50 p-5 ring-1 ring-blue-100 dark:bg-blue-500/10 dark:ring-blue-500/20">
           <div className="mb-4">
-            <h4 className="font-semibold text-blue-100 flex items-center gap-2">
-              <Sparkles className="size-4 text-blue-400" />
+            <h4 className="font-semibold text-blue-900 flex items-center gap-2 dark:text-blue-100">
+              <Sparkles className="size-4 text-blue-500 dark:text-blue-400" />
               Save your receipts
             </h4>
-            <ul className="mt-2 space-y-1 text-sm text-blue-200/70">
+            <ul className="mt-2 space-y-1 text-sm text-blue-700/70 dark:text-blue-200/70">
               <li className="flex items-center gap-2">
-                <div className="size-1 rounded-full bg-blue-400" />
+                <div className="size-1 rounded-full bg-blue-500 dark:bg-blue-400" />
                 Access past receipts anytime
               </li>
               <li className="flex items-center gap-2">
-                <div className="size-1 rounded-full bg-blue-400" />
+                <div className="size-1 rounded-full bg-blue-500 dark:bg-blue-400" />
                 Track returns & store details
               </li>
             </ul>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20">
+            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 dark:hover:bg-blue-500 dark:shadow-blue-900/20">
               Create Free Account
             </Button>
             <Button
               variant="ghost"
               onClick={onClose}
-              className="text-blue-200 hover:text-white hover:bg-blue-500/10"
+              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-200 dark:hover:text-white dark:hover:bg-blue-500/10"
             >
               Not now
             </Button>

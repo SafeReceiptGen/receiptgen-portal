@@ -56,8 +56,8 @@ export default function ReceiptFormScreen() {
       </ExpandableScreenTrigger>
 
       <ExpandableScreenContent
-        className="bg-[#050B16] text-white shadow-2xl ring-1 ring-white/10"
-        closeButtonClassName="text-white bg-white/5 hover:bg-white/10 ring-1 ring-white/10 backdrop-blur"
+        className="bg-slate-50 text-slate-900 shadow-2xl ring-1 ring-slate-200 dark:bg-[#050B16] dark:text-white dark:ring-white/10"
+        closeButtonClassName="text-slate-500 bg-slate-100 hover:bg-slate-200 ring-1 ring-slate-200 backdrop-blur dark:text-white dark:bg-white/5 dark:hover:bg-white/10 dark:ring-white/10"
       >
         <>
           <MobileWizard
@@ -68,9 +68,9 @@ export default function ReceiptFormScreen() {
           />
           <div className="relative hidden h-full w-full overflow-hidden md:flex">
             {/* Background atmosphere */}
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(1200px_circle_at_20%_0%,rgba(59,130,246,0.18),transparent_50%),radial-gradient(900px_circle_at_80%_10%,rgba(99,102,241,0.12),transparent_55%),radial-gradient(800px_circle_at_50%_100%,rgba(255,255,255,0.04),transparent_55%)]" />
+            <div className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(1200px_circle_at_20%_0%,rgba(59,130,246,0.18),transparent_50%),radial-gradient(900px_circle_at_80%_10%,rgba(99,102,241,0.12),transparent_55%),radial-gradient(800px_circle_at_50%_100%,rgba(255,255,255,0.04),transparent_55%)] dark:block" />
             <div
-              className="pointer-events-none absolute inset-0 opacity-20"
+              className="pointer-events-none absolute inset-0 opacity-20 hidden dark:block"
               style={{
                 backgroundImage:
                   "radial-gradient(rgba(255,255,255,0.18) 1px, transparent 1px)",
@@ -80,9 +80,9 @@ export default function ReceiptFormScreen() {
 
             <div className="relative z-10 flex h-full w-full min-w-0 gap-6 p-6 lg:p-8">
               {/* Left Panel: Configuration */}
-              <div className="flex h-full w-[520px] max-w-[46%] min-w-0 flex-col overflow-hidden rounded-3xl bg-white/4 ring-1 ring-white/10 backdrop-blur">
+              <div className="flex h-full w-[520px] max-w-[46%] min-w-0 flex-col overflow-hidden rounded-3xl bg-white ring-1 ring-slate-200 backdrop-blur dark:bg-white/4 dark:ring-white/10">
                 {/* Header */}
-                <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 px-5">
+                <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 px-5 dark:border-white/10">
                   <div className="flex items-center gap-2.5">
                     <Image
                       src="/logo.jpg"
@@ -92,15 +92,15 @@ export default function ReceiptFormScreen() {
                     />
 
                     <div className="leading-tight">
-                      <div className="text-sm font-semibold tracking-tight text-white">
+                      <div className="text-sm font-semibold tracking-tight text-slate-900 dark:text-white">
                         SafeReceipt
                       </div>
-                      <div className="text-[11px] text-white/60">
+                      <div className="text-[11px] text-slate-500 dark:text-white/60">
                         Receipt builder
                       </div>
                     </div>
                   </div>
-                  <div className="rounded-full bg-white/5 px-3 py-1 text-[11px] font-medium text-white/60 ring-1 ring-white/10">
+                  <div className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium text-slate-500 ring-1 ring-slate-200 dark:bg-white/5 dark:text-white/60 dark:ring-white/10">
                     v0.1.0
                   </div>
                 </header>
@@ -111,16 +111,16 @@ export default function ReceiptFormScreen() {
                 </div>
 
                 {/* Action Bar */}
-                <div className="shrink-0 border-t border-white/10 p-4">
+                <div className="shrink-0 border-t border-slate-200 p-4 dark:border-white/10">
                   <div className="flex gap-3">
                     <button
                       onClick={handleGenerate}
-                      className="group flex flex-1 items-center justify-center gap-2 rounded-xl bg-linear-to-b from-blue-500 to-blue-700 py-2.5 text-sm font-semibold text-white shadow-[0_18px_45px_rgba(37,99,235,0.28)] ring-1 ring-white/10 transition-all hover:from-blue-400 hover:to-blue-700 active:scale-[0.99]"
+                      className="group flex flex-1 items-center justify-center gap-2 rounded-xl bg-linear-to-b from-blue-600 to-blue-700 py-2.5 text-sm font-semibold text-white shadow-[0_18px_45px_rgba(37,99,235,0.28)] ring-1 ring-black/5 transition-all hover:from-blue-500 hover:to-blue-700 active:scale-[0.99] dark:from-blue-500 dark:ring-white/10 dark:hover:from-blue-400"
                     >
                       <Sparkles size={16} className="opacity-95" />
                       Generate Receipt
                     </button>
-                    <button className="flex items-center justify-center rounded-xl bg-white/5 px-4 text-white/80 ring-1 ring-white/10 transition-colors hover:bg-white/10">
+                    <button className="flex items-center justify-center rounded-xl bg-slate-100 px-4 text-slate-600 ring-1 ring-slate-200 transition-colors hover:bg-slate-200 dark:bg-white/5 dark:text-white/80 dark:ring-white/10 dark:hover:bg-white/10">
                       <Share2 size={18} />
                     </button>
                   </div>
@@ -128,10 +128,10 @@ export default function ReceiptFormScreen() {
               </div>
 
               {/* Right Panel: Preview */}
-              <div className="relative flex h-full min-w-0 flex-1 overflow-hidden rounded-3xl bg-linear-to-b from-white/6 to-white/2 ring-1 ring-white/10">
+              <div className="relative flex h-full min-w-0 flex-1 overflow-hidden rounded-3xl bg-slate-100 ring-1 ring-slate-200 dark:bg-linear-to-b dark:from-white/6 dark:to-white/2 dark:ring-white/10">
                 {/* Ambient Light Effect */}
-                <div className="pointer-events-none absolute top-[-18%] right-[-10%] h-[620px] w-[620px] rounded-full bg-blue-500/10 blur-[120px]" />
-                <div className="pointer-events-none absolute bottom-[-12%] left-[8%] h-[520px] w-[520px] rounded-full bg-indigo-500/10 blur-[110px]" />
+                <div className="pointer-events-none absolute top-[-18%] right-[-10%] h-[620px] w-[620px] rounded-full bg-blue-500/10 blur-[120px] hidden dark:block" />
+                <div className="pointer-events-none absolute bottom-[-12%] left-[8%] h-[520px] w-[520px] rounded-full bg-indigo-500/10 blur-[110px] hidden dark:block" />
 
                 <div className="relative h-full w-full min-w-0">
                   <ReceiptPreview data={data} ref={receiptRef} />

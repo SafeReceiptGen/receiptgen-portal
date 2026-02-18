@@ -109,7 +109,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
       className="flex h-full min-h-0 flex-col gap-0 text-white/80"
     >
       {/* Tabs */}
-      <div className="shrink-0 border-b border-white/10 p-4">
+      <div className="shrink-0 border-b border-slate-200 p-4 dark:border-white/10">
         <TabsList className="w-full">
           <TabsTrigger value="general" className="gap-2">
             <Settings size={14} /> General
@@ -128,45 +128,47 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
         <TabsContent value="general" className="h-full">
           <div className="h-full min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar p-6 space-y-8">
             <section className="space-y-4">
-              <h3 className="border-b border-white/10 pb-2 text-xs font-bold uppercase tracking-wider text-white/50">
+              <h3 className="border-b border-slate-200 pb-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:border-white/10 dark:text-white/50">
                 Store Info
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-white/60">
+                  <Label className="text-xs font-medium text-slate-600 dark:text-white/60">
                     Store Name
                   </Label>
                   <Input
                     type="text"
                     value={data.storeName}
                     onChange={(e) => handleChange("storeName", e.target.value)}
-                    className="w-full bg-white/5 border-white/10 text-white placeholder:text-white/20 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400"
+                    className="w-full bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/20"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-white/60">
+                  <Label className="text-xs font-medium text-slate-600 dark:text-white/60">
                     Store Phone
                   </Label>
                   <Input
                     type="text"
                     value={data.storePhone}
                     onChange={(e) => handleChange("storePhone", e.target.value)}
-                    className="w-full bg-white/5 border-white/10 text-white placeholder:text-white/20 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400"
+                    className="w-full bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/20"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-white/60">
+                <Label className="text-xs font-medium text-slate-600 dark:text-white/60">
                   Customer Name{" "}
-                  <span className="text-white/30">(Optional)</span>
+                  <span className="text-slate-400 dark:text-white/30">
+                    (Optional)
+                  </span>
                 </Label>
                 <Input
                   type="text"
                   value={data.customerName || ""}
                   onChange={(e) => handleChange("customerName", e.target.value)}
                   placeholder="e.g. John Doe"
-                  className="w-full bg-white/5 border-white/10 text-white placeholder:text-white/20 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400"
+                  className="w-full bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/20"
                 />
               </div>
 
@@ -182,19 +184,19 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
               </div> */}
             </section>
             <section className="space-y-4">
-              <h3 className="border-b border-white/10 pb-2 text-xs font-bold uppercase tracking-wider text-white/50">
+              <h3 className="border-b border-slate-200 pb-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:border-white/10 dark:text-white/50">
                 Financials
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-white/60">
+                  <Label className="text-xs font-medium text-slate-600 dark:text-white/60">
                     Currency
                   </Label>
                   <Select
                     value={data.currency}
                     onValueChange={(value) => handleChange("currency", value)}
                   >
-                    <SelectTrigger className="w-full bg-white/5 border-white/10 text-white focus:ring-blue-400 focus:ring-offset-0 focus:border-blue-400">
+                    <SelectTrigger className="w-full bg-slate-50 border-slate-200 text-slate-900 focus:ring-blue-400 focus:ring-offset-0 focus:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white">
                       <SelectValue placeholder="Select currency" />
                     </SelectTrigger>
                     <SelectContent>
@@ -221,7 +223,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
                   />
                 </div> */}
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-white/60">
+                  <Label className="text-xs font-medium text-slate-600 dark:text-white/60">
                     Payment Method
                   </Label>
                   <Select
@@ -230,7 +232,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
                       handleChange("paymentMethod", value)
                     }
                   >
-                    <SelectTrigger className="w-full bg-white/5 border-white/10 text-white focus:ring-blue-400 focus:ring-offset-0 focus:border-blue-400">
+                    <SelectTrigger className="w-full bg-slate-50 border-slate-200 text-slate-900 focus:ring-blue-400 focus:ring-offset-0 focus:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white">
                       <SelectValue placeholder="Select payment method" />
                     </SelectTrigger>
                     <SelectContent>
@@ -250,7 +252,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
         <TabsContent value="items" className="h-full">
           <div className="h-full min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar p-6 space-y-4">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-white/50">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-white/50">
                 Line Items
               </h3>
               <button
@@ -265,11 +267,11 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
               {data.items.map((item) => (
                 <div
                   key={item.id}
-                  className={`group relative rounded-xl border border-white/10 bg-white/4 p-4 transition-colors hover:border-white/15 ${!isExiting && !isOpening ? "animate-in fade-in slide-in-from-bottom-2" : ""}`}
+                  className={`group relative rounded-xl border border-slate-200 bg-slate-50 p-4 transition-colors hover:border-slate-300 dark:border-white/10 dark:bg-white/4 dark:hover:border-white/15 ${!isExiting && !isOpening ? "animate-in fade-in slide-in-from-bottom-2" : ""}`}
                 >
                   <button
                     onClick={() => removeItem(item.id)}
-                    className="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100 text-white/45 hover:text-red-300"
+                    className="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100 text-slate-400 hover:text-red-500 dark:text-white/45 dark:hover:text-red-300"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -280,7 +282,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
                       onChange={(e) =>
                         handleItemChange(item.id, "name", e.target.value)
                       }
-                      className="w-full border-b border-white/10 bg-transparent pb-1 text-sm font-medium text-white outline-none placeholder-white/30 focus:border-blue-400"
+                      className="w-full border-b border-slate-200 bg-transparent pb-1 text-sm font-medium text-slate-900 outline-none placeholder-slate-400 focus:border-blue-400 dark:border-white/10 dark:text-white dark:placeholder-white/30"
                       placeholder="Product Name"
                     />
                     <input
@@ -289,12 +291,12 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
                       onChange={(e) =>
                         handleItemChange(item.id, "detail", e.target.value)
                       }
-                      className="w-full border-b border-white/10 bg-transparent pb-1 text-xs text-white/60 outline-none placeholder-white/25 focus:border-blue-400"
+                      className="w-full border-b border-slate-200 bg-transparent pb-1 text-xs text-slate-500 outline-none placeholder-slate-400 focus:border-blue-400 dark:border-white/10 dark:text-white/60 dark:placeholder-white/25"
                       placeholder="Details (e.g. 200g, Medium Roast)"
                     />
                     <div className="mt-1 grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-[10px] uppercase text-white/45">
+                        <label className="text-[10px] uppercase text-slate-400 dark:text-white/45">
                           Qty
                         </label>
                         <input
@@ -307,11 +309,11 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
                               parseInt(e.target.value) || 0,
                             )
                           }
-                          className="w-full rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-sm text-white outline-none transition-colors focus:border-blue-400"
+                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition-colors focus:border-blue-400 dark:border-white/10 dark:bg-white/5 dark:text-white"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] uppercase text-white/45">
+                        <label className="text-[10px] uppercase text-slate-400 dark:text-white/45">
                           Price ({data.currency})
                         </label>
                         <input
@@ -324,7 +326,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
                               parseFloat(e.target.value) || 0,
                             )
                           }
-                          className="w-full rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-sm text-white outline-none transition-colors focus:border-blue-400"
+                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition-colors focus:border-blue-400 dark:border-white/10 dark:bg-white/5 dark:text-white"
                         />
                       </div>
                     </div>
@@ -333,7 +335,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
               ))}
             </div>
             {data.items.length === 0 && (
-              <div className="rounded-xl border border-dashed border-white/10 py-12 text-center text-white/45">
+              <div className="rounded-xl border border-dashed border-slate-200 py-12 text-center text-slate-400 dark:border-white/10 dark:text-white/45">
                 <p className="text-sm">No items added yet</p>
               </div>
             )}
@@ -343,20 +345,20 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
         <TabsContent value="returns" className="h-full">
           <div className="h-full min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar p-6 space-y-8">
             <section className="space-y-4">
-              <h3 className="border-b border-white/10 pb-2 text-xs font-bold uppercase tracking-wider text-white/50">
+              <h3 className="border-b border-slate-200 pb-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:border-white/10 dark:text-white/50">
                 Return & Refund Policy
               </h3>
 
               {/* Return Window */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-white/60">
+                <Label className="text-xs font-medium text-slate-600 dark:text-white/60">
                   Return Window
                 </Label>
                 <Select
                   value={data.returnWindow}
                   onValueChange={(value) => handleChange("returnWindow", value)}
                 >
-                  <SelectTrigger className="w-full bg-white/5 border-white/10 text-white focus:ring-blue-400 focus:ring-offset-0 focus:border-blue-400">
+                  <SelectTrigger className="w-full bg-slate-50 border-slate-200 text-slate-900 focus:ring-blue-400 focus:ring-offset-0 focus:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white">
                     <SelectValue placeholder="Select return window" />
                   </SelectTrigger>
                   <SelectContent>
@@ -378,7 +380,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
                       : "space-y-1.5"
                   }
                 >
-                  <Label className="text-xs font-medium text-white/60">
+                  <Label className="text-xs font-medium text-slate-600 dark:text-white/60">
                     Specify Custom Duration
                   </Label>
                   <Input
@@ -388,14 +390,14 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
                       handleChange("customReturnWindow", e.target.value)
                     }
                     placeholder="e.g. 45 days, 3 months..."
-                    className="w-full bg-white/5 border-white/10 text-white placeholder:text-white/20 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400"
+                    className="w-full bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/20"
                   />
                 </div>
               )}
 
               {/* Return Condition */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-white/60">
+                <Label className="text-xs font-medium text-slate-600 dark:text-white/60">
                   Return Condition
                 </Label>
                 <Select
@@ -404,7 +406,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
                     handleChange("returnCondition", value)
                   }
                 >
-                  <SelectTrigger className="w-full bg-white/5 border-white/10 text-white focus:ring-blue-400 focus:ring-offset-0 focus:border-blue-400">
+                  <SelectTrigger className="w-full bg-slate-50 border-slate-200 text-slate-900 focus:ring-blue-400 focus:ring-offset-0 focus:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white">
                     <SelectValue placeholder="Select return condition" />
                   </SelectTrigger>
                   <SelectContent>
@@ -419,14 +421,14 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
 
               {/* Refund Type */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-white/60">
+                <Label className="text-xs font-medium text-slate-600 dark:text-white/60">
                   Refund Type
                 </Label>
                 <Select
                   value={data.refundType}
                   onValueChange={(value) => handleChange("refundType", value)}
                 >
-                  <SelectTrigger className="w-full bg-white/5 border-white/10 text-white focus:ring-blue-400 focus:ring-offset-0 focus:border-blue-400">
+                  <SelectTrigger className="w-full bg-slate-50 border-slate-200 text-slate-900 focus:ring-blue-400 focus:ring-offset-0 focus:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white">
                     <SelectValue placeholder="Select refund type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -456,7 +458,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
               </div> */}
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-white/60">
+                <Label className="text-xs font-medium text-slate-600 dark:text-white/60">
                   Marketing / Additional Note
                 </Label>
                 <Textarea
@@ -464,7 +466,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
                   onChange={(e) =>
                     handleChange("marketingText", e.target.value)
                   }
-                  className="h-16 w-full resize-none bg-white/5 border-white/10 text-white placeholder:text-white/20 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400"
+                  className="h-16 w-full resize-none bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/20"
                   placeholder="Optional extra text..."
                 />
               </div>
