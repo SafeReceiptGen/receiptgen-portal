@@ -9,7 +9,8 @@ import { SignUpSection } from "@/components/landing/sign-up-section";
 import { SiteFooter } from "@/components/landing/site-footer";
 
 export default function LandingPage() {
-  return (
+
+return (
     <div className="min-h-screen bg-white">
       <SiteHeader />
       <HeroSection />
