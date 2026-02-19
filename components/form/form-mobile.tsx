@@ -5,6 +5,7 @@ import {
   Plus,
   Trash2,
   Sparkles,
+  Calendar as CalendarIcon,
 } from "lucide-react";
 import { ReceiptData, LineItem } from "@/types";
 import { ReceiptPreview } from "./receipt-preview";
@@ -19,6 +20,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface MobileWizardProps {
   data: ReceiptData;
@@ -182,6 +192,39 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                 placeholder="e.g. Emma Doe"
                 className="w-full rounded-xl bg-slate-50 border-slate-200 p-4 text-lg text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/35"
               />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm text-slate-600 dark:text-white/70">
+                Date
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full rounded-xl bg-slate-50 border-slate-200 p-4 text-lg text-slate-900 justify-start text-left font-normal h-auto dark:bg-white/5 dark:border-white/10 dark:text-white",
+                      !data.date && "text-muted-foreground",
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {data.date ? (
+                      format(new Date(data.date), "PPP")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={data.date ? new Date(data.date) : undefined}
+                    onSelect={(date) =>
+                      handleChange("date", date ? date.toISOString() : "")
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="space-y-2">
               <Label className="text-sm text-slate-600 dark:text-white/70">

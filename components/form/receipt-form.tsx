@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Plus, Trash2, Settings, ShoppingCart, RefreshCcw } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Settings,
+  ShoppingCart,
+  RefreshCcw,
+  Calendar as CalendarIcon,
+} from "lucide-react";
 import { ReceiptData, LineItem } from "@/types";
 import {
   Tabs,
@@ -19,6 +26,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface ReceiptFormProps {
   data: ReceiptData;
@@ -170,6 +186,40 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
                   placeholder="e.g. Emma Doe"
                   className="w-full bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/20"
                 />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-slate-600 dark:text-white/60">
+                  Date
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal bg-slate-50 border-slate-200 text-slate-900 focus:ring-blue-400 focus:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white",
+                        !data.date && "text-muted-foreground",
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {data.date ? (
+                        format(new Date(data.date), "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={data.date ? new Date(data.date) : undefined}
+                      onSelect={(date) =>
+                        handleChange("date", date ? date.toISOString() : "")
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
 
               {/* <div className="space-y-1.5">
