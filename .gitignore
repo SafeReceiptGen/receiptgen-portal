@@ -45,4 +45,7 @@ next-env.d.ts
 /.agent/
 /.agents/
 
+# docs
+/docs
+
 

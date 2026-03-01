@@ -4,15 +4,21 @@ import {
   ExpandableScreenContent,
   ExpandableScreenTrigger,
 } from "@/components/ui/expandable-screen";
-import { Download, LayoutDashboard, Share2, Sparkles } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 import { ReceiptPreview } from "./receipt-preview";
 import { INITIAL_RECEIPT_DATA, ReceiptData } from "@/types";
-import { useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { ReceiptForm } from "./receipt-form";
 import html2canvas from "html2canvas-pro";
 import ConversionDialog from "./conversion-dialog";
 import { MobileWizard } from "./form-mobile";
 import Image from "next/image";
+import { generateReceipt, ActionState } from "./actions";
+
+const initialActionState: ActionState = {
+  success: false,
+  message: "",
+};
 
 export default function ReceiptFormScreen() {
   const [data, setData] = useState<ReceiptData>(INITIAL_RECEIPT_DATA);
@@ -20,7 +26,22 @@ export default function ReceiptFormScreen() {
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string>("");
   const receiptRef = useRef<HTMLDivElement>(null);
 
-  const handleGenerate = async () => {
+  // Bind the current receipt data to the server action
+  const boundAction = generateReceipt.bind(null, data);
+  const [state, formAction, pending] = useActionState(
+    boundAction,
+    initialActionState,
+  );
+
+  // When server action succeeds, trigger the canvas capture
+  useEffect(() => {
+    if (state.success) {
+      captureReceipt();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
+
+  const captureReceipt = async () => {
     if (!receiptRef.current || !html2canvas) {
       console.error("Capture target or library not found");
       return;
@@ -39,9 +60,9 @@ export default function ReceiptFormScreen() {
       setShowConversionDialog(true);
     } catch (err) {
       console.error("Download failed:", err);
-      alert("Could not generate image. Please try again.");
     }
   };
+
   return (
     <ExpandableScreen
       layoutId="cta-card"
@@ -64,7 +85,9 @@ export default function ReceiptFormScreen() {
             data={data}
             ref={receiptRef}
             onChange={setData}
-            onGenerate={handleGenerate}
+            formAction={formAction}
+            pending={pending}
+            actionState={state}
           />
           <div className="relative hidden h-full w-full overflow-hidden md:flex">
             {/* Background atmosphere */}
@@ -107,20 +130,45 @@ export default function ReceiptFormScreen() {
 
                 {/* Form */}
                 <div className="min-h-0 flex-1">
-                  <ReceiptForm data={data} onChange={setData} />
+                  <ReceiptForm
+                    data={data}
+                    onChange={setData}
+                    actionState={state}
+                  />
                 </div>
 
                 {/* Action Bar */}
                 <div className="shrink-0 border-t border-slate-200 p-4 dark:border-white/10">
-                  <div className="flex gap-3">
-                    <button
-                      onClick={handleGenerate}
-                      className="group flex flex-1 items-center justify-center gap-2 rounded-xl bg-linear-to-b from-blue-600 to-blue-700 py-2.5 text-sm font-semibold text-white shadow-[0_18px_45px_rgba(37,99,235,0.28)] ring-1 ring-black/5 transition-all hover:from-blue-500 hover:to-blue-700 active:scale-[0.99] dark:from-blue-500 dark:ring-white/10 dark:hover:from-blue-400"
-                    >
-                      <Sparkles size={16} className="opacity-95" />
-                      Generate Receipt
-                    </button>
-                  </div>
+                  {/* Status message */}
+                  {state.message && !state.success && (
+                    <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">
+                      {state.message}
+                    </div>
+                  )}
+                  <form action={formAction}>
+                    <div className="flex gap-3">
+                      <button
+                        type="submit"
+                        disabled={pending}
+                        className="group flex flex-1 items-center justify-center gap-2 rounded-xl bg-linear-to-b from-blue-600 to-blue-700 py-2.5 text-sm font-semibold text-white shadow-[0_18px_45px_rgba(37,99,235,0.28)] ring-1 ring-black/5 transition-all hover:from-blue-500 hover:to-blue-700 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed dark:from-blue-500 dark:ring-white/10 dark:hover:from-blue-400"
+                      >
+                        {pending ? (
+                          <>
+                            <Loader2
+                              size={16}
+                              className="animate-spin opacity-95"
+                            />
+                            Generating…
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles size={16} className="opacity-95" />
+                            Generate Receipt
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
 

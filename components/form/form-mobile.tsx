@@ -5,6 +5,7 @@ import {
   Plus,
   Trash2,
   Sparkles,
+  Loader2,
   Calendar as CalendarIcon,
 } from "lucide-react";
 import { ReceiptData, LineItem } from "@/types";
@@ -29,12 +30,15 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ActionState } from "./actions";
 
 interface MobileWizardProps {
   data: ReceiptData;
   ref: RefObject<HTMLDivElement | null>;
   onChange: (data: ReceiptData) => void;
-  onGenerate: () => void;
+  formAction: (payload: FormData) => void;
+  pending: boolean;
+  actionState: ActionState;
 }
 
 const STEPS = [
@@ -81,7 +85,9 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
   ref,
   data,
   onChange,
-  onGenerate,
+  formAction,
+  pending,
+  actionState,
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const { isExiting, isOpening } = useExpandableScreen();
@@ -453,30 +459,52 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
       </div>
 
       {/* Navigation Footer */}
-      <div className="shrink-0 border-t border-slate-200 bg-white/90 p-4 backdrop-blur flex gap-3 dark:border-white/10 dark:bg-[#061124]/90">
-        {currentStep > 0 && (
-          <button
-            onClick={prevStep}
-            className="rounded-xl border border-slate-200 bg-slate-100 px-6 py-4 font-semibold text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-white/70"
-          >
-            <ChevronLeft />
-          </button>
+      <div className="shrink-0 border-t border-slate-200 bg-white/90 p-4 backdrop-blur dark:border-white/10 dark:bg-[#061124]/90">
+        {/* Error message */}
+        {actionState.message && !actionState.success && (
+          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">
+            {actionState.message}
+          </div>
         )}
-        {currentStep < STEPS.length - 1 ? (
-          <button
-            onClick={nextStep}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-linear-to-b from-blue-500 to-blue-700 py-4 text-lg font-bold text-white shadow-lg shadow-blue-500/20 ring-1 ring-white/10 dark:shadow-blue-900/20"
-          >
-            Next Step <ChevronRight size={20} />
-          </button>
-        ) : (
-          <button
-            onClick={onGenerate}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-slate-900 py-4 text-lg font-bold text-white shadow-lg ring-1 ring-black/5 dark:bg-white dark:text-[#071427]"
-          >
-            <Sparkles size={20} /> Generate Receipt
-          </button>
-        )}
+        <div className="flex gap-3">
+          {currentStep > 0 && (
+            <button
+              type="button"
+              onClick={prevStep}
+              className="rounded-xl border border-slate-200 bg-slate-100 px-6 py-4 font-semibold text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-white/70"
+            >
+              <ChevronLeft />
+            </button>
+          )}
+          {currentStep < STEPS.length - 1 ? (
+            <button
+              type="button"
+              onClick={nextStep}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-linear-to-b from-blue-500 to-blue-700 py-4 text-lg font-bold text-white shadow-lg shadow-blue-500/20 ring-1 ring-white/10 dark:shadow-blue-900/20"
+            >
+              Next Step <ChevronRight size={20} />
+            </button>
+          ) : (
+            <form action={formAction} className="flex-1">
+              <button
+                type="submit"
+                disabled={pending}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-4 text-lg font-bold text-white shadow-lg ring-1 ring-black/5 disabled:opacity-60 disabled:cursor-not-allowed dark:bg-white dark:text-[#071427]"
+              >
+                {pending ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin" />
+                    Generating…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={20} /> Generate Receipt
+                  </>
+                )}
+              </button>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );

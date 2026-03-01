@@ -35,10 +35,12 @@ import {
 } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { ActionState } from "./actions";
 
 interface ReceiptFormProps {
   data: ReceiptData;
   onChange: (data: ReceiptData) => void;
+  actionState?: ActionState;
 }
 
 const CURRENCIES = [
@@ -85,7 +87,11 @@ const REFUND_TYPES = [
 
 type Tab = "general" | "items" | "returns";
 
-export const ReceiptForm: React.FC<ReceiptFormProps> = ({ data, onChange }) => {
+export const ReceiptForm: React.FC<ReceiptFormProps> = ({
+  data,
+  onChange,
+  actionState,
+}) => {
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const { isExiting, isOpening } = useExpandableScreen();
 
