@@ -38,13 +38,13 @@ export const Header = () => {
   return (
     <header
       ref={headerRef}
-      className={`fixed top-0 md:w-full w-auto transition-all duration-500 ${
+      className={`fixed top-0 md:w-full z-10  w-auto transition-all duration-500 ${
         isScrolled
           ? "bg-background/80 py-4 backdrop-blur-md shadow-sm"
           : "bg-transparent py-6"
       }`}
     >
-      <div className="container mx-auto flex items-center justify-between px-6 md:px-12">
+      <div className="container mx-auto flex z-10 items-center justify-between px-6 md:px-12">
         <div className="header-item text-2xl font-bold tracking-tighter font-display text-foreground">
           Safe<span className="text-primary">Receipts</span>
         </div>
@@ -63,7 +63,7 @@ export const Header = () => {
           {/* <MagneticButton className="header-item hidden md:inline-flex px-6 py-2 text-sm bg-foreground text-background hover:bg-foreground/90">
             Get Started
           </MagneticButton> */}
-          <ReceiptFormScreen />
+          {/* <ReceiptFormScreen /> */}
         </div>
       </div>
     </header>

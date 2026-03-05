@@ -50,7 +50,7 @@ function TabsTrigger({ className, ...props }: TabsTriggerProps) {
     <TabsHighlightItemPrimitive value={props.value} className="flex-1">
       <TabsTriggerPrimitive
         className={cn(
-          "data-[state=active]:text-slate-900 focus-visible:border-slate-400 focus-visible:ring-slate-400 text-slate-500 inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md w-full px-2 py-1 text-sm font-medium whitespace-nowrap transition-colors duration-500 ease-in-out focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 hover:text-slate-800 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 dark:data-[state=active]:text-white dark:focus-visible:border-white/30 dark:focus-visible:ring-white/20 dark:text-white/65 dark:hover:text-white/90",
+          "data-[state=active]:text-slate-900 focus-visible:border-slate-400 focus-visible:ring-slate-400 text-slate-500 inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md w-full px-2 py-1 text-sm font-medium whitespace-nowrap transition-colors duration-150 ease-in-out focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 hover:text-slate-800 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 dark:data-[state=active]:text-white dark:focus-visible:border-white/30 dark:focus-visible:ring-white/20 dark:text-white/65 dark:hover:text-white/90",
           className,
         )}
         {...props}
