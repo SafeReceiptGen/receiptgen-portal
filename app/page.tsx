@@ -1,24 +1,40 @@
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+// import { SiteHeader } from "@/components/landing/site-header";
+// import { HeroSection } from "@/components/landing/hero-section";
+// import { FeaturesSection } from "@/components/landing/features-section";
+// import { HowItWorksSection } from "@/components/landing/how-it-works-section";
+// import { UseCasesSection } from "@/components/landing/use-cases-section";
+// import { EarlyAccessSection } from "@/components/landing/early-access-section";
+// import { FaqSection } from "@/components/landing/faq-section";
+// import { SignUpSection } from "@/components/landing/sign-up-section";
+// import { SiteFooter } from "@/components/landing/site-footer";
+import { Hero } from "@/components/landing/v2/Hero";
+import { ProblemSection } from "@/components/landing/v2/ProblemSection";
+import { SolutionSection } from "@/components/landing/v2/SolutionSection";
+import { HowItWorks } from "@/components/landing/v2/HowItWorks";
+import { ValueSection } from "@/components/landing/v2/ValueSection";
+import { VisionSection } from "@/components/landing/v2/VisionSection";
 
-export default function Home() {
+export default function LandingPage() {
   return (
     <main className="min-h-screen">
-      <section className="container mx-auto px-4 py-20 text-center">
-        <h1 className="text-5xl font-bold mb-6">
-          Generate Professional Receipts in Seconds
-        </h1>
-        <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-          Create, customize and share digital receipts with QR codes. 
-          Perfect for small businesses and anyone needing quick receipt generation.
-        </p>
-        <div className="flex gap-4 justify-center">
-          <Link href="/receipt">
-            <Button size="lg">Create Your First Receipt</Button>
-          </Link>
-          <Button size="lg" variant="outline">View Sample Receipt</Button>
-        </div>
-      </section>
+      {/* v2 Components */}
+      <Hero />
+      <ProblemSection />
+      <SolutionSection />
+      <HowItWorks />
+      <ValueSection />
+      <VisionSection />
+
+      {/* v1 Components */}
+      {/* <SiteHeader /> */}
+      {/* <HeroSection />
+      <FeaturesSection />
+      <HowItWorksSection />
+      <UseCasesSection />
+      <EarlyAccessSection />
+      <FaqSection />
+      <SignUpSection />
+      <SiteFooter /> */}
     </main>
   );
 }

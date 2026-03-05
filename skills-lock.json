@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "gsap-react": {
+      "source": "bbeierle12/skill-mcp-claude",
+      "sourceType": "github",
+      "computedHash": "1d4999cae81ed7af6270874408ce76edbea408ac0fe9f04e976a3f537e06de02"
+    }
+  }
+}
