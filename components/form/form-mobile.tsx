@@ -4,7 +4,7 @@ import {
   ChevronLeft,
   Plus,
   Trash2,
-  Sparkles,
+  ReceiptCent,
   Loader2,
   Calendar as CalendarIcon,
 } from "lucide-react";
@@ -498,7 +498,7 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                   </>
                 ) : (
                   <>
-                    <Sparkles size={20} /> Generate Receipt
+                    <ReceiptCent size={20} /> Generate Receipt
                   </>
                 )}
               </button>

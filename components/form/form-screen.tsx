@@ -4,7 +4,7 @@ import {
   ExpandableScreenContent,
   ExpandableScreenTrigger,
 } from "@/components/ui/expandable-screen";
-import { Sparkles, Loader2 } from "lucide-react";
+import { ReceiptCent, Loader2 } from "lucide-react";
 import { ReceiptPreview } from "./receipt-preview";
 import { INITIAL_RECEIPT_DATA, ReceiptData } from "@/types";
 import { useActionState, useEffect, useRef, useState } from "react";
@@ -162,7 +162,7 @@ export default function ReceiptFormScreen() {
                           </>
                         ) : (
                           <>
-                            <Sparkles size={16} className="opacity-95" />
+                            <ReceiptCent size={16} className="opacity-95" />
                             Generate Receipt
                           </>
                         )}
