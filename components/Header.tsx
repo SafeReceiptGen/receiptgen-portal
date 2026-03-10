@@ -5,7 +5,7 @@ import { useGSAP } from "@gsap/react";
 import Link from "next/link";
 import ReceiptFormScreen from "./form/form-screen";
 
-export const Header = () => {
+export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
 
@@ -60,6 +60,19 @@ export const Header = () => {
           ))}
         </nav>
         <div className="hidden md:flex items-center gap-4">
+          <Link
+            href="/login"
+            className="header-item text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
+          >
+            Login
+          </Link>
+          <hr className="h-4 w-px bg-foreground/20" />
+          <Link
+            href="/signup"
+            className="header-item text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
+          >
+            Signup
+          </Link>
           {/* <MagneticButton className="header-item hidden md:inline-flex px-6 py-2 text-sm bg-foreground text-background hover:bg-foreground/90">
             Get Started
           </MagneticButton> */}
@@ -68,4 +81,4 @@ export const Header = () => {
       </div>
     </header>
   );
-};
+}
