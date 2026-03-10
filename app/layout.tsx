@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/Header";
 import { Footer } from "@/components/landing/v2/Footer";
 
 const inter = Inter({
@@ -90,7 +89,6 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className="font-sans antialiased">
-        <Header />
         {children}
         <Footer />
       </body>
