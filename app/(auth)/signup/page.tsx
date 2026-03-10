@@ -308,6 +308,7 @@ export default function Signup() {
                     type="number"
                     label="Number of Stores"
                     required
+                    defaultValue={1}
                     disabled={isLoading}
                   />
                 </div>

@@ -10,11 +10,12 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export const Input: React.FC<InputProps> = ({
   label,
   className,
+  defaultValue = false,
   id,
   ...props
 }) => {
   const [isFocused, setIsFocused] = useState(false);
-  const [hasValue, setHasValue] = useState(false);
+  const [hasValue, setHasValue] = useState(defaultValue ? true : false);
   const labelRef = useRef<HTMLLabelElement>(null);
   const lineRef = useRef<HTMLDivElement>(null);
 
