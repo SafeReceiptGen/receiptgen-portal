@@ -7,6 +7,8 @@ import {
   ShoppingCart,
   RefreshCcw,
   Calendar as CalendarIcon,
+  Store as StoreIcon,
+  ChevronDown,
 } from "lucide-react";
 import { ReceiptData, LineItem } from "@/types";
 import {
@@ -37,11 +39,13 @@ import {
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ActionState } from "./actions";
+import { useStores } from "@/hooks/use-stores";
 
 interface ReceiptFormProps {
   data: ReceiptData;
   onChange: (data: ReceiptData) => void;
   actionState?: ActionState;
+  isAuthenticated?: boolean;
 }
 
 const CURRENCIES = [
@@ -92,9 +96,11 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
   data,
   onChange,
   actionState,
+  isAuthenticated = false,
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const { isExiting, isOpening } = useExpandableScreen();
+  const { stores: userStores, isLoading: storesLoading } = useStores(isAuthenticated);
 
   const handleChange = (field: keyof ReceiptData, value: any) => {
     onChange({ ...data, [field]: value });
@@ -154,6 +160,48 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
               <h3 className="border-b border-slate-200 pb-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:border-white/10 dark:text-white/50">
                 Store Info
               </h3>
+
+              {/* Store selector — authenticated users pick from their stores */}
+              {isAuthenticated && userStores.length > 0 && (
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-white/60">
+                    <StoreIcon size={12} />
+                    Select Store
+                  </label>
+                  <div className="relative">
+                    <select
+                      className="w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 pr-8 text-sm text-slate-900 outline-none transition-colors focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                      disabled={storesLoading}
+                      value={userStores.find(
+                        (s) => s.name === data.storeName && s.phone === data.storePhone
+                      )?.id ?? ""}
+                      onChange={(e) => {
+                        const selected = userStores.find((s) => s.id === e.target.value);
+                        if (selected) {
+                          onChange({ ...data, storeName: selected.name, storePhone: selected.phone ?? "" });
+                        }
+                      }}
+                    >
+                      <option value="" disabled>Pick a store…</option>
+                      {userStores.map((s) => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={14} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/40" />
+                  </div>
+                  <p className="text-[10px] text-slate-400 dark:text-white/35">
+                    Or edit the fields below to override.
+                  </p>
+                </div>
+              )}
+
+              {isAuthenticated && storesLoading && (
+                <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-white/30">
+                  <div className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
+                  Loading your stores…
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-slate-600 dark:text-white/60">

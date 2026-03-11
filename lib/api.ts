@@ -47,10 +47,18 @@ async function request<T>(
 
 // ─── Retailer ───────────────────────────────────────────────────────────────
 
+export interface StoreInput {
+  name: string;
+  phone?: string;
+  address?: string;
+  returnWindow?: string;
+  returnCondition?: string;
+  refundType?: string;
+}
+
 export interface OnboardPayload {
   businessName: string;
-  storeCount: number;
-  phone: string;
+  stores: StoreInput[];
 }
 
 export interface Retailer {

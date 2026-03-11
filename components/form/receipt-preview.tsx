@@ -6,11 +6,14 @@ import { ReceiptData } from "@/types";
 interface ReceiptPreviewProps {
   data: ReceiptData;
   ref: any;
+  /** Only show QR when the user is authenticated and a real qrUrl exists from the server */
+  showQr?: boolean;
 }
 
 export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
   data,
   ref,
+  showQr = false,
 }) => {
   // Calculations
   const subtotal = useMemo(() => {
@@ -101,7 +104,7 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
             }}
           >
             {/* Line Items */}
-            <div className="flex flex-col gap-6 mb-8">
+            <div className="flex flex-col gap-6 mb-8 text-left">
               {data.items.map((item, index) => (
                 <div key={item.id} className="flex gap-4 items-start text-xs">
                   <div className="w-4 pt-0.5 font-medium text-zinc-400">
@@ -145,7 +148,7 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
             </div>
 
             {/* Footer / Return Policy */}
-            <div className="flex items-start gap-4 mb-8">
+            <div className="flex items-start gap-4 mb-8 text-left">
               <div className="flex-1 pt-1">
                 {/* Primary Content: Return Policy if exists, otherwise Marketing Text */}
                 {hasPolicy ? (
@@ -182,14 +185,33 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                   Scan for {hasPolicy ? "return" : "details"}
                 </p>
               </div>
-              <div className="p-2 border border-zinc-200 rounded-lg bg-white shrink-0">
-                <QRCodeSVG
-                  value={data.qrUrl}
-                  size={80}
-                  level="M"
-                  fgColor="#18181b"
-                />
-              </div>
+              {/* QR Code — only rendered when authenticated and a real URL exists */}
+              {showQr ? (
+                <div className="p-2 border border-zinc-200 rounded-lg bg-white shrink-0">
+                  <QRCodeSVG
+                    value={data.qrUrl || "https://getsafereceipts.com"}
+                    size={80}
+                    level="M"
+                    fgColor="#18181b"
+                  />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center p-2 rounded-lg border border-dashed border-zinc-200 bg-zinc-50/50 shrink-0 w-[96px] h-[96px] gap-1.5">
+                  <div className="grid grid-cols-3 gap-0.5 opacity-20">
+                    {Array.from({ length: 9 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className={`w-2 h-2 rounded-[2px] bg-zinc-400 ${[0, 2, 6, 8].includes(i) ? "opacity-100" : "opacity-40"}`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-[8px] text-zinc-400 text-center leading-tight font-medium tracking-wide uppercase">
+                    QR on
+                    <br />
+                    sign in
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Legal/Bottom */}

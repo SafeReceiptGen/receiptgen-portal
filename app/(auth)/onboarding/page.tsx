@@ -7,43 +7,107 @@ import {
   CheckCircle2,
   AlertCircle,
   Store,
-  Hash,
   Phone,
   Building2,
   ArrowRight,
   Sparkles,
+  Plus,
+  Trash2,
+  MapPin,
+  RefreshCcw,
+  ShieldCheck,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { MagneticButton } from "@/components/landing/v2/MagneticButton";
 import { Input } from "@/components/ui/input-2";
 import { retailerApi, ApiRequestError } from "@/lib/api";
 
-const STEPS = [
-  {
-    icon: Building2,
-    label: "Business Name",
-    hint: "Your trading name or brand",
-    id: "businessName",
-    type: "text",
-    inputMode: undefined as React.HTMLAttributes<HTMLInputElement>["inputMode"],
-  },
-  {
-    icon: Hash,
-    label: "Number of Stores",
-    hint: "Physical or virtual locations",
-    id: "storeCount",
-    type: "number",
-    inputMode: "numeric" as React.HTMLAttributes<HTMLInputElement>["inputMode"],
-  },
-  {
-    icon: Phone,
-    label: "Phone Number",
-    hint: "Business contact number",
-    id: "phone",
-    type: "tel",
-    inputMode: "tel" as React.HTMLAttributes<HTMLInputElement>["inputMode"],
-  },
-] as const;
+// ─────────────────────────────────────────────────────────────────────────────
+// Constants
+// ─────────────────────────────────────────────────────────────────────────────
+
+const RETURN_WINDOWS = ["No returns", "3 days", "7 days", "14 days", "30 days", "60 days", "Custom"] as const;
+const RETURN_CONDITIONS = ["Unused", "Original Packaging", "Any Condition", "Defective Only"] as const;
+const REFUND_TYPES = ["Full Refund", "Partial Refund", "Store Credit", "Exchange Only"] as const;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface StoreReturnPolicy {
+  returnWindow: string;
+  returnCondition: string;
+  refundType: string;
+}
+
+interface StoreEntry {
+  id: string;
+  name: string;
+  phone: string;
+  address: string;
+  policy: StoreReturnPolicy;
+}
+
+const DEFAULT_POLICY: StoreReturnPolicy = {
+  returnWindow: "7 days",
+  returnCondition: "Unused",
+  refundType: "Full Refund",
+};
+
+const makeStore = (): StoreEntry => ({
+  id: Math.random().toString(36).slice(2),
+  name: "",
+  phone: "",
+  address: "",
+  policy: { ...DEFAULT_POLICY },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sub-components
+// ─────────────────────────────────────────────────────────────────────────────
+
+function PolicyPill({
+  label,
+  options,
+  value,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  options: readonly string[];
+  value: string;
+  onChange: (v: string) => void;
+  disabled: boolean;
+}) {
+  return (
+    <div>
+      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-foreground/35">
+        {label}
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map((opt) => (
+          <button
+            key={opt}
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange(opt)}
+            className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors disabled:opacity-50 ${
+              value === opt
+                ? "border-primary bg-primary text-white"
+                : "border-foreground/15 bg-transparent text-foreground/55 hover:border-primary/40 hover:text-primary/80"
+            }`}
+          >
+            {opt}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Component
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function Onboarding() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -51,153 +115,156 @@ export default function Onboarding() {
   const rightPanelRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
+  const storesListRef = useRef<HTMLDivElement>(null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [businessName, setBusinessName] = useState("");
+  const [terms, setTerms] = useState(false);
+  const [stores, setStores] = useState<StoreEntry[]>([makeStore()]);
+
   const navigate = useRouter();
+
+  // ── GSAP entrance ─────────────────────────────────────────────────────────
 
   const { contextSafe } = useGSAP(
     () => {
       const tl = gsap.timeline();
+      tl.fromTo(leftPanelRef.current, { x: "-100%", opacity: 0 }, { x: "0%", opacity: 1, duration: 1.2, ease: "power4.out" })
+        .fromTo(rightPanelRef.current, { x: "100%", opacity: 0 }, { x: "0%", opacity: 1, duration: 1.2, ease: "power4.out" }, "-=1.2")
+        .fromTo(".stagger-item", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: "power3.out" }, "-=0.5");
 
-      tl.fromTo(
-        leftPanelRef.current,
-        { x: "-100%", opacity: 0 },
-        { x: "0%", opacity: 1, duration: 1.2, ease: "power4.out" },
-      )
-        .fromTo(
-          rightPanelRef.current,
-          { x: "100%", opacity: 0 },
-          { x: "0%", opacity: 1, duration: 1.2, ease: "power4.out" },
-          "-=1.2",
-        )
-        .fromTo(
-          ".stagger-item",
-          { y: 30, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.8, stagger: 0.12, ease: "power3.out" },
-          "-=0.5",
-        );
-
-      // Animate the progress bar fill on mount
-      gsap.fromTo(
-        progressRef.current,
-        { scaleX: 0 },
-        { scaleX: 1, duration: 1.4, ease: "power3.out", delay: 0.3 },
-      );
+      gsap.fromTo(progressRef.current, { scaleX: 0 }, { scaleX: 1, duration: 1.4, ease: "power3.out", delay: 0.3 });
     },
     { scope: containerRef },
   );
 
   const shakeForm = contextSafe(() => {
-    gsap.fromTo(
-      formRef.current,
-      { x: -8 },
-      {
-        x: 8,
-        duration: 0.08,
-        yoyo: true,
-        repeat: 4,
-        onComplete: () => void gsap.set(formRef.current, { x: 0 }),
-      },
-    );
+    gsap.fromTo(formRef.current, { x: -8 }, {
+      x: 8, duration: 0.08, yoyo: true, repeat: 4,
+      onComplete: () => void gsap.set(formRef.current, { x: 0 }),
+    });
   });
+
+  // ── Store management ──────────────────────────────────────────────────────
+
+  const addStore = contextSafe(() => {
+    setStores((prev) => [...prev, makeStore()]);
+    requestAnimationFrame(() => {
+      const cards = storesListRef.current?.querySelectorAll(".store-card");
+      if (!cards?.length) return;
+      const lastCard = cards[cards.length - 1];
+      gsap.fromTo(lastCard, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" });
+      lastCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  });
+
+  const removeStore = contextSafe((id: string) => {
+    if (stores.length === 1) return;
+    const card = storesListRef.current?.querySelector(`[data-store-id="${id}"]`);
+    if (card) {
+      gsap.to(card, {
+        opacity: 0, y: -10, height: 0, marginBottom: 0, paddingTop: 0, paddingBottom: 0,
+        duration: 0.25, ease: "power2.in",
+        onComplete: () => setStores((prev) => prev.filter((s) => s.id !== id)),
+      });
+    } else {
+      setStores((prev) => prev.filter((s) => s.id !== id));
+    }
+  });
+
+  const updateStore = (id: string, field: keyof Omit<StoreEntry, "policy" | "id">, value: string) =>
+    setStores((prev) => prev.map((s) => s.id === id ? { ...s, [field]: value } : s));
+
+  const updatePolicy = (id: string, field: keyof StoreReturnPolicy, value: string) =>
+    setStores((prev) => prev.map((s) => s.id === id ? { ...s, policy: { ...s.policy, [field]: value } } : s));
+
+  // ── Submit ────────────────────────────────────────────────────────────────
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!businessName.trim()) { setError("Please enter your business or brand name."); shakeForm(); return; }
+    if (!terms) { setError("You must agree to the Terms of Service to continue."); shakeForm(); return; }
+    if (stores.some((s) => !s.name.trim())) { setError("Every location must have a name."); shakeForm(); return; }
+
     setIsLoading(true);
 
-    const businessName = (document.getElementById("businessName") as HTMLInputElement)?.value.trim();
-    const storeCountRaw = (document.getElementById("storeCount") as HTMLInputElement)?.value;
-    const phone = (document.getElementById("phone") as HTMLInputElement)?.value.trim();
-    const termsChecked = (document.getElementById("terms") as HTMLInputElement)?.checked;
-
-    if (!businessName || !phone) {
-      setIsLoading(false);
-      setError("Please fill in all required fields.");
-      shakeForm();
-      return;
-    }
-
-    if (!termsChecked) {
-      setIsLoading(false);
-      setError("You must agree to the Terms of Service to continue.");
-      shakeForm();
-      return;
-    }
-
-    const storeCount = parseInt(storeCountRaw || "1", 10);
-
     try {
-      await retailerApi.onboard({ businessName, storeCount, phone });
+      await retailerApi.onboard({
+        businessName,
+        stores: stores.map((s) => ({
+          name: s.name,
+          phone: s.phone || undefined,
+          address: s.address || undefined,
+          returnWindow: s.policy.returnWindow,
+          returnCondition: s.policy.returnCondition,
+          refundType: s.policy.refundType,
+        })),
+      });
 
-      // Animate success before redirect
       gsap.to(formRef.current, {
-        opacity: 0,
-        y: -20,
-        duration: 0.4,
-        ease: "power2.in",
+        opacity: 0, y: -20, duration: 0.4, ease: "power2.in",
         onComplete: () => navigate.push("/dashboard"),
       });
     } catch (err) {
       setIsLoading(false);
-      if (err instanceof ApiRequestError) {
-        setError(err.message);
-      } else {
-        setError("Something went wrong. Please try again.");
-      }
+      setError(err instanceof ApiRequestError ? err.message : "Something went wrong. Please try again.");
       shakeForm();
     }
   };
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // Render
+  // ─────────────────────────────────────────────────────────────────────────
+
   return (
-    <div
-      ref={containerRef}
-      className="flex min-h-screen w-full overflow-hidden bg-background"
-    >
-      {/* ── Left Panel ── */}
+    <div ref={containerRef} className="flex min-h-screen w-full overflow-hidden bg-background">
+
+      {/* ── Left Panel ─────────────────────────────────────────────────────── */}
       <div
         ref={leftPanelRef}
-        className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-primary p-12 text-white lg:flex"
+        className="relative hidden w-[42%] flex-col justify-between overflow-hidden bg-primary p-12 text-white lg:flex"
       >
-        {/* Grid texture */}
+        {/* Dot grid */}
         <div
-          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          className="pointer-events-none absolute inset-0"
           style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
+            backgroundImage: "radial-gradient(rgba(255,255,255,0.15) 1.5px, transparent 1.5px)",
+            backgroundSize: "28px 28px",
           }}
         />
-
-        {/* Glowing orb */}
-        <div className="pointer-events-none absolute -bottom-32 -right-32 h-[500px] w-[500px] rounded-full bg-white/10 blur-[80px]" />
+        {/* Glow orbs */}
+        <div className="pointer-events-none absolute -bottom-40 -right-40 h-[600px] w-[600px] rounded-full bg-white/10 blur-[100px]" />
+        <div className="pointer-events-none absolute -top-20 -left-20 h-[300px] w-[300px] rounded-full bg-white/5 blur-[80px]" />
 
         {/* Logo */}
         <div className="stagger-item relative z-10 text-3xl font-bold tracking-tighter font-display">
-          Safe<span className="text-white/40">Receipts</span>
+          Safe<span className="text-white/35">Receipts</span>
         </div>
 
         {/* Main copy */}
-        <div className="stagger-item relative z-10 max-w-md">
+        <div className="stagger-item relative z-10 max-w-sm">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-medium backdrop-blur-sm">
             <Sparkles size={14} />
-            One more step
+            Step 2 of 2 — Almost done
           </div>
-          <h2 className="mb-6 text-5xl font-bold leading-tight tracking-tighter font-display">
-            Let&apos;s set up your business.
+          <h2 className="mb-5 text-5xl font-bold leading-tight tracking-tighter font-display">
+            Your stores,<br />your rules.
           </h2>
-          <p className="text-lg text-white/70 leading-relaxed">
-            We need a few details to personalise your dashboard and configure your first store.
+          <p className="text-white/70 leading-relaxed">
+            Tell us where you operate and what your return policy looks like.
+            Every store can have its own policy — customers will see it on every receipt.
           </p>
         </div>
 
-        {/* Feature list */}
-        <div className="stagger-item relative z-10 space-y-4">
+        {/* Feature bullets */}
+        <div className="stagger-item relative z-10 space-y-3">
           {[
-            { icon: Store, text: "Your stores appear in the receipt builder" },
-            { icon: CheckCircle2, text: "Return policies are linked to each store" },
-            { icon: Building2, text: "Business name appears on every receipt" },
+            { icon: Store, text: "Each location gets its own receipt history" },
+            { icon: ShieldCheck, text: "Return policies print directly on the receipt" },
+            { icon: Building2, text: "Your brand name appears on every receipt" },
           ].map(({ icon: Icon, text }) => (
             <div key={text} className="flex items-center gap-3">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15">
@@ -209,92 +276,231 @@ export default function Onboarding() {
         </div>
       </div>
 
-      {/* ── Right Panel ── */}
+      {/* ── Right Panel ────────────────────────────────────────────────────── */}
       <div
         ref={rightPanelRef}
-        className="flex w-full flex-col justify-center px-8 py-12 lg:w-1/2 lg:px-24"
+        className="flex w-full flex-col overflow-y-auto px-8 py-10 lg:w-[58%] lg:px-14"
       >
-        <div className="mx-auto w-full max-w-md">
+        <div className="mx-auto w-full max-w-xl">
+
           {/* Mobile logo */}
-          <div className="stagger-item mb-10 text-2xl font-bold tracking-tighter font-display text-foreground lg:hidden">
+          <div className="stagger-item mb-8 text-2xl font-bold tracking-tighter font-display text-foreground lg:hidden">
             Safe<span className="text-primary">Receipts</span>
           </div>
 
-          {/* Progress indicator */}
+          {/* Progress bar */}
           <div className="stagger-item mb-8">
-            <div className="mb-2 flex items-center justify-between text-xs text-foreground/40">
+            <div className="mb-2 flex justify-between text-xs text-foreground/40">
               <span>Step 2 of 2</span>
-              <span>Almost there</span>
+              <span>Business &amp; Stores</span>
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
-              <div
-                ref={progressRef}
-                className="h-full origin-left rounded-full bg-primary"
-                style={{ transform: "scaleX(0)" }}
-              />
+              <div ref={progressRef} className="h-full origin-left rounded-full bg-primary" style={{ transform: "scaleX(0)" }} />
             </div>
           </div>
 
           {/* Heading */}
           <div className="stagger-item mb-8">
-            <h1 className="mb-2 text-4xl font-bold tracking-tighter font-display text-foreground">
-              Business Details
+            <h1 className="mb-1.5 text-4xl font-bold tracking-tighter font-display text-foreground">
+              Business &amp; Stores
             </h1>
-            <p className="text-foreground/60">
-              Tell us about your retail business.
+            <p className="text-foreground/55">
+              Add your brand name and the locations where you&apos;ll issue receipts. Set a return policy for each one.
             </p>
           </div>
 
-          {/* Form */}
-          <form
-            ref={formRef}
-            onSubmit={handleSubmit}
-            className="flex flex-col gap-2"
-          >
-            {/* Field cards */}
-            {STEPS.map(({ icon: Icon, label, hint, id, type, inputMode }) => (
-              <div
-                key={id}
-                className="stagger-item group relative rounded-2xl border border-foreground/10 bg-foreground/2 px-5 pb-4 pt-3 transition-colors hover:border-foreground/20 focus-within:border-primary/50 focus-within:bg-primary/2"
-              >
-                <div className="mb-1 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-foreground/35 transition-colors group-focus-within:text-primary/70">
-                  <Icon size={11} />
-                  {label}
-                </div>
-                <Input
-                  id={id}
-                  type={type}
-                  label=""
-                  inputMode={inputMode}
-                  required={id !== "storeCount"}
-                  defaultValue={id === "storeCount" ? 1 : undefined}
-                  disabled={isLoading}
-                  className="mt-0"
-                />
-                <p className="mt-1 text-[11px] text-foreground/35">{hint}</p>
-              </div>
-            ))}
+          <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-5">
 
-            {/* Terms */}
-            <div className="stagger-item mt-2 flex items-start gap-3 rounded-2xl border border-foreground/10 bg-foreground/2 px-5 py-4">
+            {/* ── Business name ──────────────────────────────────────────── */}
+            <div className="stagger-item rounded-2xl border border-foreground/10 bg-foreground/2 p-5">
+              <h3 className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-foreground/40">
+                <Building2 size={11} />
+                Your Brand
+              </h3>
+              <Input
+                id="businessName"
+                type="text"
+                label="Trading / Brand Name"
+                required
+                disabled={isLoading}
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+              />
+              <p className="mt-2 text-[11px] text-foreground/35">
+                This appears on every receipt as your business identity.
+              </p>
+            </div>
+
+            {/* ── Store list ─────────────────────────────────────────────── */}
+            <div className="stagger-item">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-foreground/40">
+                  <Store size={11} />
+                  Your Locations
+                </h3>
+                <button
+                  type="button"
+                  onClick={addStore}
+                  disabled={isLoading}
+                  className="flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
+                >
+                  <Plus size={11} />
+                  Add Location
+                </button>
+              </div>
+
+              <div ref={storesListRef} className="flex flex-col gap-4">
+                {stores.map((store, idx) => (
+                  <div
+                    key={store.id}
+                    data-store-id={store.id}
+                    className="store-card overflow-hidden rounded-2xl border border-foreground/10 bg-foreground/2 transition-colors hover:border-foreground/15"
+                  >
+                    {/* ── Store header ── */}
+                    <div className="flex items-center justify-between border-b border-foreground/8 px-5 py-3">
+                      <span className="flex items-center gap-2 text-xs font-semibold text-foreground/40">
+                        <Store size={11} />
+                        Location {idx + 1}
+                      </span>
+                      {stores.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeStore(store.id)}
+                          disabled={isLoading}
+                          className="flex items-center gap-1 rounded-full p-1.5 text-foreground/30 transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                          aria-label="Remove location"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* ── Location details ── */}
+                    <div className="p-5 pb-4">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {/* Name — full width */}
+                        <div className="sm:col-span-2">
+                          <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-foreground/35 mb-1">
+                            <Store size={10} />
+                            Location Name <span className="text-destructive ml-0.5">*</span>
+                          </div>
+                          <input
+                            type="text"
+                            required
+                            disabled={isLoading}
+                            value={store.name}
+                            onChange={(e) => updateStore(store.id, "name", e.target.value)}
+                            placeholder="e.g. Accra Central Branch"
+                            className="w-full border-b border-foreground/15 bg-transparent py-2 text-foreground outline-none placeholder-foreground/30 transition-colors hover:border-foreground/30 focus:border-primary"
+                          />
+                        </div>
+
+                        {/* Phone */}
+                        <div>
+                          <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-foreground/35 mb-1">
+                            <Phone size={10} />
+                            Phone <span className="text-foreground/20 normal-case font-normal tracking-normal">(optional)</span>
+                          </div>
+                          <input
+                            type="tel"
+                            disabled={isLoading}
+                            value={store.phone}
+                            onChange={(e) => updateStore(store.id, "phone", e.target.value)}
+                            placeholder="+233 XXX XXX XXX"
+                            className="w-full border-b border-foreground/15 bg-transparent py-2 text-foreground outline-none placeholder-foreground/25 transition-colors hover:border-foreground/30 focus:border-primary"
+                          />
+                        </div>
+
+                        {/* Address */}
+                        <div>
+                          <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-foreground/35 mb-1">
+                            <MapPin size={10} />
+                            Address <span className="text-foreground/20 normal-case font-normal tracking-normal">(optional)</span>
+                          </div>
+                          <input
+                            type="text"
+                            disabled={isLoading}
+                            value={store.address}
+                            onChange={(e) => updateStore(store.id, "address", e.target.value)}
+                            placeholder="123 High St, Accra"
+                            className="w-full border-b border-foreground/15 bg-transparent py-2 text-foreground outline-none placeholder-foreground/25 transition-colors hover:border-foreground/30 focus:border-primary"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ── Return Policy ── */}
+                    <div className="border-t border-foreground/8 bg-foreground/1.5 px-5 py-4">
+                      <div className="mb-3 flex items-center gap-2">
+                        <RefreshCcw size={11} className="text-primary/60" />
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-foreground/40">
+                          Return Policy
+                        </span>
+                        <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                          Printed on receipts
+                        </span>
+                      </div>
+
+                      <div className="space-y-4">
+                        <PolicyPill
+                          label="Return Window"
+                          options={RETURN_WINDOWS}
+                          value={store.policy.returnWindow}
+                          onChange={(v) => updatePolicy(store.id, "returnWindow", v)}
+                          disabled={isLoading}
+                        />
+                        {store.policy.returnWindow !== "No returns" && (
+                          <>
+                            <PolicyPill
+                              label="Accepted Condition"
+                              options={RETURN_CONDITIONS}
+                              value={store.policy.returnCondition}
+                              onChange={(v) => updatePolicy(store.id, "returnCondition", v)}
+                              disabled={isLoading}
+                            />
+                            <PolicyPill
+                              label="Refund Method"
+                              options={REFUND_TYPES}
+                              value={store.policy.refundType}
+                              onChange={(v) => updatePolicy(store.id, "refundType", v)}
+                              disabled={isLoading}
+                            />
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Inline "add another" prompt */}
+                {stores.length === 1 && (
+                  <button
+                    type="button"
+                    onClick={addStore}
+                    disabled={isLoading}
+                    className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-foreground/12 py-3.5 text-sm text-foreground/35 transition-colors hover:border-primary/35 hover:text-primary/60 disabled:opacity-50"
+                  >
+                    <Plus size={15} />
+                    Got another location? Add it here
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* ── Terms ──────────────────────────────────────────────────── */}
+            <div className="stagger-item flex items-start gap-3 rounded-2xl border border-foreground/10 bg-foreground/2 px-5 py-4">
               <input
                 type="checkbox"
                 id="terms"
-                className="mt-0.5 h-4 w-4 shrink-0 rounded border-foreground/30 text-primary accent-primary focus:ring-primary cursor-pointer"
+                checked={terms}
+                onChange={(e) => setTerms(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-foreground/30 accent-primary cursor-pointer"
               />
-              <label
-                htmlFor="terms"
-                className="text-sm text-foreground/60 cursor-pointer leading-relaxed"
-              >
+              <label htmlFor="terms" className="text-sm text-foreground/60 cursor-pointer leading-relaxed">
                 I agree to the{" "}
-                <a href="#" className="font-medium text-primary hover:underline">
-                  Terms of Service
-                </a>{" "}
-                and{" "}
-                <a href="#" className="font-medium text-primary hover:underline">
-                  Privacy Policy
-                </a>
-                .
+                <a href="#" className="font-medium text-primary hover:underline">Terms of Service</a>
+                {" "}and{" "}
+                <a href="#" className="font-medium text-primary hover:underline">Privacy Policy</a>.
               </label>
             </div>
 
@@ -307,7 +513,7 @@ export default function Onboarding() {
             )}
 
             {/* Submit */}
-            <div className="stagger-item mt-6">
+            <div className="stagger-item">
               <MagneticButton
                 type="submit"
                 disabled={isLoading}
@@ -316,15 +522,12 @@ export default function Onboarding() {
                 {isLoading ? (
                   <>
                     <Loader2 className="animate-spin" size={20} />
-                    Setting up your account…
+                    Creating your account…
                   </>
                 ) : (
                   <>
-                    Create Account
-                    <ArrowRight
-                      className="transition-transform group-hover:translate-x-1"
-                      size={20}
-                    />
+                    Launch my Dashboard
+                    <ArrowRight className="transition-transform group-hover:translate-x-1" size={20} />
                   </>
                 )}
               </MagneticButton>
@@ -333,9 +536,7 @@ export default function Onboarding() {
 
           <p className="stagger-item mt-6 text-center text-sm text-foreground/40">
             Wrong account?{" "}
-            <a href="/signup" className="text-primary hover:underline font-medium">
-              Go back
-            </a>
+            <a href="/signup" className="text-primary hover:underline font-medium">Go back</a>
           </p>
         </div>
       </div>
