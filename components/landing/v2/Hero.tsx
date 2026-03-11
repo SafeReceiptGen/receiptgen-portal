@@ -2,8 +2,8 @@
 import { useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { MagneticButton } from "./MagneticButton";
-import { ArrowRight } from "lucide-react";
+// import { MagneticButton } from "./MagneticButton";
+// import { ArrowRight } from "lucide-react";
 import ReceiptFormScreen from "@/components/form/form-screen";
 
 export const Hero = () => {

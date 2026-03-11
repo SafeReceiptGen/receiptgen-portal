@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://safereceipts.com"), // Update with your domain
+  metadataBase: new URL("https://getsafereceipts.com"), // Update with your domain
   title: {
     default: "SafeReceipts - Professional Receipt Generator with QR Codes",
     template: "%s | SafeReceipts",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://safereceipts.com",
+    url: "https://getsafereceipts.com",
     title: "SafeReceipts - Professional Receipt Generator with QR Codes",
     description:
       "Generate professional digital receipts in seconds with QR codes, PDF export and live preview. Free to start.",
@@ -71,7 +71,7 @@ export const metadata: Metadata = {
     google: "your-google-verification-code", // Add after Google Search Console setup
   },
   alternates: {
-    canonical: "https://SafeReceipts.com",
+    canonical: "https://getsafereceipts.com",
   },
 };
 

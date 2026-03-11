@@ -33,10 +33,14 @@ export default function ReceiptFormScreen() {
     initialActionState,
   );
 
-  // When server action succeeds, trigger the canvas capture
+  // When server action succeeds, update qrUrl from backend then trigger capture
   useEffect(() => {
     if (state.success) {
-      captureReceipt();
+      if (state.qrUrl) {
+        setData((prev) => ({ ...prev, qrUrl: state.qrUrl! }));
+      }
+      // Allow one render pass for the qrUrl to flow into the preview
+      requestAnimationFrame(() => captureReceipt());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
