@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useActionState } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ArrowRight, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
@@ -8,14 +8,15 @@ import { Input } from "@/components/ui/input-2";
 import { MagneticButton } from "@/components/landing/v2/MagneticButton";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { validateSignupAction, AuthActionState } from "../actions";
 
 export default function Signup() {
   const containerRef = useRef<HTMLDivElement>(null);
   const leftPanelRef = useRef<HTMLDivElement>(null);
   const rightPanelRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const navigate = useRouter();
 
   const { contextSafe } = useGSAP(
@@ -56,67 +57,68 @@ export default function Signup() {
     );
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsLoading(true);
+  const [state, formAction, pending] = useActionState(
+    async (prevState: AuthActionState, formData: FormData): Promise<AuthActionState> => {
+      setAuthError(null);
+      
+      const result = await validateSignupAction(prevState, formData);
+      
+      if (!result.success) {
+        shakeForm();
+        return result;
+      }
+      
+      const { email, password, firstName, lastName } = result.data;
+      
+      try {
+        const { error: signUpErr } = await authClient.signUp.email({
+          email,
+          password,
+          name: `${firstName} ${lastName}`,
+        });
 
-    const firstNameEl = document.getElementById(
-      "firstName",
-    ) as HTMLInputElement;
-    const lastNameEl = document.getElementById("lastName") as HTMLInputElement;
-    const emailEl = document.getElementById("email") as HTMLInputElement;
-    const passwordEl = document.getElementById("password") as HTMLInputElement;
+        if (signUpErr) {
+          shakeForm();
+          const message =
+            signUpErr.code === "USER_ALREADY_EXISTS"
+              ? "An account with this email already exists."
+              : signUpErr.code === "PASSWORD_TOO_SHORT"
+                ? "Password must be at least 8 characters."
+                : (signUpErr.message ?? "Sign up failed. Please try again.");
+          setAuthError(message);
+          return { ...result, success: false };
+        }
+      } catch (e: unknown) {
+        console.error("Sign up error:", e);
+        shakeForm();
+        setAuthError((e as Error).message || "Failed to connect to the server. Please check your connection and try again.");
+        return { ...result, success: false };
+      }
 
-    const firstName = firstNameEl?.value.trim();
-    const lastName = lastNameEl?.value.trim();
-    const email = emailEl?.value.trim();
-    const password = passwordEl?.value;
-
-    if (!firstName || !lastName || !email || !password) {
-      setIsLoading(false);
-      shakeForm();
-      return;
-    }
-
-    const { error: authError } = await authClient.signUp.email({
-      email,
-      password,
-      name: `${firstName} ${lastName}`,
-    });
-
-    if (authError) {
-      setIsLoading(false);
-      const message =
-        authError.code === "USER_ALREADY_EXISTS"
-          ? "An account with this email already exists."
-          : authError.code === "PASSWORD_TOO_SHORT"
-            ? "Password must be at least 8 characters."
-            : (authError.message ?? "Sign up failed. Please try again.");
-      setError(message);
-      shakeForm();
-      return;
-    }
-
-    // Account created — proceed to business onboarding
-    navigate.push("/onboarding");
-  };
+      navigate.push("/onboarding");
+      return { ...result, success: true };
+    },
+    { success: false, errors: null, data: null }
+  );
 
   const handleGoogleSignup = async () => {
-    setIsLoading(true);
-    setError(null);
+    setIsGoogleLoading(true);
+    setAuthError(null);
     try {
       await authClient.signIn.social({
         provider: "google",
         callbackURL: "/onboarding",
       });
-    } catch (error: any) {
-      setError(error.message);
-      console.log(error);
+    } catch (err: unknown) {
+      setAuthError((err as Error).message || "Failed to connect to the server. Please check your connection and try again.");
+      console.log(err);
     } finally {
-      setIsLoading(false);
+      setIsGoogleLoading(false);
     }
   };
+
+  const isLoading = pending || isGoogleLoading;
+  const generalError = authError || state?.message;
 
   return (
     <div
@@ -235,49 +237,75 @@ export default function Signup() {
 
           <form
             ref={formRef}
-            onSubmit={handleSubmit}
+            action={formAction}
             className="flex flex-col gap-4"
           >
             <div className="stagger-item flex gap-4">
-              <Input
-                id="firstName"
-                type="text"
-                label="First Name"
-                required
-                disabled={isLoading}
-              />
-              <Input
-                id="lastName"
-                type="text"
-                label="Last Name"
-                required
-                disabled={isLoading}
-              />
+              <div className="flex-1">
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  type="text"
+                  label="First Name"
+                  required
+                  disabled={isLoading}
+                  defaultValue={(state.data?.firstName as string) || ""}
+                />
+                {state.errors?.firstName && (
+                  <p className="mt-1 text-xs text-destructive">{state.errors.firstName[0]}</p>
+                )}
+              </div>
+              <div className="flex-1">
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  label="Last Name"
+                  required
+                  disabled={isLoading}
+                  defaultValue={(state.data?.lastName as string) || ""}
+                />
+                {state.errors?.lastName && (
+                  <p className="mt-1 text-xs text-destructive">{state.errors.lastName[0]}</p>
+                )}
+              </div>
             </div>
+            
             <div className="stagger-item">
               <Input
                 id="email"
+                name="email"
                 type="email"
                 label="Work Email"
                 required
                 disabled={isLoading}
+                defaultValue={(state.data?.email as string) || ""}
               />
+              {state.errors?.email && (
+                <p className="mt-1 text-xs text-destructive">{state.errors.email[0]}</p>
+              )}
             </div>
+            
             <div className="stagger-item">
               <Input
                 id="password"
+                name="password"
                 type="password"
                 label="Password (min. 8 characters)"
                 required
                 disabled={isLoading}
+                defaultValue={(state.data?.password as string) || ""}
               />
+              {state.errors?.password && (
+                <p className="mt-1 text-xs text-destructive">{state.errors.password[0]}</p>
+              )}
             </div>
 
             {/* Error message */}
-            {error && (
+            {generalError && (
               <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/8 px-4 py-3 text-sm text-destructive">
                 <AlertCircle size={15} className="shrink-0" />
-                <span>{error}</span>
+                <span>{generalError}</span>
               </div>
             )}
 

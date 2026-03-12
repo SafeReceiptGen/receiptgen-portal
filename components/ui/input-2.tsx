@@ -10,12 +10,12 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export const Input: React.FC<InputProps> = ({
   label,
   className,
-  defaultValue = false,
+  defaultValue,
   id,
   ...props
 }) => {
   const [isFocused, setIsFocused] = useState(false);
-  const [hasValue, setHasValue] = useState(defaultValue ? true : false);
+  const [hasValue, setHasValue] = useState(false);
   const labelRef = useRef<HTMLLabelElement>(null);
   const lineRef = useRef<HTMLDivElement>(null);
 
@@ -71,6 +71,7 @@ export const Input: React.FC<InputProps> = ({
       </label>
       <input
         id={id}
+        defaultValue={defaultValue}
         className="w-full border-b border-foreground/20 bg-transparent py-3 text-foreground outline-none transition-colors hover:border-foreground/40"
         onFocus={(e) => {
           setIsFocused(true);

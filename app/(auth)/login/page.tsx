@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useActionState } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ArrowRight, Loader2, AlertCircle } from "lucide-react";
@@ -8,17 +8,18 @@ import { Input } from "@/components/ui/input-2";
 import Link from "next/link";
 import { MagneticButton } from "@/components/landing/v2/MagneticButton";
 import { authClient } from "@/lib/auth-client";
+import { validateLoginAction, AuthActionState } from "../actions";
 
 export default function Login() {
   const containerRef = useRef<HTMLDivElement>(null);
   const leftPanelRef = useRef<HTMLDivElement>(null);
   const rightPanelRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const navigate = useRouter();
 
-  useGSAP(
+  const { contextSafe } = useGSAP(
     () => {
       const tl = gsap.timeline();
 
@@ -43,45 +44,70 @@ export default function Login() {
     { scope: containerRef },
   );
 
-  const shakeForm = () => {
+  const shakeForm = contextSafe(() => {
     gsap.fromTo(
       formRef.current,
       { x: -8 },
       { x: 8, duration: 0.08, yoyo: true, repeat: 4, onComplete: () => void gsap.set(formRef.current, { x: 0 }) },
     );
-  };
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsLoading(true);
+  const [state, formAction, pending] = useActionState(
+    async (prevState: AuthActionState, formData: FormData): Promise<AuthActionState> => {
+      setAuthError(null);
+      
+      const result = await validateLoginAction(prevState, formData);
+      
+      if (!result.success) {
+        shakeForm();
+        return result;
+      }
+      
+      const { email, password } = result.data;
+      
+      try {
+        const { error: signInErr } = await authClient.signIn.email({
+          email,
+          password,
+        });
 
-    const email = (document.getElementById("email") as HTMLInputElement)?.value;
-    const password = (document.getElementById("password") as HTMLInputElement)?.value;
+        if (signInErr) {
+          shakeForm();
+          const message =
+            signInErr.code === "INVALID_EMAIL_OR_PASSWORD"
+              ? "Incorrect email or password."
+              : (signInErr.message ?? "Sign in failed. Please try again.");
+          setAuthError(message);
+          return { ...result, success: false };
+        }
+      } catch (e: unknown) {
+        console.error("Sign in error:", e);
+        shakeForm();
+        setAuthError((e as Error).message || "Failed to connect to the server. Please check your connection and try again.");
+        return { ...result, success: false };
+      }
 
-    const { error: authError } = await authClient.signIn.email(
-      { email, password },
-    );
-
-    if (authError) {
-      setIsLoading(false);
-      const message =
-        authError.code === "INVALID_EMAIL_OR_PASSWORD"
-          ? "Incorrect email or password."
-          : (authError.message ?? "Sign in failed. Please try again.");
-      setError(message);
-      shakeForm();
-      return;
-    }
-
-    navigate.push("/dashboard");
-  };
+      navigate.push("/dashboard");
+      return { ...result, success: true };
+    },
+    { success: false, errors: null, data: null }
+  );
 
   const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    setError(null);
-    await authClient.signIn.social({ provider: "google", callbackURL: "/dashboard" });
+    setIsGoogleLoading(true);
+    setAuthError(null);
+    try {
+      await authClient.signIn.social({ provider: "google", callbackURL: "/dashboard" });
+    } catch (err: unknown) {
+      setAuthError((err as Error).message || "Failed to connect to the server. Please check your connection and try again.");
+      console.log(err);
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
+
+  const isLoading = pending || isGoogleLoading;
+  const generalError = authError || state?.message;
 
   return (
     <div
@@ -150,6 +176,7 @@ export default function Login() {
           <button
             onClick={handleGoogleLogin}
             disabled={isLoading}
+            type="button"
             className="stagger-item mb-8 flex w-full items-center justify-center gap-3 rounded-full border border-foreground/20 bg-transparent py-4 font-medium text-foreground transition-colors hover:bg-foreground/5 disabled:opacity-50"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -171,33 +198,43 @@ export default function Login() {
 
           <form
             ref={formRef}
-            onSubmit={handleSubmit}
+            action={formAction}
             className="flex flex-col gap-4"
           >
             <div className="stagger-item">
               <Input
                 id="email"
+                name="email"
                 type="email"
                 label="Email Address"
                 required
                 disabled={isLoading}
+                defaultValue={(state.data?.email as string) || ""}
               />
+              {state.errors?.email && (
+                <p className="mt-1 text-xs text-destructive">{state.errors.email[0]}</p>
+              )}
             </div>
             <div className="stagger-item">
               <Input
                 id="password"
+                name="password"
                 type="password"
                 label="Password"
                 required
                 disabled={isLoading}
+                defaultValue={(state.data?.password as string) || ""}
               />
+              {state.errors?.password && (
+                <p className="mt-1 text-xs text-destructive">{state.errors.password[0]}</p>
+              )}
             </div>
 
             {/* Error message */}
-            {error && (
+            {generalError && (
               <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/8 px-4 py-3 text-sm text-destructive">
                 <AlertCircle size={15} className="shrink-0" />
-                <span>{error}</span>
+                <span>{generalError}</span>
               </div>
             )}
 
