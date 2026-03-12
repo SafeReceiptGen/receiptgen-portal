@@ -26,9 +26,27 @@ import { retailerApi, ApiRequestError } from "@/lib/api";
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
 
-const RETURN_WINDOWS = ["No returns", "3 days", "7 days", "14 days", "30 days", "60 days", "Custom"] as const;
-const RETURN_CONDITIONS = ["Unused", "Original Packaging", "Any Condition", "Defective Only"] as const;
-const REFUND_TYPES = ["Full Refund", "Partial Refund", "Store Credit", "Exchange Only"] as const;
+const RETURN_WINDOWS = [
+  "No returns",
+  "3 days",
+  "7 days",
+  "14 days",
+  "30 days",
+  "60 days",
+  "Custom",
+] as const;
+const RETURN_CONDITIONS = [
+  "Unused",
+  "Original Packaging",
+  "Any Condition",
+  "Defective Only",
+] as const;
+const REFUND_TYPES = [
+  "Full Refund",
+  "Partial Refund",
+  "Store Credit",
+  "Exchange Only",
+] as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -130,20 +148,45 @@ export default function Onboarding() {
   const { contextSafe } = useGSAP(
     () => {
       const tl = gsap.timeline();
-      tl.fromTo(leftPanelRef.current, { x: "-100%", opacity: 0 }, { x: "0%", opacity: 1, duration: 1.2, ease: "power4.out" })
-        .fromTo(rightPanelRef.current, { x: "100%", opacity: 0 }, { x: "0%", opacity: 1, duration: 1.2, ease: "power4.out" }, "-=1.2")
-        .fromTo(".stagger-item", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: "power3.out" }, "-=0.5");
+      tl.fromTo(
+        leftPanelRef.current,
+        { x: "-100%", opacity: 0 },
+        { x: "0%", opacity: 1, duration: 1.2, ease: "power4.out" },
+      )
+        .fromTo(
+          rightPanelRef.current,
+          { x: "100%", opacity: 0 },
+          { x: "0%", opacity: 1, duration: 1.2, ease: "power4.out" },
+          "-=1.2",
+        )
+        .fromTo(
+          ".stagger-item",
+          { y: 30, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: "power3.out" },
+          "-=0.5",
+        );
 
-      gsap.fromTo(progressRef.current, { scaleX: 0 }, { scaleX: 1, duration: 1.4, ease: "power3.out", delay: 0.3 });
+      gsap.fromTo(
+        progressRef.current,
+        { scaleX: 0 },
+        { scaleX: 1, duration: 1.4, ease: "power3.out", delay: 0.3 },
+      );
     },
     { scope: containerRef },
   );
 
   const shakeForm = contextSafe(() => {
-    gsap.fromTo(formRef.current, { x: -8 }, {
-      x: 8, duration: 0.08, yoyo: true, repeat: 4,
-      onComplete: () => void gsap.set(formRef.current, { x: 0 }),
-    });
+    gsap.fromTo(
+      formRef.current,
+      { x: -8 },
+      {
+        x: 8,
+        duration: 0.08,
+        yoyo: true,
+        repeat: 4,
+        onComplete: () => void gsap.set(formRef.current, { x: 0 }),
+      },
+    );
   });
 
   // ── Store management ──────────────────────────────────────────────────────
@@ -154,18 +197,30 @@ export default function Onboarding() {
       const cards = storesListRef.current?.querySelectorAll(".store-card");
       if (!cards?.length) return;
       const lastCard = cards[cards.length - 1];
-      gsap.fromTo(lastCard, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" });
+      gsap.fromTo(
+        lastCard,
+        { opacity: 0, y: 16 },
+        { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" },
+      );
       lastCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
   });
 
   const removeStore = contextSafe((id: string) => {
     if (stores.length === 1) return;
-    const card = storesListRef.current?.querySelector(`[data-store-id="${id}"]`);
+    const card = storesListRef.current?.querySelector(
+      `[data-store-id="${id}"]`,
+    );
     if (card) {
       gsap.to(card, {
-        opacity: 0, y: -10, height: 0, marginBottom: 0, paddingTop: 0, paddingBottom: 0,
-        duration: 0.25, ease: "power2.in",
+        opacity: 0,
+        y: -10,
+        height: 0,
+        marginBottom: 0,
+        paddingTop: 0,
+        paddingBottom: 0,
+        duration: 0.25,
+        ease: "power2.in",
         onComplete: () => setStores((prev) => prev.filter((s) => s.id !== id)),
       });
     } else {
@@ -173,11 +228,25 @@ export default function Onboarding() {
     }
   });
 
-  const updateStore = (id: string, field: keyof Omit<StoreEntry, "policy" | "id">, value: string) =>
-    setStores((prev) => prev.map((s) => s.id === id ? { ...s, [field]: value } : s));
+  const updateStore = (
+    id: string,
+    field: keyof Omit<StoreEntry, "policy" | "id">,
+    value: string,
+  ) =>
+    setStores((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, [field]: value } : s)),
+    );
 
-  const updatePolicy = (id: string, field: keyof StoreReturnPolicy, value: string) =>
-    setStores((prev) => prev.map((s) => s.id === id ? { ...s, policy: { ...s.policy, [field]: value } } : s));
+  const updatePolicy = (
+    id: string,
+    field: keyof StoreReturnPolicy,
+    value: string,
+  ) =>
+    setStores((prev) =>
+      prev.map((s) =>
+        s.id === id ? { ...s, policy: { ...s.policy, [field]: value } } : s,
+      ),
+    );
 
   // ── Submit ────────────────────────────────────────────────────────────────
 
@@ -185,9 +254,21 @@ export default function Onboarding() {
     e.preventDefault();
     setError(null);
 
-    if (!businessName.trim()) { setError("Please enter your business or brand name."); shakeForm(); return; }
-    if (!terms) { setError("You must agree to the Terms of Service to continue."); shakeForm(); return; }
-    if (stores.some((s) => !s.name.trim())) { setError("Every location must have a name."); shakeForm(); return; }
+    if (!businessName.trim()) {
+      setError("Please enter your business or brand name.");
+      shakeForm();
+      return;
+    }
+    if (!terms) {
+      setError("You must agree to the Terms of Service to continue.");
+      shakeForm();
+      return;
+    }
+    if (stores.some((s) => !s.name.trim())) {
+      setError("Every location must have a name.");
+      shakeForm();
+      return;
+    }
 
     setIsLoading(true);
 
@@ -205,12 +286,19 @@ export default function Onboarding() {
       });
 
       gsap.to(formRef.current, {
-        opacity: 0, y: -20, duration: 0.4, ease: "power2.in",
+        opacity: 0,
+        y: -20,
+        duration: 0.4,
+        ease: "power2.in",
         onComplete: () => navigate.push("/dashboard"),
       });
     } catch (err) {
       setIsLoading(false);
-      setError(err instanceof ApiRequestError ? err.message : "Something went wrong. Please try again.");
+      setError(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Something went wrong. Please try again.",
+      );
       shakeForm();
     }
   };
@@ -218,10 +306,11 @@ export default function Onboarding() {
   // ─────────────────────────────────────────────────────────────────────────
   // Render
   // ─────────────────────────────────────────────────────────────────────────
-
   return (
-    <div ref={containerRef} className="flex min-h-screen w-full overflow-hidden bg-background">
-
+    <div
+      ref={containerRef}
+      className="flex min-h-screen w-full overflow-hidden bg-background"
+    >
       {/* ── Left Panel ─────────────────────────────────────────────────────── */}
       <div
         ref={leftPanelRef}
@@ -231,7 +320,8 @@ export default function Onboarding() {
         <div
           className="pointer-events-none absolute inset-0"
           style={{
-            backgroundImage: "radial-gradient(rgba(255,255,255,0.15) 1.5px, transparent 1.5px)",
+            backgroundImage:
+              "radial-gradient(rgba(255,255,255,0.15) 1.5px, transparent 1.5px)",
             backgroundSize: "28px 28px",
           }}
         />
@@ -251,11 +341,14 @@ export default function Onboarding() {
             Step 2 of 2 — Almost done
           </div>
           <h2 className="mb-5 text-5xl font-bold leading-tight tracking-tighter font-display">
-            Your stores,<br />your rules.
+            Your stores,
+            <br />
+            your rules.
           </h2>
           <p className="text-white/70 leading-relaxed">
             Tell us where you operate and what your return policy looks like.
-            Every store can have its own policy — customers will see it on every receipt.
+            Every store can have its own policy — customers will see it on every
+            receipt.
           </p>
         </div>
 
@@ -263,8 +356,14 @@ export default function Onboarding() {
         <div className="stagger-item relative z-10 space-y-3">
           {[
             { icon: Store, text: "Each location gets its own receipt history" },
-            { icon: ShieldCheck, text: "Return policies print directly on the receipt" },
-            { icon: Building2, text: "Your brand name appears on every receipt" },
+            {
+              icon: ShieldCheck,
+              text: "Return policies print directly on the receipt",
+            },
+            {
+              icon: Building2,
+              text: "Your brand name appears on every receipt",
+            },
           ].map(({ icon: Icon, text }) => (
             <div key={text} className="flex items-center gap-3">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15">
@@ -282,7 +381,6 @@ export default function Onboarding() {
         className="flex w-full flex-col overflow-y-auto px-8 py-10 lg:w-[58%] lg:px-14"
       >
         <div className="mx-auto w-full max-w-xl">
-
           {/* Mobile logo */}
           <div className="stagger-item mb-8 text-2xl font-bold tracking-tighter font-display text-foreground lg:hidden">
             Safe<span className="text-primary">Receipts</span>
@@ -295,7 +393,11 @@ export default function Onboarding() {
               <span>Business &amp; Stores</span>
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
-              <div ref={progressRef} className="h-full origin-left rounded-full bg-primary" style={{ transform: "scaleX(0)" }} />
+              <div
+                ref={progressRef}
+                className="h-full origin-left rounded-full bg-primary"
+                style={{ transform: "scaleX(0)" }}
+              />
             </div>
           </div>
 
@@ -305,12 +407,16 @@ export default function Onboarding() {
               Business &amp; Stores
             </h1>
             <p className="text-foreground/55">
-              Add your brand name and the locations where you&apos;ll issue receipts. Set a return policy for each one.
+              Add your brand name and the locations where you&apos;ll issue
+              receipts. Set a return policy for each one.
             </p>
           </div>
 
-          <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-5">
-
+          <form
+            ref={formRef}
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-5"
+          >
             {/* ── Business name ──────────────────────────────────────────── */}
             <div className="stagger-item rounded-2xl border border-foreground/10 bg-foreground/2 p-5">
               <h3 className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-foreground/40">
@@ -382,14 +488,17 @@ export default function Onboarding() {
                         <div className="sm:col-span-2">
                           <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-foreground/35 mb-1">
                             <Store size={10} />
-                            Location Name <span className="text-destructive ml-0.5">*</span>
+                            Location Name{" "}
+                            <span className="text-destructive ml-0.5">*</span>
                           </div>
                           <input
                             type="text"
                             required
                             disabled={isLoading}
                             value={store.name}
-                            onChange={(e) => updateStore(store.id, "name", e.target.value)}
+                            onChange={(e) =>
+                              updateStore(store.id, "name", e.target.value)
+                            }
                             placeholder="e.g. Accra Central Branch"
                             className="w-full border-b border-foreground/15 bg-transparent py-2 text-foreground outline-none placeholder-foreground/30 transition-colors hover:border-foreground/30 focus:border-primary"
                           />
@@ -399,13 +508,18 @@ export default function Onboarding() {
                         <div>
                           <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-foreground/35 mb-1">
                             <Phone size={10} />
-                            Phone <span className="text-foreground/20 normal-case font-normal tracking-normal">(optional)</span>
+                            Phone{" "}
+                            <span className="text-foreground/20 normal-case font-normal tracking-normal">
+                              (optional)
+                            </span>
                           </div>
                           <input
                             type="tel"
                             disabled={isLoading}
                             value={store.phone}
-                            onChange={(e) => updateStore(store.id, "phone", e.target.value)}
+                            onChange={(e) =>
+                              updateStore(store.id, "phone", e.target.value)
+                            }
                             placeholder="+233 XXX XXX XXX"
                             className="w-full border-b border-foreground/15 bg-transparent py-2 text-foreground outline-none placeholder-foreground/25 transition-colors hover:border-foreground/30 focus:border-primary"
                           />
@@ -415,13 +529,18 @@ export default function Onboarding() {
                         <div>
                           <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-foreground/35 mb-1">
                             <MapPin size={10} />
-                            Address <span className="text-foreground/20 normal-case font-normal tracking-normal">(optional)</span>
+                            Address{" "}
+                            <span className="text-foreground/20 normal-case font-normal tracking-normal">
+                              (optional)
+                            </span>
                           </div>
                           <input
                             type="text"
                             disabled={isLoading}
                             value={store.address}
-                            onChange={(e) => updateStore(store.id, "address", e.target.value)}
+                            onChange={(e) =>
+                              updateStore(store.id, "address", e.target.value)
+                            }
                             placeholder="123 High St, Accra"
                             className="w-full border-b border-foreground/15 bg-transparent py-2 text-foreground outline-none placeholder-foreground/25 transition-colors hover:border-foreground/30 focus:border-primary"
                           />
@@ -446,7 +565,9 @@ export default function Onboarding() {
                           label="Return Window"
                           options={RETURN_WINDOWS}
                           value={store.policy.returnWindow}
-                          onChange={(v) => updatePolicy(store.id, "returnWindow", v)}
+                          onChange={(v) =>
+                            updatePolicy(store.id, "returnWindow", v)
+                          }
                           disabled={isLoading}
                         />
                         {store.policy.returnWindow !== "No returns" && (
@@ -455,14 +576,18 @@ export default function Onboarding() {
                               label="Accepted Condition"
                               options={RETURN_CONDITIONS}
                               value={store.policy.returnCondition}
-                              onChange={(v) => updatePolicy(store.id, "returnCondition", v)}
+                              onChange={(v) =>
+                                updatePolicy(store.id, "returnCondition", v)
+                              }
                               disabled={isLoading}
                             />
                             <PolicyPill
                               label="Refund Method"
                               options={REFUND_TYPES}
                               value={store.policy.refundType}
-                              onChange={(v) => updatePolicy(store.id, "refundType", v)}
+                              onChange={(v) =>
+                                updatePolicy(store.id, "refundType", v)
+                              }
                               disabled={isLoading}
                             />
                           </>
@@ -496,11 +621,25 @@ export default function Onboarding() {
                 onChange={(e) => setTerms(e.target.checked)}
                 className="mt-0.5 h-4 w-4 shrink-0 rounded border-foreground/30 accent-primary cursor-pointer"
               />
-              <label htmlFor="terms" className="text-sm text-foreground/60 cursor-pointer leading-relaxed">
+              <label
+                htmlFor="terms"
+                className="text-sm text-foreground/60 cursor-pointer leading-relaxed"
+              >
                 I agree to the{" "}
-                <a href="#" className="font-medium text-primary hover:underline">Terms of Service</a>
-                {" "}and{" "}
-                <a href="#" className="font-medium text-primary hover:underline">Privacy Policy</a>.
+                <a
+                  href="#"
+                  className="font-medium text-primary hover:underline"
+                >
+                  Terms of Service
+                </a>{" "}
+                and{" "}
+                <a
+                  href="#"
+                  className="font-medium text-primary hover:underline"
+                >
+                  Privacy Policy
+                </a>
+                .
               </label>
             </div>
 
@@ -527,7 +666,10 @@ export default function Onboarding() {
                 ) : (
                   <>
                     Launch my Dashboard
-                    <ArrowRight className="transition-transform group-hover:translate-x-1" size={20} />
+                    <ArrowRight
+                      className="transition-transform group-hover:translate-x-1"
+                      size={20}
+                    />
                   </>
                 )}
               </MagneticButton>
@@ -536,7 +678,12 @@ export default function Onboarding() {
 
           <p className="stagger-item mt-6 text-center text-sm text-foreground/40">
             Wrong account?{" "}
-            <a href="/signup" className="text-primary hover:underline font-medium">Go back</a>
+            <a
+              href="/signup"
+              className="text-primary hover:underline font-medium"
+            >
+              Go back
+            </a>
           </p>
         </div>
       </div>

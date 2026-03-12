@@ -14,7 +14,11 @@ class ApiRequestError extends Error {
   status: number;
   details?: Record<string, string[]>;
 
-  constructor(message: string, status: number, details?: Record<string, string[]>) {
+  constructor(
+    message: string,
+    status: number,
+    details?: Record<string, string[]>,
+  ) {
     super(message);
     this.name = "ApiRequestError";
     this.status = status;
@@ -22,10 +26,7 @@ class ApiRequestError extends Error {
   }
 }
 
-async function request<T>(
-  path: string,
-  options: RequestInit = {}
-): Promise<T> {
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     credentials: "include", // Send session cookies with every request
@@ -39,7 +40,11 @@ async function request<T>(
 
   if (!res.ok) {
     const err = data as ApiError;
-    throw new ApiRequestError(err.error ?? "Request failed", res.status, err.details);
+    throw new ApiRequestError(
+      err.error ?? "Request failed",
+      res.status,
+      err.details,
+    );
   }
 
   return data as T;
@@ -71,15 +76,19 @@ export interface Retailer {
 
 export const retailerApi = {
   onboard: (payload: OnboardPayload) =>
-    request<{ retailer: Retailer }>("/api/retailer/onboard", {
+    request<{ retailer: Retailer }>("/retailer/onboard", {
       method: "POST",
       body: JSON.stringify(payload),
     }),
 
-  get: () => request<{ retailer: Retailer }>("/api/retailer"),
+  get: () => request<{ retailer: Retailer }>("/retailer"),
 
-  update: (payload: Partial<Pick<Retailer, "name" | "companyName" | "tin" | "website">>) =>
-    request<{ message: string }>("/api/retailer", {
+  update: (
+    payload: Partial<
+      Pick<Retailer, "name" | "companyName" | "tin" | "website">
+    >,
+  ) =>
+    request<{ message: string }>("/retailer", {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
@@ -116,7 +125,7 @@ export interface CreatedReceipt {
 
 export const receiptsApi = {
   create: (payload: CreateReceiptPayload) =>
-    request<{ receipt: CreatedReceipt; qrUrl: string }>("/api/receipts", {
+    request<{ receipt: CreatedReceipt; qrUrl: string }>("/receipts", {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -124,12 +133,11 @@ export const receiptsApi = {
   list: (params?: { storeId?: string; page?: number; status?: string }) => {
     const qs = new URLSearchParams(params as Record<string, string>).toString();
     return request<{ receipts: CreatedReceipt[]; page: number; limit: number }>(
-      `/api/receipts${qs ? `?${qs}` : ""}`
+      `/receipts${qs ? `?${qs}` : ""}`,
     );
   },
 
-  get: (id: string) =>
-    request<{ receipt: CreatedReceipt }>(`/api/receipts/${id}`),
+  get: (id: string) => request<{ receipt: CreatedReceipt }>(`/receipts/${id}`),
 };
 
 // ─── Stores ──────────────────────────────────────────────────────────────────
@@ -143,10 +151,10 @@ export interface Store {
 }
 
 export const storesApi = {
-  list: () => request<{ stores: Store[] }>("/api/stores"),
+  list: () => request<{ stores: Store[] }>("/stores"),
 
   create: (payload: Pick<Store, "name" | "phone" | "address">) =>
-    request<{ store: Store }>("/api/stores", {
+    request<{ store: Store }>("/stores", {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -162,20 +170,23 @@ export interface SubmitReturnPayload {
 
 export const returnsApi = {
   submit: (payload: SubmitReturnPayload) =>
-    request<{ returnRequest: { id: string; status: string } }>("/api/returns", {
+    request<{ returnRequest: { id: string; status: string } }>("/returns", {
       method: "POST",
       body: JSON.stringify(payload),
     }),
 
-  list: () => request<{ returns: unknown[] }>("/api/returns"),
+  list: () => request<{ returns: unknown[] }>("/returns"),
 
   approve: (id: string) =>
-    request<{ message: string; refundAmount: string }>(`/api/returns/${id}/approve`, {
-      method: "PATCH",
-    }),
+    request<{ message: string; refundAmount: string }>(
+      `/returns/${id}/approve`,
+      {
+        method: "PATCH",
+      },
+    ),
 
   reject: (id: string, reason?: string) =>
-    request<{ message: string }>(`/api/returns/${id}/reject`, {
+    request<{ message: string }>(`/returns/${id}/reject`, {
       method: "PATCH",
       body: JSON.stringify({ reason }),
     }),
