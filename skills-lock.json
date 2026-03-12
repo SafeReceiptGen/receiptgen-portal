@@ -5,6 +5,11 @@
       "source": "bbeierle12/skill-mcp-claude",
       "sourceType": "github",
       "computedHash": "1d4999cae81ed7af6270874408ce76edbea408ac0fe9f04e976a3f537e06de02"
+    },
+    "seo-audit": {
+      "source": "coreyhaines31/marketingskills",
+      "sourceType": "github",
+      "computedHash": "941f6f4db0f79248f6480256cf1838ed19bc1a0d70f499bb756f491142625cb4"
     }
   }
 }
