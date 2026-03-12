@@ -69,8 +69,9 @@ export const Hero = () => {
             className="mb-6 text-5xl font-bold leading-[1.1] tracking-tighter sm:text-7xl md:text-8xl lg:text-9xl font-display text-foreground"
             style={{ perspective: "1000px" }}
           >
-            <span className="inline-block">Post-Purchase</span>{" "}
-            <span className="inline-block text-primary">Made Simple.</span>
+            <span className="sr-only">Digital Receipts & Returns Management for Retailers</span>
+            <span className="inline-block" aria-hidden="true">Post-Purchase</span>{" "}
+            <span className="inline-block text-primary" aria-hidden="true">Made Simple.</span>
           </h1>
 
           <p
