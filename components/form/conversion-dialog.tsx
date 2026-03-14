@@ -11,9 +11,11 @@ import { authClient } from "@/lib/auth-client";
 export default function ConversionDialog({
   onClose,
   imgUrl,
+  receiptUrl,
 }: {
   onClose: () => void;
   imgUrl: string;
+  receiptUrl?: string; // Add receiptUrl as an optional prop
 }) {
   const [copied, setCopied] = React.useState(false);
   const { data: session } = authClient.useSession();
@@ -38,14 +40,31 @@ export default function ConversionDialog({
   const handleShare = async () => {
     if (navigator.share) {
       try {
-        const blob = await (await fetch(imgUrl)).blob();
-        const file = new File([blob], "receipt.png", { type: blob.type });
-        await navigator.share({ title: "Receipt", files: [file] });
+        if (receiptUrl) {
+          // Share the URL if it was provided
+          await navigator.share({ 
+            title: "Your SafeReceipt", 
+            text: "Here is your digital receipt",
+            url: receiptUrl 
+          });
+        } else {
+          // Fallback to sharing the image if no URL is provided
+          const blob = await (await fetch(imgUrl)).blob();
+          const file = new File([blob], "receipt.png", { type: blob.type });
+          await navigator.share({ title: "Receipt", files: [file] });
+        }
       } catch (error) {
         console.log("Error sharing", error);
       }
     } else {
-      alert("Sharing is not supported on this device/browser.");
+      // Fallback for browsers that don't support native share
+      if (receiptUrl) {
+        navigator.clipboard.writeText(receiptUrl).then(() => {
+          alert("Sharing not supported. Link copied to clipboard instead!");
+        });
+      } else {
+        alert("Sharing is not supported on this device/browser.");
+      }
     }
   };
 

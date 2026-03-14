@@ -2,6 +2,8 @@
 
 import { z } from "zod";
 import { ReceiptData } from "@/types";
+import { ReceiptForReturn } from "@/types/returns";
+import { addMockReceipt } from "@/lib/mock-data";
 
 // Zod schema — most fields are optional, validation is lenient
 const lineItemSchema = z.object({
@@ -97,6 +99,40 @@ export async function generateReceipt(
     }
 
     const data = await response.json();
+
+    // Transform form data into our backend schema type and save it
+    const data = result.data;
+    const orderId = data.orderId || `REC-${Date.now()}`;
+    
+    // Create the receipt record
+    const newReceipt: ReceiptForReturn = {
+      id: orderId,
+      receiptNumber: data.receiptNumber || `SR-${Math.floor(Math.random() * 10000)}`,
+      storeName: data.storeName,
+      storePhone: data.storePhone,
+      customerName: data.customerName,
+      items: data.items.map((item, index) => ({
+        id: item.id || `item-${index}`,
+        name: item.name,
+        detail: item.detail,
+        quantity: item.quantity,
+        price: item.price,
+        selected: false
+      })),
+      currency: data.currency,
+      subtotal: data.items.reduce((acc, item) => acc + (item.price * item.quantity), 0),
+      total: data.items.reduce((acc, item) => acc + (item.price * item.quantity), 0),
+      paymentMethod: data.paymentMethod,
+      purchasedAt: data.date ? new Date(data.date).toISOString() : new Date().toISOString(),
+      returnWindow: data.returnWindow,
+      returnCondition: data.returnCondition,
+      refundType: data.refundType,
+      isReturnable: data.returnWindow !== "No returns",
+      qrUrl: data.qrUrl || `https://safereceipts.com/receipt/${orderId}`,
+    };
+
+    // Save to our in-memory mock database
+    addMockReceipt(newReceipt);
 
     return {
       success: true,

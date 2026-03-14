@@ -7,6 +7,8 @@
 // import { FaqSection } from "@/components/landing/faq-section";
 // import { SignUpSection } from "@/components/landing/sign-up-section";
 // import { SiteFooter } from "@/components/landing/site-footer";
+
+import { Footer } from "@/components/landing/v2/Footer";
 import { Hero } from "@/components/landing/v2/Hero";
 import { ProblemSection } from "@/components/landing/v2/ProblemSection";
 import { SolutionSection } from "@/components/landing/v2/SolutionSection";
@@ -45,17 +47,7 @@ export default function LandingPage() {
       <HowItWorks />
       <ValueSection />
       <VisionSection />
-
-      {/* v1 Components */}
-      {/* <SiteHeader /> */}
-      {/* <HeroSection />
-      <FeaturesSection />
-      <HowItWorksSection />
-      <UseCasesSection />
-      <EarlyAccessSection />
-      <FaqSection />
-      <SignUpSection />
-      <SiteFooter /> */}
+      <Footer />
     </main>
   );
 }
