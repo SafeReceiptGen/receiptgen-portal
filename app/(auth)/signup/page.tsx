@@ -58,18 +58,21 @@ export default function Signup() {
   });
 
   const [state, formAction, pending] = useActionState(
-    async (prevState: AuthActionState, formData: FormData): Promise<AuthActionState> => {
+    async (
+      prevState: AuthActionState,
+      formData: FormData,
+    ): Promise<AuthActionState> => {
       setAuthError(null);
-      
+
       const result = await validateSignupAction(prevState, formData);
-      
+
       if (!result.success) {
         shakeForm();
         return result;
       }
-      
+
       const { email, password, firstName, lastName } = result.data;
-      
+
       try {
         const { error: signUpErr } = await authClient.signUp.email({
           email,
@@ -91,14 +94,17 @@ export default function Signup() {
       } catch (e: unknown) {
         console.error("Sign up error:", e);
         shakeForm();
-        setAuthError((e as Error).message || "Failed to connect to the server. Please check your connection and try again.");
+        setAuthError(
+          (e as Error).message ||
+            "Failed to connect to the server. Please check your connection and try again.",
+        );
         return { ...result, success: false };
       }
 
       navigate.push("/onboarding");
       return { ...result, success: true };
     },
-    { success: false, errors: null, data: null }
+    { success: false, errors: null, data: null },
   );
 
   const handleGoogleSignup = async () => {
@@ -107,10 +113,15 @@ export default function Signup() {
     try {
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/onboarding",
+        callbackURL:
+          (process.env.NEXT_PUBLIC_APP_URL || "https://getsafereceipts.com") +
+          "/onboarding",
       });
     } catch (err: unknown) {
-      setAuthError((err as Error).message || "Failed to connect to the server. Please check your connection and try again.");
+      setAuthError(
+        (err as Error).message ||
+          "Failed to connect to the server. Please check your connection and try again.",
+      );
       console.log(err);
     } finally {
       setIsGoogleLoading(false);
@@ -252,7 +263,9 @@ export default function Signup() {
                   defaultValue={(state.data?.firstName as string) || ""}
                 />
                 {state.errors?.firstName && (
-                  <p className="mt-1 text-xs text-destructive">{state.errors.firstName[0]}</p>
+                  <p className="mt-1 text-xs text-destructive">
+                    {state.errors.firstName[0]}
+                  </p>
                 )}
               </div>
               <div className="flex-1">
@@ -266,11 +279,13 @@ export default function Signup() {
                   defaultValue={(state.data?.lastName as string) || ""}
                 />
                 {state.errors?.lastName && (
-                  <p className="mt-1 text-xs text-destructive">{state.errors.lastName[0]}</p>
+                  <p className="mt-1 text-xs text-destructive">
+                    {state.errors.lastName[0]}
+                  </p>
                 )}
               </div>
             </div>
-            
+
             <div className="stagger-item">
               <Input
                 id="email"
@@ -282,10 +297,12 @@ export default function Signup() {
                 defaultValue={(state.data?.email as string) || ""}
               />
               {state.errors?.email && (
-                <p className="mt-1 text-xs text-destructive">{state.errors.email[0]}</p>
+                <p className="mt-1 text-xs text-destructive">
+                  {state.errors.email[0]}
+                </p>
               )}
             </div>
-            
+
             <div className="stagger-item">
               <Input
                 id="password"
@@ -297,7 +314,9 @@ export default function Signup() {
                 defaultValue={(state.data?.password as string) || ""}
               />
               {state.errors?.password && (
-                <p className="mt-1 text-xs text-destructive">{state.errors.password[0]}</p>
+                <p className="mt-1 text-xs text-destructive">
+                  {state.errors.password[0]}
+                </p>
               )}
             </div>
 

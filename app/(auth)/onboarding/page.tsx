@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import {
@@ -22,30 +22,53 @@ import { MagneticButton } from "@/components/landing/v2/MagneticButton";
 import { Input } from "@/components/ui/input-2";
 import { retailerApi, ApiRequestError } from "@/lib/api";
 
+import {
+  returnWindowEnum,
+  returnConditionEnum,
+  refundTypeEnum,
+} from "@/types/enums";
+import { authClient } from "@/lib/auth-client";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
 
 const RETURN_WINDOWS = [
-  "No returns",
-  "3 days",
-  "7 days",
-  "14 days",
-  "30 days",
-  "60 days",
-  "Custom",
+  { label: "No returns", value: returnWindowEnum[returnWindowEnum.none] },
+  { label: "3 days", value: returnWindowEnum[returnWindowEnum["3_days"]] },
+  { label: "7 days", value: returnWindowEnum[returnWindowEnum["7_days"]] },
+  { label: "14 days", value: returnWindowEnum[returnWindowEnum["14_days"]] },
+  { label: "30 days", value: returnWindowEnum[returnWindowEnum["30_days"]] },
+  // { label: "Custom", value: returnWindowEnum[returnWindowEnum.custom] },
 ] as const;
+
 const RETURN_CONDITIONS = [
-  "Unused",
-  "Original Packaging",
-  "Any Condition",
-  "Defective Only",
+  { label: "Unused", value: returnConditionEnum[returnConditionEnum.unused] },
+  {
+    label: "Original Packaging",
+    value: returnConditionEnum[returnConditionEnum.original_packaging],
+  },
+  {
+    label: "Any Condition",
+    value: returnConditionEnum[returnConditionEnum.any_condition],
+  },
+  {
+    label: "Defective Only",
+    value: returnConditionEnum[returnConditionEnum.defective_only],
+  },
 ] as const;
+
 const REFUND_TYPES = [
-  "Full Refund",
-  "Partial Refund",
-  "Store Credit",
-  "Exchange Only",
+  { label: "Full Refund", value: refundTypeEnum[refundTypeEnum.full_refund] },
+  {
+    label: "Partial Refund",
+    value: refundTypeEnum[refundTypeEnum.partial_refund],
+  },
+  { label: "Store Credit", value: refundTypeEnum[refundTypeEnum.store_credit] },
+  {
+    label: "Exchange Only",
+    value: refundTypeEnum[refundTypeEnum.exchange_only],
+  },
 ] as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -67,9 +90,9 @@ interface StoreEntry {
 }
 
 const DEFAULT_POLICY: StoreReturnPolicy = {
-  returnWindow: "7 days",
-  returnCondition: "Unused",
-  refundType: "Full Refund",
+  returnWindow: returnWindowEnum[returnWindowEnum["7_days"]],
+  returnCondition: returnConditionEnum[returnConditionEnum.unused],
+  refundType: refundTypeEnum[refundTypeEnum.full_refund],
 };
 
 const makeStore = (): StoreEntry => ({
@@ -92,7 +115,7 @@ function PolicyPill({
   disabled,
 }: {
   label: string;
-  options: readonly string[];
+  options: readonly { label: string; value: string }[];
   value: string;
   onChange: (v: string) => void;
   disabled: boolean;
@@ -105,17 +128,17 @@ function PolicyPill({
       <div className="flex flex-wrap gap-1.5">
         {options.map((opt) => (
           <button
-            key={opt}
+            key={opt.value}
             type="button"
             disabled={disabled}
-            onClick={() => onChange(opt)}
+            onClick={() => onChange(opt.value)}
             className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors disabled:opacity-50 ${
-              value === opt
+              value === opt.value
                 ? "border-primary bg-primary text-white"
                 : "border-foreground/15 bg-transparent text-foreground/55 hover:border-primary/40 hover:text-primary/80"
             }`}
           >
-            {opt}
+            {opt.label}
           </button>
         ))}
       </div>
@@ -142,11 +165,21 @@ export default function Onboarding() {
   const [stores, setStores] = useState<StoreEntry[]>([makeStore()]);
 
   const navigate = useRouter();
+  const { data, isPending } = authClient.useSession();
+
+  useEffect(() => {
+    if (!isPending && data?.user?.retailerId) {
+      navigate.push("/dashboard");
+    }
+  }, [data, isPending, navigate]);
 
   // ── GSAP entrance ─────────────────────────────────────────────────────────
 
   const { contextSafe } = useGSAP(
     () => {
+      // Don't run entrance animation until we're actually showing the content
+      if (isPending) return;
+      
       const tl = gsap.timeline();
       tl.fromTo(
         leftPanelRef.current,
@@ -172,9 +205,8 @@ export default function Onboarding() {
         { scaleX: 1, duration: 1.4, ease: "power3.out", delay: 0.3 },
       );
     },
-    { scope: containerRef },
+    { scope: containerRef, dependencies: [isPending] },
   );
-
   const shakeForm = contextSafe(() => {
     gsap.fromTo(
       formRef.current,
@@ -273,7 +305,7 @@ export default function Onboarding() {
     setIsLoading(true);
 
     try {
-      await retailerApi.onboard({
+      const res = await retailerApi.onboard({
         businessName,
         stores: stores.map((s) => ({
           name: s.name,
@@ -292,7 +324,9 @@ export default function Onboarding() {
         ease: "power2.in",
         onComplete: () => navigate.push("/dashboard"),
       });
+      console.log("onboard res", res);
     } catch (err) {
+      console.log("onboard err", err);
       setIsLoading(false);
       setError(
         err instanceof ApiRequestError
@@ -303,9 +337,31 @@ export default function Onboarding() {
     }
   };
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Render
-  // ─────────────────────────────────────────────────────────────────────────
+  if (isPending) {
+    return (
+      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative flex h-16 w-16 items-center justify-center">
+            {/* Outer ring */}
+            <div className="absolute inset-0 animate-[spin_3s_linear_infinite] rounded-full border border-primary/20" />
+            {/* Inner dashed/spinning ring */}
+            <div className="absolute inset-2 animate-[spin_1s_ease-in-out_infinite] rounded-full border-2 border-primary border-t-transparent border-l-transparent" />
+            {/* Center dot */}
+            <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-foreground/40 font-mono">
+              Authenticating
+            </p>
+            <p className="text-[10px] text-foreground/25 font-mono">
+              Verifying credentials
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       ref={containerRef}
@@ -570,7 +626,8 @@ export default function Onboarding() {
                           }
                           disabled={isLoading}
                         />
-                        {store.policy.returnWindow !== "No returns" && (
+                        {store.policy.returnWindow !==
+                          returnWindowEnum[returnWindowEnum.none] && (
                           <>
                             <PolicyPill
                               label="Accepted Condition"

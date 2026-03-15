@@ -6,7 +6,8 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 interface ApiError {
-  error: string;
+  success: false;
+  message: string;
   details?: Record<string, string[]>;
 }
 
@@ -41,7 +42,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (!res.ok) {
     const err = data as ApiError;
     throw new ApiRequestError(
-      err.error ?? "Request failed",
+      err.message ?? "Request failed",
       res.status,
       err.details,
     );

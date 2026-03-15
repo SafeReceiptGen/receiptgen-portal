@@ -19,15 +19,16 @@ export default function LandingPage() {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "SafeReceipts",
-    "operatingSystem": "Web browser",
-    "applicationCategory": "BusinessApplication",
-    "description": "Digital receipts and returns management system for retailers to prevent fraud, speed up refunds, and gain insights.",
-    "offers": {
+    name: "SafeReceipts",
+    operatingSystem: "Web browser",
+    applicationCategory: "BusinessApplication",
+    description:
+      "Digital receipts and returns management system for retailers to prevent fraud, speed up refunds, and gain insights.",
+    offers: {
       "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    }
+      price: "0",
+      priceCurrency: "USD",
+    },
   };
 
   return (
