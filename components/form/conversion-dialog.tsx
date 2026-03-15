@@ -5,6 +5,7 @@ import { Share2, Download, Check, Copy, X, ArrowRight } from "lucide-react";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export default function ConversionDialog({
   onClose,
@@ -14,7 +15,7 @@ export default function ConversionDialog({
   imgUrl: string;
 }) {
   const [copied, setCopied] = React.useState(false);
-
+  const router = useRouter();
   const handleCopyImage = () => {
     try {
       fetch(imgUrl)
@@ -125,6 +126,7 @@ export default function ConversionDialog({
             </button>
             <Button
               size="sm"
+              onClick={() => router.push("/signup")}
               className="h-8 cursor-pointer rounded-full bg-blue-700 px-4 text-[13px] font-medium text-white hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-white/90"
             >
               Create free account
