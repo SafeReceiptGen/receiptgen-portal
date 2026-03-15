@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   description:
     "Replace paper receipts with secure, verifiable digital proof of purchase and streamline returns management for retailers. Prevent fraud, speed up refunds, and gain insights.",
   keywords: [
+    "safe receipts",
+    "getsafereceipts",
     "digital receipts",
     "returns management software",
     "retail returns solution",
