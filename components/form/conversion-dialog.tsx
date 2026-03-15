@@ -6,6 +6,7 @@ import { Share2, Download, Check, Copy, X, ArrowRight } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 
 export default function ConversionDialog({
   onClose,
@@ -15,6 +16,7 @@ export default function ConversionDialog({
   imgUrl: string;
 }) {
   const [copied, setCopied] = React.useState(false);
+  const { data: session } = authClient.useSession();
   const router = useRouter();
   const handleCopyImage = () => {
     try {
@@ -109,31 +111,42 @@ export default function ConversionDialog({
         <div className="mx-6 h-px bg-slate-100 dark:bg-white/8" />
 
         {/* Soft conversion nudge */}
-        <div className="px-6 py-5">
-          <p className="text-[13px] font-medium text-slate-700 dark:text-white/80">
-            Keep your receipts organized
-          </p>
-          <p className="mt-1 text-[12px] leading-relaxed text-slate-400 dark:text-white/40">
-            Create a free account to save receipts, track returns, and access
-            them from any device.
-          </p>
-          <div className="mt-4 flex items-center gap-3">
-            <button
-              onClick={onClose}
-              className="text-[13px] text-slate-400 transition-colors hover:text-slate-600 dark:text-white/40 dark:hover:text-white/70"
-            >
-              Maybe later
-            </button>
-            <Button
-              size="sm"
-              onClick={() => router.push("/signup")}
-              className="h-8 cursor-pointer rounded-full bg-blue-700 px-4 text-[13px] font-medium text-white hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-white/90"
-            >
-              Create free account
-              <ArrowRight className="ml-1.5 size-3.5" />
-            </Button>
+        {!session ? (
+          <div className="px-6 py-5">
+            <p className="text-[13px] font-medium text-slate-700 dark:text-white/80">
+              Keep your receipts organized
+            </p>
+            <p className="mt-1 text-[12px] leading-relaxed text-slate-400 dark:text-white/40">
+              Create a free account to save receipts, track returns, and access
+              them from any device.
+            </p>
+            <div className="mt-4 flex items-center gap-3">
+              <button
+                onClick={onClose}
+                className="text-[13px] text-slate-400 transition-colors hover:text-slate-600 dark:text-white/40 dark:hover:text-white/70"
+              >
+                Maybe later
+              </button>
+              <Button
+                size="sm"
+                onClick={() => router.push("/signup")}
+                className="h-8 cursor-pointer rounded-full bg-blue-700 px-4 text-[13px] font-medium text-white hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-white/90"
+              >
+                Create free account
+                <ArrowRight className="ml-1.5 size-3.5" />
+              </Button>
+            </div>
           </div>
-        </div>
+        ) : (
+          <Button
+            size="sm"
+            onClick={() => router.push("/dashboard")}
+            className="h-8 cursor-pointer rounded-full bg-blue-700 px-4 text-[13px] font-medium text-white hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-white/90"
+          >
+            Go to dashboard
+            <ArrowRight className="ml-1.5 size-3.5" />
+          </Button>
+        )}
       </DialogContent>
     </Dialog>
   );

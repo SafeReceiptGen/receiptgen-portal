@@ -24,7 +24,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (isAuthPath && sessionCookie) {
-    const homeURL = new URL("/", request.url); // will change the home URL to dashboard soon
+    const homeURL = new URL("/dashboard", request.url);
     return NextResponse.redirect(homeURL);
   }
 
