@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import Link from "next/link";
-import ReceiptFormScreen from "./form/form-screen";
+// import ReceiptFormScreen from "./form/form-screen";
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
