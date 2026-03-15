@@ -10,23 +10,23 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://safereceipts.com"), // Update with your domain
+  metadataBase: new URL("https://getsafereceipts.com"), // Update with your domain
   title: {
-    default: "SafeReceipts - Professional Receipt Generator with QR Codes",
+    default:
+      "SafeReceipts - Digital Receipts & Returns Management for Retailers",
     template: "%s | SafeReceipts",
   },
   description:
-    "Generate professional digital receipts in seconds with QR codes, PDF export and live preview. Perfect for freelancers, small businesses and event organizers. Free to start.",
+    "Replace paper receipts with secure, verifiable digital proof of purchase and streamline returns management for retailers. Prevent fraud, speed up refunds, and gain insights.",
   keywords: [
-    "receipt generator",
-    "digital receipt",
-    "QR code receipt",
-    "PDF receipt",
-    "online receipt maker",
-    "receipt template",
-    "business receipt",
-    "invoice generator",
-    "free receipt generator",
+    "digital receipts",
+    "returns management software",
+    "retail returns solution",
+    "prevent return fraud",
+    "digital proof of purchase",
+    "receipt generator app",
+    "e-receipt system",
+    "Ghana retail software",
   ],
   authors: [{ name: "SafeReceipts Team" }],
   creator: "SafeReceipts",
@@ -45,33 +45,33 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://safereceipts.com",
-    title: "SafeReceipts - Professional Receipt Generator with QR Codes",
+    url: "https://getsafereceipts.com",
+    title: "SafeReceipts - Digital Receipts & Returns Management for Retailers",
     description:
-      "Generate professional digital receipts in seconds with QR codes, PDF export and live preview. Free to start.",
+      "Replace paper receipts with secure, verifiable digital proof of purchase and streamline returns management for retailers.",
     siteName: "SafeReceipts",
     images: [
       {
-        url: "/og-image.jpg", // Create this image (1200x630px)
+        url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "SafeReceipts - Professional Receipt Generator",
+        alt: "SafeReceipts - Digital Receipts & Returns Management",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "SafeReceipts - Professional Receipt Generator",
+    title: "SafeReceipts - Digital Receipts & Returns Management",
     description:
-      "Generate professional digital receipts in seconds with QR codes and PDF export.",
-    creator: "@safereceipts", // Update with your Twitter handle
-    images: ["/twitter-image.jpg"], // Create this image (1200x600px)
+      "Replace paper receipts with secure digital proof of purchase and streamline returns management.",
+    creator: "@safereceipts", // Update with our Twitter handle
+    images: ["/og-image.png"], //
   },
   verification: {
     google: "your-google-verification-code", // Add after Google Search Console setup
   },
   alternates: {
-    canonical: "https://SafeReceipts.com",
+    canonical: "https://getsafereceipts.com",
   },
 };
 
@@ -83,8 +83,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/favicon.png" sizes="any" />
+        <link rel="icon" href="/favicon.png" type="image/png" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
       </head>

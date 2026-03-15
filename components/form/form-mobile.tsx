@@ -6,6 +6,9 @@ import {
   Trash2,
   ReceiptCent,
   Loader2,
+  Save,
+  Store as StoreIcon,
+  ChevronDown,
   Calendar as CalendarIcon,
 } from "lucide-react";
 import { ReceiptData, LineItem } from "@/types";
@@ -31,6 +34,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ActionState } from "./actions";
+import { useStores } from "@/hooks/use-stores";
 
 interface MobileWizardProps {
   data: ReceiptData;
@@ -39,6 +43,9 @@ interface MobileWizardProps {
   formAction: (payload: FormData) => void;
   pending: boolean;
   actionState: ActionState;
+  isAuthenticated: boolean;
+  onGuestSave: () => void;
+  guestSaved: boolean;
 }
 
 const STEPS = [
@@ -88,9 +95,13 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
   formAction,
   pending,
   actionState,
+  isAuthenticated,
+  onGuestSave,
+  guestSaved,
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const { isExiting, isOpening } = useExpandableScreen();
+  const { stores: userStores, isLoading: storesLoading } = useStores(isAuthenticated);
 
   const handleChange = (field: keyof ReceiptData, value: any) => {
     onChange({ ...data, [field]: value });
@@ -162,6 +173,47 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
           <div
             className={`space-y-6 ${!isExiting && !isOpening ? "animate-in slide-in-from-right fade-in duration-300" : ""}`}
           >
+            {/* Store picker — authenticated users */}
+            {isAuthenticated && (
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-white/70">
+                  <StoreIcon size={13} />
+                  Your Store
+                </Label>
+                {storesLoading ? (
+                  <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-white/35">
+                    <div className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
+                    Loading stores…
+                  </div>
+                ) : userStores.length > 0 ? (
+                  <div className="relative">
+                    <select
+                      className="w-full appearance-none rounded-xl bg-slate-50 border border-slate-200 px-4 py-3.5 pr-10 text-base text-slate-900 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 dark:bg-white/5 dark:border-white/10 dark:text-white"
+                      value={userStores.find(
+                        (s) => s.name === data.storeName
+                      )?.id ?? ""}
+                      onChange={(e) => {
+                        const selected = userStores.find((s) => s.id === e.target.value);
+                        if (selected) {
+                          onChange({ ...data, storeName: selected.name, storePhone: selected.phone ?? "" });
+                        }
+                      }}
+                    >
+                      <option value="" disabled>Pick a store…</option>
+                      {userStores.map((s) => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={16} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/40" />
+                  </div>
+                ) : (
+                  <p className="rounded-xl border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-400 dark:border-white/10 dark:text-white/30">
+                    No stores yet — fill in the fields below.
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label className="text-sm text-slate-600 dark:text-white/70">
                 Store Name
@@ -453,7 +505,7 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
 
         {currentStep === 3 && (
           <div className="h-full -mx-6 -mt-6">
-            <ReceiptPreview data={data} ref={ref} />
+            <ReceiptPreview data={data} ref={ref} showQr={isAuthenticated && !!data.qrUrl} />
           </div>
         )}
       </div>
@@ -484,7 +536,7 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
             >
               Next Step <ChevronRight size={20} />
             </button>
-          ) : (
+          ) : isAuthenticated ? (
             <form action={formAction} className="flex-1">
               <button
                 type="submit"
@@ -503,6 +555,22 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                 )}
               </button>
             </form>
+          ) : (
+            <button
+              type="button"
+              onClick={onGuestSave}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-100 py-4 text-lg font-bold text-slate-700 ring-1 ring-slate-200 dark:border-white/10 dark:bg-white/5 dark:text-white/80"
+            >
+              {guestSaved ? (
+                <>
+                  <Save size={20} className="text-green-500" /> Saved!
+                </>
+              ) : (
+                <>
+                  <Save size={20} /> Save & Download
+                </>
+              )}
+            </button>
           )}
         </div>
       </div>

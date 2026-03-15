@@ -38,8 +38,11 @@ const receiptSchema = z.object({
 export type ActionState = {
   success: boolean;
   message: string;
+  qrUrl?: string;
   errors?: Record<string, string[] | undefined>;
 };
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 export async function generateReceipt(
   receiptData: ReceiptData,
@@ -47,7 +50,7 @@ export async function generateReceipt(
   _formData: FormData,
 ): Promise<ActionState> {
   try {
-    // Validate the receipt data against the schema
+    // 1. Validate client-side data first
     const result = receiptSchema.safeParse(receiptData);
 
     if (!result.success) {
@@ -60,17 +63,45 @@ export async function generateReceipt(
       };
     }
 
-    // Simulate backend API call (1.4s delay)
-    await new Promise((resolve) => setTimeout(resolve, 1400));
+    // 2. Send to Express backend
+    const response = await fetch(`${API_URL}/api/receipts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        // TODO: replace storeId with the real storeId from the user's session once dashboard is built
+        storeId: result.data.orderId || "default",
+        receiptNumber: result.data.receiptNumber,
+        date: result.data.date || new Date().toISOString(),
+        orderId: result.data.orderId,
+        currency: result.data.currency,
+        vatRate: result.data.vatRate,
+        paymentMethod: result.data.paymentMethod,
+        customerName: result.data.customerName,
+        marketingText: result.data.marketingText,
+        items: result.data.items.map((item) => ({
+          name: item.name,
+          detail: item.detail,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+      }),
+    });
 
-    // Log the validated data to the server console
-    console.log("=== Receipt Generated ===");
-    console.log(JSON.stringify(result.data, null, 2));
-    console.log("=========================");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return {
+        success: false,
+        message: errorData.error ?? "Failed to save receipt. Please try again.",
+      };
+    }
+
+    const data = await response.json();
 
     return {
       success: true,
       message: "Receipt generated successfully!",
+      qrUrl: data.qrUrl,
     };
   } catch (error) {
     console.error("Receipt generation failed:", error);
