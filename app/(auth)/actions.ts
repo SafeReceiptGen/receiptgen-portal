@@ -23,12 +23,12 @@ export type AuthActionState = {
 
 export async function validateSignupAction(
   prevState: AuthActionState,
-  formData: FormData
+  formData: FormData,
 ): Promise<AuthActionState> {
   const data = Object.fromEntries(formData.entries());
-  
+
   const validatedFields = signupSchema.safeParse(data);
-  
+
   if (!validatedFields.success) {
     return {
       success: false,
@@ -37,7 +37,7 @@ export async function validateSignupAction(
       message: "Please fix the errors below.",
     };
   }
-  
+
   return {
     success: true,
     errors: null,
@@ -47,12 +47,12 @@ export async function validateSignupAction(
 
 export async function validateLoginAction(
   prevState: AuthActionState,
-  formData: FormData
+  formData: FormData,
 ): Promise<AuthActionState> {
   const data = Object.fromEntries(formData.entries());
-  
+
   const validatedFields = loginSchema.safeParse(data);
-  
+
   if (!validatedFields.success) {
     return {
       success: false,
@@ -61,7 +61,7 @@ export async function validateLoginAction(
       message: "Please fix the errors below.",
     };
   }
-  
+
   return {
     success: true,
     errors: null,
