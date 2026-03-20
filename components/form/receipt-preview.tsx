@@ -2,6 +2,8 @@ import React, { useMemo } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Grip, RotateCcw } from "lucide-react";
 import { ReceiptData } from "@/types";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 interface ReceiptPreviewProps {
   data: ReceiptData;
@@ -46,6 +48,17 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
       ? data.customReturnWindow
       : data.returnWindow;
   const hasPolicy = data.returnWindow !== "No returns";
+
+  const [origin, setOrigin] = useState("https://safereceipts.com");
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setOrigin(window.location.origin);
+    }
+  }, []);
+
+  const dynamicQrUrl = data.qrUrl && !data.qrUrl.includes("safereceipt.com")
+    ? data.qrUrl
+    : `${origin}/receipt/${data.orderId}`;
 
   return (
     <div className="flex items-start justify-center w-full h-full p-8 overflow-auto overscroll-contain custom-scrollbar">
@@ -180,16 +193,17 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                     </p>
                   </div>
                 )}
-
-                <p className="text-[10px] text-zinc-400 mt-3">
-                  Scan for {hasPolicy ? "return" : "details"}
-                </p>
+                {hasPolicy && (
+                  <p className="mt-4 text-[10px] font-medium text-zinc-500">
+                    Scan to view receipt or start a return
+                  </p>
+                )}
               </div>
               {/* QR Code — only rendered when authenticated and a real URL exists */}
               {showQr ? (
                 <div className="p-2 border border-zinc-200 rounded-lg bg-white shrink-0">
                   <QRCodeSVG
-                    value={data.qrUrl || "https://getsafereceipts.com"}
+                    value={dynamicQrUrl}
                     size={80}
                     level="M"
                     fgColor="#18181b"

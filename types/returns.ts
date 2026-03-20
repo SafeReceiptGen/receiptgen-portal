@@ -1,0 +1,141 @@
+// ─── ReturnFlow Type Definitions ───────────────────────────────────────────────
+// Consistent with the existing types.ts pattern: interfaces + constants + enums.
+
+export type ReturnStatus = "PENDING" | "COLLECTED" | "IN_TRANSIT" | "WITH_RETAILER" | "APPROVED" | "REJECTED" | "REFUNDED";
+
+export type ReturnReason = "DEFECTIVE" | "WRONG_ITEM" | "CHANGED_MIND" | "DAMAGED_IN_DELIVERY" | "OTHER";
+
+export type RefundMethod = "ORIGINAL_PAYMENT" | "STORE_CREDIT" | "BANK_TRANSFER" | "MOBILE_MONEY";
+
+export type LogisticsMethod = "HOME_PICKUP" | "DROP_OFF";
+
+export type RejectedAction = "SELL_TO_PLATFORM" | "RETURN_ITEMS" | "CLOSE_CASE";
+
+export interface ReturnItem {
+  id: string;
+  name: string;
+  detail: string;
+  quantity: number;
+  price: number;
+  selected: boolean;
+}
+
+export interface PudoPoint {
+  id: string;
+  name: string;
+  address: string;
+}
+
+export interface ReturnLogistics {
+  method: LogisticsMethod;
+  pudoPointId?: string;
+  fee: number;
+  timeSlot: string;
+  phoneNumber: string;
+  phoneCountry: string;
+}
+
+export interface ReturnActivityLog {
+  id: string;
+  action: string;
+  performedBy: string;
+  notes?: string;
+  createdAt: string; // ISO string
+}
+
+export interface ReturnRequest {
+  id: string;
+  returnNumber: string;
+  receiptId: string;
+  retailerName: string;
+  retailerLogo?: string;
+  customerName: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  items: ReturnItem[];
+  returnReason: ReturnReason;
+  reasonDescription?: string;
+  photoUrls: string[];
+  status: ReturnStatus;
+  isEligible: boolean;
+  logistics: ReturnLogistics;
+  refundAmount: number;
+  refundMethod?: RefundMethod;
+  rejectionReason?: string;
+  rejectedAction?: RejectedAction;
+  currency: string;
+  requestedAt: string; // ISO string
+  collectedAt?: string;
+  inTransitAt?: string;
+  withRetailerAt?: string;
+  reviewedAt?: string;
+  resolvedAt?: string;
+  activityLog: ReturnActivityLog[];
+}
+
+// Receipt type for the return flow (viewing a receipt before requesting a return)
+export interface ReceiptForReturn {
+  id: string;
+  receiptNumber: string;
+  storeName: string;
+  storePhone: string;
+  storeLogo?: string;
+  customerName: string;
+  items: ReturnItem[];
+  currency: string;
+  subtotal: number;
+  total: number;
+  paymentMethod: string;
+  purchasedAt: string; // ISO string
+  returnWindow: string;
+  returnCondition: string;
+  refundType: string;
+  isReturnable: boolean;
+  qrUrl: string;
+}
+
+// ─── Display Helpers ──────────────────────────────────────────────────────────
+
+export const RETURN_REASON_LABELS: Record<ReturnReason, string> = {
+  DEFECTIVE: "Defective",
+  WRONG_ITEM: "Wrong Item",
+  CHANGED_MIND: "Changed Mind",
+  DAMAGED_IN_DELIVERY: "Damaged in Delivery",
+  OTHER: "Other",
+};
+
+export const RETURN_STATUS_LABELS: Record<ReturnStatus, string> = {
+  PENDING: "Pending",
+  COLLECTED: "Collected",
+  IN_TRANSIT: "In Transit",
+  WITH_RETAILER: "With Retailer",
+  APPROVED: "Approved",
+  REJECTED: "Rejected",
+  REFUNDED: "Refunded",
+};
+
+export const REFUND_METHOD_LABELS: Record<RefundMethod, string> = {
+  ORIGINAL_PAYMENT: "Original Payment Method",
+  STORE_CREDIT: "Store Credit",
+  BANK_TRANSFER: "Bank Transfer",
+  MOBILE_MONEY: "Mobile Money",
+};
+
+export const LOGISTICS_METHOD_LABELS: Record<LogisticsMethod, string> = {
+  HOME_PICKUP: "Home Pick-Up",
+  DROP_OFF: "Drop Off",
+};
+
+export const RETURN_STATUS_STEPS: ReturnStatus[] = [
+  "PENDING",
+  "COLLECTED",
+  "IN_TRANSIT",
+  "WITH_RETAILER",
+];
+
+export const TIME_SLOTS = [
+  "9:00 AM - 12:00 PM",
+  "12:00 PM - 3:00 PM",
+  "3:00 PM - 6:00 PM",
+  "6:00 PM - 9:00 PM",
+];

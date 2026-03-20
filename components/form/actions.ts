@@ -2,6 +2,8 @@
 
 import { z } from "zod";
 import { ReceiptData } from "@/types";
+import { ReceiptForReturn } from "@/types/returns";
+import { addMockReceipt } from "@/lib/mock-data";
 
 // Zod schema — most fields are optional, validation is lenient
 const lineItemSchema = z.object({
@@ -96,12 +98,46 @@ export async function generateReceipt(
       };
     }
 
-    const data = await response.json();
+    const apiData = await response.json();
+
+    // Transform form data into our backend schema type and save it
+    const formData = result.data;
+    const orderId = formData.orderId || `REC-${Date.now()}`;
+    
+    // Create the receipt record
+    const newReceipt: ReceiptForReturn = {
+      id: orderId,
+      receiptNumber: formData.receiptNumber || `SR-${Math.floor(Math.random() * 10000)}`,
+      storeName: formData.storeName,
+      storePhone: formData.storePhone,
+      customerName: formData.customerName,
+      items: formData.items.map((item, index) => ({
+        id: item.id || `item-${index}`,
+        name: item.name,
+        detail: item.detail,
+        quantity: item.quantity,
+        price: item.price,
+        selected: false
+      })),
+      currency: formData.currency,
+      subtotal: formData.items.reduce((acc: any, item: any) => acc + (item.price * item.quantity), 0),
+      total: formData.items.reduce((acc: any, item: any) => acc + (item.price * item.quantity), 0),
+      paymentMethod: formData.paymentMethod,
+      purchasedAt: formData.date ? new Date(formData.date).toISOString() : new Date().toISOString(),
+      returnWindow: formData.returnWindow,
+      returnCondition: formData.returnCondition,
+      refundType: formData.refundType,
+      isReturnable: formData.returnWindow !== "No returns",
+      qrUrl: formData.qrUrl || `https://safereceipts.com/receipt/${orderId}`,
+    };
+
+    // Save to our in-memory mock database
+    addMockReceipt(newReceipt);
 
     return {
       success: true,
       message: "Receipt generated successfully!",
-      qrUrl: data.qrUrl,
+      qrUrl: formData.qrUrl,
     };
   } catch (error) {
     console.error("Receipt generation failed:", error);
