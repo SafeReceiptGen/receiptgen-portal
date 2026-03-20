@@ -98,20 +98,20 @@ export async function generateReceipt(
       };
     }
 
-    const data = await response.json();
+    const apiData = await response.json();
 
     // Transform form data into our backend schema type and save it
-    const data = result.data;
-    const orderId = data.orderId || `REC-${Date.now()}`;
+    const formData = result.data;
+    const orderId = formData.orderId || `REC-${Date.now()}`;
     
     // Create the receipt record
     const newReceipt: ReceiptForReturn = {
       id: orderId,
-      receiptNumber: data.receiptNumber || `SR-${Math.floor(Math.random() * 10000)}`,
-      storeName: data.storeName,
-      storePhone: data.storePhone,
-      customerName: data.customerName,
-      items: data.items.map((item, index) => ({
+      receiptNumber: formData.receiptNumber || `SR-${Math.floor(Math.random() * 10000)}`,
+      storeName: formData.storeName,
+      storePhone: formData.storePhone,
+      customerName: formData.customerName,
+      items: formData.items.map((item, index) => ({
         id: item.id || `item-${index}`,
         name: item.name,
         detail: item.detail,
@@ -119,16 +119,16 @@ export async function generateReceipt(
         price: item.price,
         selected: false
       })),
-      currency: data.currency,
-      subtotal: data.items.reduce((acc, item) => acc + (item.price * item.quantity), 0),
-      total: data.items.reduce((acc, item) => acc + (item.price * item.quantity), 0),
-      paymentMethod: data.paymentMethod,
-      purchasedAt: data.date ? new Date(data.date).toISOString() : new Date().toISOString(),
-      returnWindow: data.returnWindow,
-      returnCondition: data.returnCondition,
-      refundType: data.refundType,
-      isReturnable: data.returnWindow !== "No returns",
-      qrUrl: data.qrUrl || `https://safereceipts.com/receipt/${orderId}`,
+      currency: formData.currency,
+      subtotal: formData.items.reduce((acc: any, item: any) => acc + (item.price * item.quantity), 0),
+      total: formData.items.reduce((acc: any, item: any) => acc + (item.price * item.quantity), 0),
+      paymentMethod: formData.paymentMethod,
+      purchasedAt: formData.date ? new Date(formData.date).toISOString() : new Date().toISOString(),
+      returnWindow: formData.returnWindow,
+      returnCondition: formData.returnCondition,
+      refundType: formData.refundType,
+      isReturnable: formData.returnWindow !== "No returns",
+      qrUrl: formData.qrUrl || `https://safereceipts.com/receipt/${orderId}`,
     };
 
     // Save to our in-memory mock database
@@ -137,7 +137,7 @@ export async function generateReceipt(
     return {
       success: true,
       message: "Receipt generated successfully!",
-      qrUrl: data.qrUrl,
+      qrUrl: formData.qrUrl,
     };
   } catch (error) {
     console.error("Receipt generation failed:", error);
