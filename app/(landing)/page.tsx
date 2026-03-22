@@ -25,7 +25,7 @@ export default function LandingPage() {
     operatingSystem: "Web browser",
     applicationCategory: "BusinessApplication",
     description:
-      "Digital receipts and returns management system for retailers to prevent fraud, speed up refunds, and gain insights.",
+      "Returns management powered by digital receipts for faster verification, smoother workflows, and better post-purchase experiences. ",
     offers: {
       "@type": "Offer",
       price: "0",

@@ -20,19 +20,19 @@ const problems = [
     icon: <Store className="mb-4 h-12 w-12 text-primary" />,
     items: [
       {
-        text: "Customers lose receipts leading to disputes at the returns desk.",
+        text: "Lost receipts slow down return verification and create disputes at the returns desk.",
         icon: <FileWarning size={20} />,
       },
       {
-        text: "Fake or reused receipts causes fraud losses.",
+        text: "Fake or reused receipts increase fraud and unnecessary refund losses.",
         icon: <ShieldAlert size={20} />,
       },
       {
-        text: "Manual return approvals wastes significant staff time.",
+        text: "Manual return approvals waste staff time and delay the customer experience.",
         icon: <Clock size={20} />,
       },
       {
-        text: "No clear data on why products are actually being returned.",
+        text: "Limited visibility makes it hard to understand return patterns and product issues.",
         icon: <SearchX size={20} />,
       },
     ],
@@ -42,16 +42,16 @@ const problems = [
     icon: <UserX className="mb-4 h-12 w-12 text-primary" />,
     items: [
       {
-        text: "Paper receipts fade or get lost.",
+        text: "Paper receipts fade, get lost, or are unavailable when a return is needed..",
         icon: <FileWarning size={20} />,
       },
       {
-        text: "Returns are stressful and inconsistent.",
+        text: "Returns feel inconsistent and stressful when purchase verification takes too long.",
         icon: <SearchX size={20} />,
       },
-      { text: "Refunds are slow and unclear.", icon: <Clock size={20} /> },
+      { text: "Refunds are slow, unclear, and difficult to track.", icon: <Clock size={20} /> },
       {
-        text: "No easy way to track warranties.",
+        text: "There is no simple way to keep purchase records ready for warranties or future returns.",
         icon: <ShieldAlert size={20} />,
       },
     ],
@@ -126,10 +126,10 @@ export const ProblemSection = () => {
       <div className="container mx-auto px-6 md:px-12">
         <div className="problem-title mb-20 text-center">
           <h2 className="mb-6 text-4xl font-bold tracking-tighter md:text-6xl lg:text-7xl font-display text-foreground">
-            The <span className="text-primary">Problem</span>
+            Returns Shouldn&apos;t Be <span className="text-primary">This Hard</span>
           </h2>
           <p className="mx-auto max-w-2xl text-lg text-foreground/70 md:text-xl">
-            The current state of post-purchase is broken for everyone involved.
+            Lost receipts, slow approvals, and manual workflows make returns frustrating for customers and expensive for retailers.
           </p>
         </div>
 

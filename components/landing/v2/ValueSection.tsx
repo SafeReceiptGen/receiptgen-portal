@@ -19,53 +19,62 @@ gsap.registerPlugin(ScrollTrigger);
 const retailerValues = [
   {
     title: "Reduced Fraud",
-    desc: "Each receipt is uniquely verified. Prevents reuse or fake paper receipts.",
+    desc: "Verified digital receipts make it harder to reuse fake or duplicate proof of purchase during returns.",
     icon: <Shield size={24} />,
   },
   {
     title: "Faster Returns",
-    desc: "No checking faded paper slips. Clear purchase history. Structured approval flow.",
+    desc: "Instant purchase verification speeds up approvals and reduces delays at the returns desk.",
     icon: <Zap size={24} />,
   },
   {
     title: "Lower Costs",
-    desc: "Less staff time spent resolving disputes. Fewer escalations.",
+    desc: "Less staff time is spent resolving disputes, checking receipts, and handling manual return workflows.",
     icon: <TrendingDown size={24} />,
   },
   {
     title: "Better Insights",
-    desc: "See return reasons. Track product issues. Identify repeat abuse patterns.",
+    desc: "Track return reasons, spot product issues, and identify patterns that impact operations.",
     icon: <Eye size={24} />,
   },
   {
     title: "Customer Trust",
-    desc: "Modern, transparent process. Professional experience.",
+    desc: "A smoother, more transparent return experience builds confidence and improves loyalty.",
     icon: <Heart size={24} />,
   },
+
+
+
+
+
+
+
 ];
 
 const customerValues = [
   {
-    title: "Never Lose a Receipt",
-    desc: "All receipts stored digitally.",
+    title: "Digital Receipts Ready",
+    desc: "Purchases are stored digitally, so receipts are always available when a return is needed.",
     icon: <Wallet size={24} />,
   },
   {
     title: "Easy Returns",
-    desc: "Submit a request from your phone and track status in real time.",
+    desc: "Start a return from your phone and stay updated without searching for paper receipts.",
     icon: <CheckCircle size={24} />,
   },
   {
     title: "Faster Refunds",
-    desc: "Clear approval flow reduces waiting time.",
+    desc: "Verified purchase data helps retailers approve returns more quickly and clearly.",
     icon: <Clock size={24} />,
   },
   {
     title: "Warranty Tracking",
-    desc: "Know exactly when a product warranty expires.",
+    desc: "Keep proof of purchase accessible for warranties, support, and future returns.",
     icon: <Shield size={24} />,
   },
 ];
+
+
 
 export const ValueSection = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -101,10 +110,10 @@ export const ValueSection = () => {
       <div className="container mx-auto px-6 md:px-12">
         <div className="mb-24 text-center">
           <h2 className="mb-6 text-5xl font-bold tracking-tighter md:text-7xl font-display text-foreground">
-            The <span className="text-primary">Value</span>
+            Why It <span className="text-primary">Matters</span>
           </h2>
           <p className="mx-auto max-w-2xl text-lg text-foreground/70 md:text-xl">
-            Why SafeReceipts matters for everyone.
+            SafeReceipts and ReturnFlow help retailers streamline returns while giving customers a faster, more reliable post-purchase experience.
           </p>
         </div>
 

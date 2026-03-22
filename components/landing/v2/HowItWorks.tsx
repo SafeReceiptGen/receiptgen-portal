@@ -5,34 +5,35 @@ import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
-
 const steps = [
   {
     num: "01",
-    title: "Issue",
-    desc: "Issue a digital receipt at checkout via QR code or phone number.",
+    title: "Capture",
+    desc: "Issue a SafeReceipts digital receipt at checkout using a QR code or phone number.",
   },
   {
     num: "02",
-    title: "Store",
-    desc: "The receipt is stored securely in the customer's digital wallet.",
+    title: "Verify",
+    desc: "Each purchase is stored securely and ready to verify instantly when a return begins.",
   },
   {
     num: "03",
-    title: "Request",
-    desc: 'If the customer wants a return, they simply tap "Request Return."',
+    title: "Start Return",
+    desc: "Customers can initiate a return using their digital receipt without searching for paper records.",
   },
   {
     num: "04",
-    title: "Approve",
-    desc: "The retailer approves the request inside a simple dashboard.",
+    title: "Manage",
+    desc: "Retailers review, approve, and track returns inside ReturnFlow with verified purchase data.",
   },
   {
     num: "05",
-    title: "Process",
-    desc: "The refund is processed automatically. No lost receipts. No arguments.",
+    title: "Resolve",
+    desc: "Returns are completed faster with less friction, fewer disputes, and a better customer experience.",
   },
 ];
+
+
 
 export const HowItWorks = () => {
   const sectionRef = useRef<HTMLDivElement>(null);

@@ -153,8 +153,7 @@ export default function Login() {
             Welcome back to simpler returns.
           </h2>
           <p className="text-lg text-white/80">
-            Access your dashboard to manage digital receipts, approve returns,
-            and gain insights into your post-purchase operations.
+           Issue digital receipts and manage customer returns in one place.
           </p>
         </div>
 
