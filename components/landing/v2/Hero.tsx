@@ -69,17 +69,19 @@ export const Hero = () => {
             className="mb-6 text-5xl font-bold leading-[1.1] tracking-tighter sm:text-7xl md:text-8xl lg:text-9xl font-display text-foreground"
             style={{ perspective: "1000px" }}
           >
-            <span className="sr-only">Digital Receipts & Returns Management for Retailers</span>
-            <span className="inline-block" aria-hidden="true">Post-Purchase</span>{" "}
-            <span className="inline-block text-primary" aria-hidden="true">Made Simple.</span>
+            <span className="sr-only">Returns management powered by digital receipt for retailers</span>
+            <span className="inline-block" aria-hidden="true">Returns Mangement</span>{" "}
+            <span className="inline-block text-primary" aria-hidden="true">Powered by Digital Receipts.</span>
           </h1>
 
           <p
             ref={subRef}
             className="mx-auto mb-10 max-w-2xl text-lg text-foreground/70 sm:text-xl md:text-2xl"
           >
-            SafeReceipts + ReturnFlow replaces paper receipts with secure,
-            verifiable digital proof of purchase and simple returns management.
+            Capture every purchase, verify returns instantly, and give customers a faster, smoother post-purchase experience.
+          </p>
+          <p className="mx-auto mb-10 text-sm text-foreground/60 sm:text-base">
+          No credit card required • Set up in minutes
           </p>
 
           <div
