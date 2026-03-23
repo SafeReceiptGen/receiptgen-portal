@@ -1,4 +1,4 @@
-import { getReceiptById } from "@/lib/mock-data";
+import { verifyApi, mapToReceiptForReturn, ApiRequestError } from "@/lib/api";
 import { formatCurrency } from "@/lib/currency";
 import { format } from "date-fns";
 import Link from "next/link";
@@ -12,8 +12,20 @@ export default async function DigitalReceiptPage({
   params: Promise<{ id: string }>;
 }) {
   const unwrappedParams = await params;
-  const receiptId = unwrappedParams.id;
-  const receipt = getReceiptById(receiptId);
+  const token = unwrappedParams.id;
+
+  // Fetch receipt from the real backend via QR token
+  let receipt;
+  try {
+    const { receipt: verified } = await verifyApi.getByToken(token);
+    receipt = mapToReceiptForReturn(verified, token);
+  } catch (error) {
+    if (error instanceof ApiRequestError && error.status === 404) {
+      receipt = null;
+    } else {
+      throw error; // Let error boundary handle unexpected errors
+    }
+  }
 
   // ─── Not Found ────────────────────────────────────────────────────────────
   if (!receipt) {
@@ -97,9 +109,11 @@ export default async function DigitalReceiptPage({
                 <h1 className="text-2xl font-bold tracking-tight text-slate-900">
                   {receipt.storeName}
                 </h1>
-                <p className="mt-1 text-sm text-slate-500">
-                  {receipt.storePhone}
-                </p>
+                {receipt.storePhone && (
+                  <p className="mt-1 text-sm text-slate-500">
+                    {receipt.storePhone}
+                  </p>
+                )}
               </div>
               <div className="text-right text-xs leading-relaxed text-slate-500">
                 <p className="font-medium text-slate-700">
@@ -193,18 +207,22 @@ export default async function DigitalReceiptPage({
                       {receipt.returnWindow}
                     </span>
                   </p>
-                  <p>
-                    <span className="font-medium text-slate-500">Condition:</span>{" "}
-                    <span className="font-semibold text-slate-900">
-                      {receipt.returnCondition}
-                    </span>
-                  </p>
-                  <p>
-                    <span className="font-medium text-slate-500">Refund:</span>{" "}
-                    <span className="font-semibold text-slate-900">
-                      {receipt.refundType}
-                    </span>
-                  </p>
+                  {receipt.returnCondition !== "See store policy" && (
+                    <p>
+                      <span className="font-medium text-slate-500">Condition:</span>{" "}
+                      <span className="font-semibold text-slate-900">
+                        {receipt.returnCondition}
+                      </span>
+                    </p>
+                  )}
+                  {receipt.refundType !== "See store policy" && (
+                    <p>
+                      <span className="font-medium text-slate-500">Refund:</span>{" "}
+                      <span className="font-semibold text-slate-900">
+                        {receipt.refundType}
+                      </span>
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -235,7 +253,7 @@ export default async function DigitalReceiptPage({
             </p>
           </div>
           <Link
-            href={`/receipt/${receiptId}/return`}
+            href={`/receipt/${token}/return`}
             className={cn(
               "group relative flex items-center justify-center gap-2 overflow-hidden rounded-full bg-slate-900 px-6 py-3.5 pl-7 text-sm font-semibold text-white shadow-lg ring-1 ring-black/5 transition-all hover:bg-slate-800 active:scale-[0.98] dark:bg-white dark:text-slate-900 dark:ring-white/10 dark:hover:bg-white/90",
               !hasPolicy && "opacity-50 grayscale cursor-not-allowed pointer-events-none"

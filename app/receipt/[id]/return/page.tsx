@@ -1,4 +1,4 @@
-import { getReceiptById, MOCK_RETURNS } from "@/lib/mock-data";
+import { verifyApi, mapToReceiptForReturn, ApiRequestError } from "@/lib/api";
 import { checkEligibility } from "@/lib/eligibility";
 import { formatCurrency } from "@/lib/currency";
 import { format } from "date-fns";
@@ -21,8 +21,20 @@ export default async function EligibilityDashboardPage({
   params: Promise<{ id: string }>;
 }) {
   const unwrappedParams = await params;
-  const receiptId = unwrappedParams.id;
-  const receipt = getReceiptById(receiptId);
+  const token = unwrappedParams.id;
+
+  // Fetch receipt from the real backend via QR token
+  let receipt;
+  try {
+    const { receipt: verified } = await verifyApi.getByToken(token);
+    receipt = mapToReceiptForReturn(verified, token);
+  } catch (error) {
+    if (error instanceof ApiRequestError && error.status === 404) {
+      receipt = null;
+    } else {
+      throw error;
+    }
+  }
 
   // ─── Not Found ────────────────────────────────────────────────────────────
   if (!receipt) {
@@ -36,7 +48,7 @@ export default async function EligibilityDashboardPage({
           We couldn't find this receipt.
         </p>
         <Link
-          href={`/receipt/${receiptId}`}
+          href={`/receipt/${token}`}
           className="mt-4 text-sm font-medium text-primary hover:underline dark:text-blue-400"
         >
           Back to Receipt
@@ -46,10 +58,10 @@ export default async function EligibilityDashboardPage({
   }
 
   // Calculate Eligibility
-  // In a real app, existing returns would be fetched from the DB by receiptId
-  const existingReturns = Object.values(MOCK_RETURNS).filter(
-    (r) => r.receiptId === receiptId
-  );
+  // Note: existing returns check requires an endpoint that doesn't exist yet.
+  // Passing empty array — all items show as returnable. This will be connected
+  // once a public GET /returns/by-receipt/:token endpoint is built.
+  const existingReturns: [] = [];
   const eligibility = checkEligibility(receipt, existingReturns);
 
   return (
@@ -211,7 +223,7 @@ export default async function EligibilityDashboardPage({
       <div className="fixed bottom-0 left-0 right-0 z-10 border-t border-slate-200 bg-white px-4 pb-safe pt-4 shadow-[0_-8px_30px_-15px_rgba(0,0,0,0.1)] dark:border-white/10 dark:bg-[#111827]">
         <div className="mx-auto flex max-w-lg gap-3 pb-4">
           <Link
-            href={`/receipt/${receiptId}`}
+            href={`/receipt/${token}`}
             className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:bg-slate-100 dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10"
             aria-label="Back to receipt"
           >
@@ -220,14 +232,14 @@ export default async function EligibilityDashboardPage({
 
           {eligibility.eligible ? (
             <Link
-              href={`/receipt/${receiptId}/return/request`}
+              href={`/receipt/${token}/return/request`}
               className="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-6 text-base font-semibold text-white shadow-lg ring-1 ring-black/5 transition-all hover:bg-primary-dark active:scale-[0.98] dark:ring-white/10"
             >
               Start Return Request <ChevronRight size={18} />
             </Link>
           ) : (
             <a
-              href={`tel:${receipt.storePhone.replace(/\s+/g, "")}`}
+              href={receipt.storePhone ? `tel:${receipt.storePhone.replace(/\s+/g, "")}` : "#"}
               className="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 text-base font-semibold text-white shadow-lg ring-1 ring-black/5 transition-all hover:bg-slate-800 active:scale-[0.98] dark:bg-white dark:text-slate-900 dark:hover:bg-white/90"
             >
               Contact Store Support
