@@ -3,6 +3,9 @@
  * Auth flows (sign-in, sign-up, OAuth) are handled separately via authClient.
  */
 
+import { differenceInCalendarDays } from "date-fns";
+import type { ReceiptForReturn } from "@/types/returns";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 interface ApiError {
@@ -37,18 +40,18 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     },
   });
 
-  const data = await res.json();
+  const json = await res.json();
 
   if (!res.ok) {
-    const err = data as ApiError;
     throw new ApiRequestError(
-      err.message ?? "Request failed",
+      json.message ?? "Request failed",
       res.status,
-      err.details,
+      json.data as Record<string, string[]> | undefined,
     );
   }
 
-  return data as T;
+  // Unwrap the backend response envelope: { success, message, data } → data
+  return json.data as T;
 }
 
 // ─── Retailer ───────────────────────────────────────────────────────────────
@@ -165,7 +168,7 @@ export const storesApi = {
 
 export interface SubmitReturnPayload {
   receiptToken: string;
-  reason: string;
+  reason?: string;
   items: { lineItemId: string; quantity: number }[];
 }
 
@@ -192,5 +195,92 @@ export const returnsApi = {
       body: JSON.stringify({ reason }),
     }),
 };
+
+// ─── Verify (Public) ─────────────────────────────────────────────────────────
+
+export interface VerifiedReceiptItem {
+  id: string;
+  receiptId: string;
+  name: string;
+  detail: string | null;
+  quantity: number;
+  unitPrice: string;
+  lineTotal: string;
+  sortOrder: number;
+}
+
+export interface VerifiedReceipt {
+  id: string;
+  date: string;
+  total: string;
+  currency: string;
+  status: string;
+  returnDeadline: string | null;
+  receiptNumber: string;
+  paymentMethod: string;
+  storeName: string;
+  items: VerifiedReceiptItem[];
+}
+
+export const verifyApi = {
+  getByToken: (token: string) =>
+    request<{ receipt: VerifiedReceipt }>(`/verify/${token}`),
+};
+
+// ─── Mapping Helpers ─────────────────────────────────────────────────────────
+
+/**
+ * Maps the verified receipt from the public API to the ReceiptForReturn shape
+ * used by all ReturnFlow components. Fields not returned by the verify endpoint
+ * (storePhone, customerName, detailed policy info) are set to safe defaults.
+ */
+export function mapToReceiptForReturn(
+  receipt: VerifiedReceipt,
+  token: string,
+): ReceiptForReturn {
+  // Compute a human-readable return window from the deadline
+  let returnWindow = "No returns";
+  let isReturnable = false;
+
+  if (receipt.returnDeadline && receipt.status !== "voided") {
+    const deadlineDate = new Date(receipt.returnDeadline);
+    const purchaseDate = new Date(receipt.date);
+    const windowDays = differenceInCalendarDays(deadlineDate, purchaseDate);
+
+    if (windowDays > 0) {
+      returnWindow = `${windowDays} days`;
+    }
+    isReturnable = deadlineDate > new Date();
+  }
+
+  return {
+    id: receipt.id,
+    receiptNumber: receipt.receiptNumber,
+    storeName: receipt.storeName,
+    storePhone: "",
+    customerName: "",
+    items: receipt.items.map((item) => ({
+      id: item.id,
+      name: item.name,
+      detail: item.detail ?? "",
+      quantity: item.quantity,
+      price: parseFloat(item.unitPrice),
+      selected: false,
+    })),
+    currency: receipt.currency,
+    subtotal: receipt.items.reduce(
+      (sum, i) => sum + parseFloat(i.lineTotal),
+      0,
+    ),
+    total: parseFloat(receipt.total),
+    paymentMethod: receipt.paymentMethod,
+    purchasedAt: receipt.date,
+    returnWindow,
+    returnCondition: "See store policy",
+    refundType: "See store policy",
+    isReturnable,
+    qrUrl: `${API_URL?.replace(":3001", ":3000")}/receipt/${token}`,
+  };
+}
 
 export { ApiRequestError };
