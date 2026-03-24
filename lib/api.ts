@@ -8,6 +8,16 @@ import type { ReceiptForReturn } from "@/types/returns";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
+/** Public receipt page base (portal), used for customer-facing /receipt/{qrCodeToken} links. */
+function portalOriginForReceiptLinks(): string {
+  const base =
+    process.env.NEXT_PUBLIC_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+    "http://localhost:3000";
+  return base.replace(/\/$/, "");
+}
+
 interface ApiError {
   success: false;
   message: string;
@@ -274,12 +284,13 @@ export function mapToReceiptForReturn(
     ),
     total: parseFloat(receipt.total),
     paymentMethod: receipt.paymentMethod,
+    status: receipt.status,
     purchasedAt: receipt.date,
     returnWindow,
     returnCondition: "See store policy",
     refundType: "See store policy",
     isReturnable,
-    qrUrl: `${API_URL?.replace(":3001", ":3000")}/receipt/${token}`,
+    qrUrl: `${portalOriginForReceiptLinks()}/receipt/${token}`,
   };
 }
 

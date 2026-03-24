@@ -2,8 +2,8 @@ import React, { useMemo } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Grip, RotateCcw } from "lucide-react";
 import { ReceiptData } from "@/types";
+import { formatPaymentMethodLabel } from "@/lib/receipt-display-labels";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 interface ReceiptPreviewProps {
   data: ReceiptData;
@@ -49,16 +49,8 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
       : data.returnWindow;
   const hasPolicy = data.returnWindow !== "No returns";
 
-  const [origin, setOrigin] = useState("https://safereceipts.com");
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setOrigin(window.location.origin);
-    }
-  }, []);
-
-  const dynamicQrUrl = data.qrUrl && !data.qrUrl.includes("safereceipt.com")
-    ? data.qrUrl
-    : `${origin}/receipt/${data.orderId}`;
+  // Only encode URLs returned from the API (path segment must be qrCodeToken, not orderId).
+  const dynamicQrUrl = data.qrUrl?.trim() ?? "";
 
   return (
     <div className="flex items-start justify-center w-full h-full p-8 overflow-auto overscroll-contain custom-scrollbar">
@@ -156,7 +148,9 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
 
               <div className="flex justify-between text-xs text-zinc-600 mb-1">
                 <span>Payment method</span>
-                <span className="font-medium">{data.paymentMethod}</span>
+                <span className="font-medium">
+                  {formatPaymentMethodLabel(data.paymentMethod)}
+                </span>
               </div>
             </div>
 

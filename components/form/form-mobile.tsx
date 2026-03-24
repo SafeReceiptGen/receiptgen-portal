@@ -1,4 +1,4 @@
-import React, { RefObject, useState } from "react";
+import React, { RefObject, useState, useEffect, useRef } from "react";
 import {
   ChevronRight,
   ChevronLeft,
@@ -35,6 +35,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ActionState } from "./actions";
 import { useStores } from "@/hooks/use-stores";
+import { PAYMENT_METHOD_OPTIONS } from "@/lib/payment-methods";
 
 interface MobileWizardProps {
   data: ReceiptData;
@@ -65,15 +66,6 @@ const CURRENCIES = [
   { value: "ZAR", label: "South African Rand (R)" },
 ];
 
-const PAYMENT_METHODS = [
-  "Cash",
-  "Mobile Money",
-  "Card",
-  "Bank Transfer",
-  "Wallet",
-  "Check",
-];
-
 const RETURN_CONDITIONS = [
   "Unused",
   "Original Packaging",
@@ -102,6 +94,20 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
   const { isExiting, isOpening } = useExpandableScreen();
   const { stores: userStores, isLoading: storesLoading } = useStores(isAuthenticated);
+  const dataRef = useRef(data);
+  dataRef.current = data;
+
+  useEffect(() => {
+    if (!isAuthenticated || storesLoading || userStores.length !== 1) return;
+    if (dataRef.current.storeId) return;
+    const s = userStores[0];
+    onChange({
+      ...dataRef.current,
+      storeId: s.id,
+      storeName: s.name,
+      storePhone: s.phone ?? "",
+    });
+  }, [isAuthenticated, storesLoading, userStores, onChange]);
 
   const handleChange = (field: keyof ReceiptData, value: any) => {
     onChange({ ...data, [field]: value });
@@ -221,7 +227,13 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
               <Input
                 type="text"
                 value={data.storeName}
-                onChange={(e) => handleChange("storeName", e.target.value)}
+                onChange={(e) =>
+                  onChange({
+                    ...data,
+                    storeName: e.target.value,
+                    storeId: "",
+                  })
+                }
                 className="w-full rounded-xl bg-slate-50 border-slate-200 p-4 text-lg text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/35"
               />
             </div>
@@ -232,7 +244,13 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
               <Input
                 type="text"
                 value={data.storePhone}
-                onChange={(e) => handleChange("storePhone", e.target.value)}
+                onChange={(e) =>
+                  onChange({
+                    ...data,
+                    storePhone: e.target.value,
+                    storeId: "",
+                  })
+                }
                 className="w-full rounded-xl bg-slate-50 border-slate-200 p-4 text-lg text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/35"
               />
             </div>
@@ -316,9 +334,9 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                   <SelectValue placeholder="Select payment method" />
                 </SelectTrigger>
                 <SelectContent>
-                  {PAYMENT_METHODS.map((m) => (
-                    <SelectItem key={m} value={m}>
-                      {m}
+                  {PAYMENT_METHOD_OPTIONS.map((m) => (
+                    <SelectItem key={m.value} value={m.value}>
+                      {m.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -505,7 +523,7 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
 
         {currentStep === 3 && (
           <div className="h-full -mx-6 -mt-6">
-            <ReceiptPreview data={data} ref={ref} showQr={isAuthenticated && !!data.qrUrl} />
+            <ReceiptPreview data={data} ref={ref} showQr={isAuthenticated && !!data.qrUrl?.trim()} />
           </div>
         )}
       </div>

@@ -15,6 +15,7 @@ const lineItemSchema = z.object({
 });
 
 const receiptSchema = z.object({
+  storeId: z.string().optional().default(""),
   storeName: z.string().min(1, "Store name is required"),
   storePhone: z.string().optional().default(""),
   receiptNumber: z.string().optional().default(""),
@@ -46,13 +47,35 @@ export type ActionState = {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
+function portalOrigin(): string {
+  const base =
+    process.env.NEXT_PUBLIC_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+    "http://localhost:3000";
+  return base.replace(/\/$/, "");
+}
+
+type CreateReceiptApiEnvelope = {
+  success?: boolean;
+  message?: string;
+  data?: {
+    receipt?: {
+      id: string;
+      qrCodeToken: string;
+      receiptNumber: string;
+      total?: string;
+    };
+    qrUrl?: string;
+  };
+};
+
 export async function generateReceipt(
   receiptData: ReceiptData,
   prevState: ActionState,
   _formData: FormData,
 ): Promise<ActionState> {
   try {
-    // 1. Validate client-side data first
     const result = receiptSchema.safeParse(receiptData);
 
     if (!result.success) {
@@ -65,16 +88,37 @@ export async function generateReceipt(
       };
     }
 
-    // 2. Send to Express backend
-    const response = await fetch(`${API_URL}/api/receipts`, {
+    const storeId = result.data.storeId?.trim() ?? "";
+    const uuidOk = z.string().uuid().safeParse(storeId).success;
+    if (!uuidOk) {
+      return {
+        success: false,
+        message:
+          "Select a store from your account before generating. Complete onboarding or pick a store in the form.",
+      };
+    }
+
+    let dateIso: string;
+    try {
+      const raw = result.data.date?.trim();
+      const d = raw ? new Date(raw) : new Date();
+      if (Number.isNaN(d.getTime())) {
+        dateIso = new Date().toISOString();
+      } else {
+        dateIso = d.toISOString();
+      }
+    } catch {
+      dateIso = new Date().toISOString();
+    }
+
+    const response = await fetch(`${API_URL}/receipts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({
-        // TODO: replace storeId with the real storeId from the user's session once dashboard is built
-        storeId: result.data.orderId || "default",
+        storeId,
         receiptNumber: result.data.receiptNumber,
-        date: result.data.date || new Date().toISOString(),
+        date: dateIso,
         orderId: result.data.orderId,
         currency: result.data.currency,
         vatRate: result.data.vatRate,
@@ -90,24 +134,44 @@ export async function generateReceipt(
       }),
     });
 
+    const raw = (await response.json().catch(() => ({}))) as CreateReceiptApiEnvelope;
+
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
       return {
         success: false,
-        message: errorData.error ?? "Failed to save receipt. Please try again.",
+        message:
+          (typeof raw.message === "string" && raw.message) ||
+          (raw as { error?: string }).error ||
+          "Failed to save receipt. Please try again.",
       };
     }
 
-    const apiData = await response.json();
+    const data = raw.data;
+    const receipt = data?.receipt;
+    const qrCodeToken = receipt?.qrCodeToken;
 
-    // Transform form data into our backend schema type and save it
+    const qrUrl =
+      qrCodeToken != null && qrCodeToken.length > 0
+        ? `${portalOrigin()}/receipt/${qrCodeToken}`
+        : data?.qrUrl?.trim() || undefined;
+
+    if (!qrUrl) {
+      return {
+        success: false,
+        message:
+          "Receipt was created but no verification link was returned. Check API configuration.",
+      };
+    }
+
     const formData = result.data;
     const orderId = formData.orderId || `REC-${Date.now()}`;
-    
-    // Create the receipt record
+
     const newReceipt: ReceiptForReturn = {
-      id: orderId,
-      receiptNumber: formData.receiptNumber || `SR-${Math.floor(Math.random() * 10000)}`,
+      id: receipt?.id ?? orderId,
+      receiptNumber:
+        receipt?.receiptNumber ||
+        formData.receiptNumber ||
+        `SR-${Math.floor(Math.random() * 10000)}`,
       storeName: formData.storeName,
       storePhone: formData.storePhone,
       customerName: formData.customerName,
@@ -117,27 +181,34 @@ export async function generateReceipt(
         detail: item.detail,
         quantity: item.quantity,
         price: item.price,
-        selected: false
+        selected: false,
       })),
       currency: formData.currency,
-      subtotal: formData.items.reduce((acc: any, item: any) => acc + (item.price * item.quantity), 0),
-      total: formData.items.reduce((acc: any, item: any) => acc + (item.price * item.quantity), 0),
+      subtotal: formData.items.reduce(
+        (acc, item) => acc + item.price * item.quantity,
+        0,
+      ),
+      total: formData.items.reduce(
+        (acc, item) => acc + item.price * item.quantity,
+        0,
+      ),
       paymentMethod: formData.paymentMethod,
-      purchasedAt: formData.date ? new Date(formData.date).toISOString() : new Date().toISOString(),
+      purchasedAt: formData.date
+        ? new Date(formData.date).toISOString()
+        : new Date().toISOString(),
       returnWindow: formData.returnWindow,
       returnCondition: formData.returnCondition,
       refundType: formData.refundType,
       isReturnable: formData.returnWindow !== "No returns",
-      qrUrl: formData.qrUrl || `https://safereceipts.com/receipt/${orderId}`,
+      qrUrl,
     };
 
-    // Save to our in-memory mock database
     addMockReceipt(newReceipt);
 
     return {
       success: true,
       message: "Receipt generated successfully!",
-      qrUrl: formData.qrUrl,
+      qrUrl,
     };
   } catch (error) {
     console.error("Receipt generation failed:", error);

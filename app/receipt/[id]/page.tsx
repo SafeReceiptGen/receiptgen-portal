@@ -5,6 +5,10 @@ import Link from "next/link";
 import { ChevronRight, ArrowLeft, Receipt, RotateCcw } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import {
+  formatPaymentMethodLabel,
+  formatReceiptStatusLabel,
+} from "@/lib/receipt-display-labels";
 
 export default async function DigitalReceiptPage({
   params,
@@ -125,6 +129,11 @@ export default async function DigitalReceiptPage({
             </div>
 
             <div className="mb-4 text-center">
+              {receipt.status && receipt.status !== "issued" && (
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400">
+                  {formatReceiptStatusLabel(receipt.status)}
+                </p>
+              )}
               <h2 className="text-lg font-bold text-slate-900">
                 Thank you for your purchase
                 {receipt.customerName ? `, ${receipt.customerName}` : ""}!
@@ -186,7 +195,7 @@ export default async function DigitalReceiptPage({
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-500">Payment method</span>
                 <span className="font-semibold text-slate-700">
-                  {receipt.paymentMethod}
+                  {formatPaymentMethodLabel(receipt.paymentMethod)}
                 </span>
               </div>
             </div>

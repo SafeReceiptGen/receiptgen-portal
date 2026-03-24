@@ -260,7 +260,7 @@ export default function ReturnStatusClient({
               {isApproved && (
                 <div className="mt-6">
                   <Link
-                    href={`/receipt/${returnData.receiptId}`}
+                    href={`/receipt/${returnData.receiptQrToken ?? returnData.receiptId}`}
                     className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-10 py-3 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition-all hover:bg-slate-800 active:scale-[0.99] dark:bg-white dark:text-slate-900 dark:ring-white/10 dark:hover:bg-white/90"
                   >
                     Close

@@ -47,6 +47,8 @@ export interface ReturnRequest {
   id: string;
   returnNumber: string;
   receiptId: string;
+  /** Public receipt link segment; prefer over receiptId (UUID) for /receipt/[token]. */
+  receiptQrToken?: string;
   retailerName: string;
   retailerLogo?: string;
   customerName: string;
@@ -86,6 +88,8 @@ export interface ReceiptForReturn {
   subtotal: number;
   total: number;
   paymentMethod: string;
+  /** Receipt lifecycle from API (e.g. issued, voided); optional for locally built previews */
+  status?: string;
   purchasedAt: string; // ISO string
   returnWindow: string;
   returnCondition: string;
