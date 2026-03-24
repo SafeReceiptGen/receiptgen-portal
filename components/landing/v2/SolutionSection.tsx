@@ -63,10 +63,15 @@ export const SolutionSection: React.FC = () => {
       <div className="container relative mx-auto px-6 md:px-12">
         <h2
           ref={titleRef}
-          className="mb-24 text-center text-5xl font-bold tracking-tighter sm:text-7xl md:text-8xl lg:text-9xl font-display"
+          className="mb-6 text-center text-5xl font-bold tracking-tighter sm:text-7xl md:text-8xl lg:text-9xl font-display"
         >
-          The <span className="text-white/50">Solution</span>
+          From <span className="text-white/50">Receipt to Return</span>
         </h2>
+
+<p className="mx-auto mb-24 max-w-3xl text-center text-xl leading-relaxed text-white/80 md:text-2xl">
+  Digital receipts are the starting point. Returns management is where the real value comes to life.
+</p>
+
 
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-24">
           <div
@@ -75,13 +80,22 @@ export const SolutionSection: React.FC = () => {
             style={{ perspective: "1000px" }}
           >
             <ShieldCheck className="mb-8 h-20 w-20 text-white transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12" />
-            <h3 className="mb-6 text-4xl font-bold tracking-tight md:text-5xl font-display">
-              SafeReceipts
+<p className="mb-3 text-sm uppercase tracking-[0.2em] text-white/50">
+  SafeReceipts
+</p>
+
+
+        <h3 className="mb-6 text-4xl font-bold tracking-tight md:text-5xl font-display">
+              Digital Receipts
             </h3>
             <p className="text-xl leading-relaxed text-white/80 md:text-2xl">
-              A digital receipt system that replaces paper receipts with secure,
-              verifiable digital proof of purchase.
+             Capture every purchase with secure, verifiable proof of purchase that is always ready when a return begins.
             </p>
+
+
+
+
+
           </div>
 
           <div
@@ -93,9 +107,14 @@ export const SolutionSection: React.FC = () => {
             <h3 className="mb-6 text-4xl font-bold tracking-tight md:text-5xl font-display">
               ReturnFlow
             </h3>
+<h3 className="mb-6 text-4xl font-bold tracking-tight md:text-5xl font-display">
+              Returns Management
+            </h3>
+
+
+
             <p className="text-xl leading-relaxed text-white/80 md:text-2xl">
-              A simple returns management tool connected to each receipt.
-              Together, they make post-purchase simple.
+              Use verified purchase data to approve, track, and streamline returns with less friction, less fraud, and a better customer experience.
             </p>
           </div>
         </div>

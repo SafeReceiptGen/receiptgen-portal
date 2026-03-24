@@ -43,13 +43,13 @@ export const VisionSection = () => {
 
       <div className="container relative mx-auto px-6 text-center md:px-12">
         <h2 className="vision-text mb-12 text-5xl font-bold leading-tight tracking-tighter sm:text-7xl md:text-8xl lg:text-9xl font-display">
-          Make digital receipts <br />
-          <span className="text-primary">the standard.</span>
+          Make returns simpler <br />
+          <span className="text-primary">with digital receipts.</span>
         </h2>
 
         <p className="vision-text mx-auto mb-16 max-w-4xl text-xl leading-relaxed text-white/70 md:text-3xl">
-          When every purchase has verified proof, returns become simpler, fraud
-          is reduced, and retailers gain invaluable post-sale visibility.
+          When every purchase is backed by a verified digital receipt, returns become faster, fraud is reduced, and retailers gain clearer post-purchase visibility.
+
         </p>
 
         {/* <div className="vision-text flex flex-col items-center justify-center gap-6 sm:flex-row"> */}

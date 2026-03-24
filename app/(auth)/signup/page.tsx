@@ -167,6 +167,15 @@ export default function Signup() {
               <CheckCircle2 className="text-primary" size={24} />
               Gain valuable customer insights
             </li>
+
+<li className="flex items-center gap-3">
+  <CheckCircle2 className="text-primary" size={24} />
+  Automatically enforce your return policy
+</li>
+
+
+
+
           </ul>
         </div>
 
@@ -183,7 +192,7 @@ export default function Signup() {
               <div>
                 <p className="font-bold">Kwame Osei</p>
                 <p className="text-sm text-background/60">
-                  Store Manager, Accra
+                  Store Manager - Fashion Retailer,Accra
                 </p>
               </div>
             </div>
@@ -208,10 +217,11 @@ export default function Signup() {
             Create an account
           </h1>
           <p className="stagger-item mb-8 text-foreground/60">
-            Join the future of post-purchase management.
+            Issue digital receipts and manage returns from one dashboard.
           </p>
 
-          <button
+
+ <button
             type="button"
             onClick={handleGoogleSignup}
             disabled={isLoading}
@@ -346,6 +356,12 @@ export default function Signup() {
                   </>
                 )}
               </MagneticButton>
+ <p className="stagger-item mt-3 text-center text-sm text-foreground/60">
+    No credit card required • Takes less than 2 minutes to set up
+  </p>
+
+
+
             </div>
           </form>
 
