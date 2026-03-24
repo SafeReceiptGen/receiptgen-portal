@@ -1,0 +1,13 @@
+{
+  "folders": [
+    {
+      "name": "receiptgen-portal",
+      "path": "."
+    },
+    {
+      "name": "backend",
+      "path": "../backend"
+    }
+  ],
+  "settings": {}
+}

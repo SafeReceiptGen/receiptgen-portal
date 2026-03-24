@@ -1,6 +1,7 @@
 "use client";
 
 import { ReceiptForReturn } from "@/types/returns";
+import { formatPaymentMethodLabel } from "@/lib/receipt-display-labels";
 import {
   Dialog,
   DialogContent,
@@ -81,7 +82,7 @@ export function ReceiptSheet({
                 Payment
               </div>
               <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                {receipt.paymentMethod}
+                {formatPaymentMethodLabel(receipt.paymentMethod)}
               </p>
             </div>
           </div>

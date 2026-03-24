@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Plus,
   Trash2,
@@ -40,6 +40,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ActionState } from "./actions";
 import { useStores } from "@/hooks/use-stores";
+import { PAYMENT_METHOD_OPTIONS } from "@/lib/payment-methods";
 
 interface ReceiptFormProps {
   data: ReceiptData;
@@ -56,15 +57,6 @@ const CURRENCIES = [
   { value: "NGN", label: "Nigerian Naira (₦)" },
   { value: "KES", label: "Kenyan Shilling (KSh)" },
   { value: "ZAR", label: "South African Rand (R)" },
-];
-
-const PAYMENT_METHODS = [
-  "Cash",
-  "Mobile Money",
-  "Card",
-  "Bank Transfer",
-  "Wallet",
-  "Check",
 ];
 
 const RETURN_WINDOWS = [
@@ -101,6 +93,21 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const { isExiting, isOpening } = useExpandableScreen();
   const { stores: userStores, isLoading: storesLoading } = useStores(isAuthenticated);
+  const dataRef = useRef(data);
+  dataRef.current = data;
+
+  // Auto-select the only store when the user has exactly one
+  useEffect(() => {
+    if (!isAuthenticated || storesLoading || userStores.length !== 1) return;
+    if (dataRef.current.storeId) return;
+    const s = userStores[0];
+    onChange({
+      ...dataRef.current,
+      storeId: s.id,
+      storeName: s.name,
+      storePhone: s.phone ?? "",
+    });
+  }, [isAuthenticated, storesLoading, userStores, onChange]);
 
   const handleChange = (field: keyof ReceiptData, value: any) => {
     onChange({ ...data, [field]: value });
@@ -172,13 +179,21 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                     <select
                       className="w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 pr-8 text-sm text-slate-900 outline-none transition-colors focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 dark:border-white/10 dark:bg-white/5 dark:text-white"
                       disabled={storesLoading}
-                      value={userStores.find(
-                        (s) => s.name === data.storeName && s.phone === data.storePhone
-                      )?.id ?? ""}
+                      value={
+                        data.storeId &&
+                        userStores.some((s) => s.id === data.storeId)
+                          ? data.storeId
+                          : ""
+                      }
                       onChange={(e) => {
                         const selected = userStores.find((s) => s.id === e.target.value);
                         if (selected) {
-                          onChange({ ...data, storeName: selected.name, storePhone: selected.phone ?? "" });
+                          onChange({
+                            ...data,
+                            storeId: selected.id,
+                            storeName: selected.name,
+                            storePhone: selected.phone ?? "",
+                          });
                         }
                       }}
                     >
@@ -210,7 +225,13 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                   <Input
                     type="text"
                     value={data.storeName}
-                    onChange={(e) => handleChange("storeName", e.target.value)}
+                    onChange={(e) =>
+                      onChange({
+                        ...data,
+                        storeName: e.target.value,
+                        storeId: "",
+                      })
+                    }
                     className="w-full bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/20"
                   />
                 </div>
@@ -221,7 +242,13 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                   <Input
                     type="text"
                     value={data.storePhone}
-                    onChange={(e) => handleChange("storePhone", e.target.value)}
+                    onChange={(e) =>
+                      onChange({
+                        ...data,
+                        storePhone: e.target.value,
+                        storeId: "",
+                      })
+                    }
                     className="w-full bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/20"
                   />
                 </div>
@@ -341,9 +368,9 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                       <SelectValue placeholder="Select payment method" />
                     </SelectTrigger>
                     <SelectContent>
-                      {PAYMENT_METHODS.map((m) => (
-                        <SelectItem key={m} value={m}>
-                          {m}
+                      {PAYMENT_METHOD_OPTIONS.map((m) => (
+                        <SelectItem key={m.value} value={m.value}>
+                          {m.label}
                         </SelectItem>
                       ))}
                     </SelectContent>

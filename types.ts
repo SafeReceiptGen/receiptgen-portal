@@ -7,6 +7,8 @@ export interface LineItem {
 }
 
 export interface ReceiptData {
+  /** Real store UUID from GET /stores — required for POST /receipts */
+  storeId: string;
   storeName: string;
   storePhone: string;
   receiptNumber: string;
@@ -31,6 +33,7 @@ export interface ReceiptData {
 }
 
 export const INITIAL_RECEIPT_DATA: ReceiptData = {
+  storeId: "",
   storeName: "Safe Receipt",
   storePhone: "0244444444",
   receiptNumber: "N 469",
@@ -56,12 +59,12 @@ export const INITIAL_RECEIPT_DATA: ReceiptData = {
   ],
   currency: "GHS",
   vatRate: 20,
-  paymentMethod: "Mobile Money",
+  paymentMethod: "mobile_money",
   marketingText: "",
   companyName: "",
   tin: "",
   website: "",
-  qrUrl: "https://safereceipt.com/receipt/OB987654",
+  qrUrl: "",
   customerName: "",
   returnWindow: "7 days",
   customReturnWindow: "",

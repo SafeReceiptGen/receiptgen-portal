@@ -282,7 +282,7 @@ export default function ReceiptFormScreen() {
                   <ReceiptPreview
                     data={data}
                     ref={receiptRef}
-                    showQr={isAuthenticated && !!data.qrUrl}
+                    showQr={isAuthenticated && !!data.qrUrl?.trim()}
                   />
                 </div>
               </div>
@@ -293,7 +293,7 @@ export default function ReceiptFormScreen() {
             <ConversionDialog
               onClose={() => setShowConversionDialog(false)}
               imgUrl={generatedImageUrl}
-              receiptUrl={data.qrUrl && !data.qrUrl.includes("safereceipt.com") ? data.qrUrl : `${typeof window !== 'undefined' ? window.location.origin : 'https://safereceipts.com'}/receipt/${data.orderId}`}
+              receiptUrl={data.qrUrl?.trim() || undefined}
             />
           )}
         </>
