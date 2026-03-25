@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MOCK_PUDO_POINTS } from "@/lib/mock-data";
-import { submitReturnRequest } from "@/components/returns/actions";
+import {
+  submitReturnRequest,
+  fetchReturnEligibility,
+} from "@/components/returns/actions";
 import {
   ReturnReason,
   LogisticsMethod,
@@ -72,9 +75,8 @@ export default function ReturnRequestClient({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [newReturnId, setNewReturnId] = useState("");
-  const [returnNumber] = useState(
-    `RF-2026-${String(Math.floor(Math.random() * 99999)).padStart(5, "0")}`,
-  );
+  const [returnNumber, setReturnNumber] = useState("");
+  const [eligibilityError, setEligibilityError] = useState<string | null>(null);
   const [isRestored, setIsRestored] = useState(false);
 
   const form = useForm<ReturnFlowFormData>({
@@ -147,11 +149,23 @@ export default function ReturnRequestClient({
   const fee = logistics.method === "HOME_PICKUP" ? 50 : 30;
   const isEligible = watch("isEligible");
 
-  const checkEligibilitySimulation = async () => {
+  const checkEligibilityFromApi = async () => {
     setIsCheckingEligibility(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setValue("isEligible", true, { shouldValidate: true });
-    setIsCheckingEligibility(false);
+    setEligibilityError(null);
+    try {
+      const result = await fetchReturnEligibility(receiptId);
+      setValue("isEligible", result.eligible, { shouldValidate: true });
+      if (!result.eligible) {
+        setEligibilityError(result.reasons.join(" "));
+      }
+    } catch (e) {
+      setEligibilityError(
+        e instanceof Error ? e.message : "Could not verify eligibility.",
+      );
+      setValue("isEligible", false, { shouldValidate: true });
+    } finally {
+      setIsCheckingEligibility(false);
+    }
   };
 
   const attemptNextStep = async () => {
@@ -168,7 +182,7 @@ export default function ReturnRequestClient({
         break;
       case 3:
         if (isEligible === null) {
-          await checkEligibilitySimulation();
+          await checkEligibilityFromApi();
           return;
         }
         fieldsToValidate = ["isEligible"];
@@ -185,7 +199,10 @@ export default function ReturnRequestClient({
   };
 
   const prevStep = () => {
-    if (currentStep === 3) setValue("isEligible", null);
+    if (currentStep === 3) {
+      setValue("isEligible", null);
+      setEligibilityError(null);
+    }
     if (currentStep > 0) setCurrentStep((c) => c - 1);
   };
 
@@ -193,8 +210,12 @@ export default function ReturnRequestClient({
     setIsSubmitting(true);
     try {
       const data = getValues();
-      const id = await submitReturnRequest(data, receiptId);
+      const { id, returnNumber: rn } = await submitReturnRequest(
+        data,
+        receiptId,
+      );
       setNewReturnId(id);
+      setReturnNumber(rn);
       setIsSubmitted(true);
       // Clear draft on success
       localStorage.removeItem(STORAGE_KEY);
@@ -219,7 +240,10 @@ export default function ReturnRequestClient({
           Your return request <span className="font-semibold text-slate-700 dark:text-white/80">{returnNumber}</span> has been submitted successfully.
         </p>
         <div className="mt-8 flex flex-col gap-3 w-full max-w-xs animate-in slide-in-from-bottom-4 fade-in duration-500 delay-500">
-          <Link href={`/return/${newReturnId}`} className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-white shadow-lg ring-1 ring-black/5 transition-all hover:bg-primary-dark">
+          <Link
+            href={`/return/${newReturnId}?token=${encodeURIComponent(receiptId)}`}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-white shadow-lg ring-1 ring-black/5 transition-all hover:bg-primary-dark"
+          >
             Track My Return
           </Link>
           <Link href={`/receipt/${receiptId}`} className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors dark:text-white/50 dark:hover:text-white">
@@ -345,6 +369,11 @@ export default function ReturnRequestClient({
                     <XCircle size={40} className="text-red-500 dark:text-red-400" />
                   </div>
                   <h3 className="mt-5 text-xl font-bold text-slate-900 font-display dark:text-white">Not Eligible</h3>
+                  {eligibilityError && (
+                    <p className="mt-3 max-w-xs text-center text-sm text-red-600 dark:text-red-400">
+                      {eligibilityError}
+                    </p>
+                  )}
                 </>
               ) : (
                 <>

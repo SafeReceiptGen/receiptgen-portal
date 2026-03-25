@@ -1,4 +1,9 @@
-import { verifyApi, mapToReceiptForReturn, ApiRequestError } from "@/lib/api";
+import {
+  verifyApi,
+  mapToReceiptForReturn,
+  ApiRequestError,
+  returnsApi,
+} from "@/lib/api";
 import { checkEligibility } from "@/lib/eligibility";
 import { formatCurrency } from "@/lib/currency";
 import { format } from "date-fns";
@@ -57,12 +62,44 @@ export default async function EligibilityDashboardPage({
     );
   }
 
-  // Calculate Eligibility
-  // Note: existing returns check requires an endpoint that doesn't exist yet.
-  // Passing empty array — all items show as returnable. This will be connected
-  // once a public GET /returns/by-receipt/:token endpoint is built.
-  const existingReturns: [] = [];
-  const eligibility = checkEligibility(receipt, existingReturns);
+  let serverEligibility = null as Awaited<
+    ReturnType<typeof returnsApi.getEligibility>
+  > | null;
+  try {
+    serverEligibility = await returnsApi.getEligibility(token);
+  } catch {
+    serverEligibility = null;
+  }
+
+  const fallback = checkEligibility(receipt, []);
+
+  const eligible =
+    serverEligibility !== null
+      ? serverEligibility.eligible && receipt.isReturnable !== false
+      : fallback.eligible;
+
+  const daysRemaining =
+    serverEligibility?.policy?.daysRemaining ?? fallback.daysRemaining;
+
+  const reason = !eligible
+    ? serverEligibility?.reasons?.length
+      ? serverEligibility.reasons.join(" ")
+      : fallback.reason
+    : serverEligibility?.policy?.daysRemaining != null
+      ? `You have ${serverEligibility.policy.daysRemaining} day${serverEligibility.policy.daysRemaining === 1 ? "" : "s"} remaining to return items from this receipt.`
+      : fallback.reason;
+
+  const alreadyReturnedItemIds =
+    serverEligibility?.items
+      .filter((i) => i.returnable === 0 && i.alreadyReturned > 0)
+      .map((i) => i.id) ?? fallback.alreadyReturnedItemIds;
+
+  const eligibility = {
+    eligible,
+    daysRemaining,
+    reason,
+    alreadyReturnedItemIds,
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#111827]">

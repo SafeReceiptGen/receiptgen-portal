@@ -5,6 +5,7 @@
 
 import { differenceInCalendarDays } from "date-fns";
 import type { ReceiptForReturn } from "@/types/returns";
+import type { PublicReturnBundle } from "@/lib/return-mappers";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
@@ -178,28 +179,163 @@ export const storesApi = {
 
 export interface SubmitReturnPayload {
   receiptToken: string;
-  reason?: string;
   items: { lineItemId: string; quantity: number }[];
+  reason?:
+    | "defective"
+    | "wrong_item"
+    | "changed_mind"
+    | "damaged_in_delivery"
+    | "other";
+  description?: string;
+  photoUrls?: string[];
+  logistics?: {
+    method: "home_pickup" | "drop_off";
+    pudoPointId?: string;
+    timeSlot: string;
+    phoneNumber: string;
+    phoneCountry: string;
+  };
+  serviceFee?: number;
+}
+
+/** Response from GET /returns/eligibility — mirrors backend eligibility service */
+export interface ReturnEligibilityResponse {
+  eligible: boolean;
+  reasons: string[];
+  receipt: {
+    id: string;
+    receiptNumber: string;
+    currency: string;
+    total: string;
+    purchaseDate: string;
+    storeName: string;
+    retailerName: string;
+    retailerLogo: string | null;
+    customerName: string | null;
+  } | null;
+  policy: {
+    returnWindow: string;
+    returnCondition: string;
+    refundType: string;
+    deadlineDate: string | null;
+    daysRemaining: number | null;
+  } | null;
+  items: Array<{
+    id: string;
+    name: string;
+    detail: string | null;
+    quantity: number;
+    unitPrice: string;
+    lineTotal: string;
+    alreadyReturned: number;
+    returnable: number;
+  }>;
+}
+
+export interface ReturnListRow {
+  returnRequest: Record<string, unknown>;
+  receipt: Record<string, unknown>;
+  store: Record<string, unknown>;
+  customer: Record<string, unknown> | null;
+  itemCount: number;
+  photoCount: number;
+}
+
+async function requestWithoutJsonBody<T>(
+  path: string,
+  options: RequestInit,
+): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    ...options,
+    credentials: "include",
+  });
+  const json = await res.json();
+  if (!res.ok) {
+    throw new ApiRequestError(
+      json.message ?? "Request failed",
+      res.status,
+      json.data as Record<string, string[]> | undefined,
+    );
+  }
+  return json.data as T;
+}
+
+/**
+ * Upload return photos (multipart). Call before POST /returns with returned URLs in `photoUrls`.
+ */
+export async function uploadReturnPhotosFromDataUrls(
+  dataUrls: string[],
+): Promise<string[]> {
+  if (dataUrls.length === 0) return [];
+  const form = new FormData();
+  for (let i = 0; i < dataUrls.length; i++) {
+    const url = dataUrls[i];
+    const m = /^data:(.+?);base64,(.+)$/.exec(url);
+    if (!m) continue;
+    const mime = m[1] || "image/jpeg";
+    const buf = Buffer.from(m[2], "base64");
+    const blob = new Blob([buf], { type: mime });
+    form.append("photos", blob, `photo-${i}.jpg`);
+  }
+  const data = await requestWithoutJsonBody<{ urls: string[] }>(
+    "/uploads/return-photos",
+    { method: "POST", body: form },
+  );
+  return data.urls;
 }
 
 export const returnsApi = {
   submit: (payload: SubmitReturnPayload) =>
-    request<{ returnRequest: { id: string; status: string } }>("/returns", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }),
-
-  list: () => request<{ returns: unknown[] }>("/returns"),
-
-  approve: (id: string) =>
-    request<{ message: string; refundAmount: string }>(
-      `/returns/${id}/approve`,
+    request<{ returnRequest: { id: string; returnNumber: string; status: string } }>(
+      "/returns",
       {
-        method: "PATCH",
+        method: "POST",
+        body: JSON.stringify(payload),
       },
     ),
 
-  reject: (id: string, reason?: string) =>
+  getEligibility: (receiptToken: string) =>
+    request<ReturnEligibilityResponse>(
+      `/returns/eligibility?token=${encodeURIComponent(receiptToken)}`,
+    ),
+
+  getPublic: (returnId: string, receiptToken: string) =>
+    request<{ returnRequest: PublicReturnBundle }>(
+      `/returns/public/${encodeURIComponent(returnId)}?token=${encodeURIComponent(receiptToken)}`,
+    ).then((d) => d.returnRequest),
+
+  confirmPayment: (returnId: string, body: { paymentType: "service_fee" | "refund"; provider: string; reference: string }) =>
+    request<{ payment: unknown }>(`/returns/public/${encodeURIComponent(returnId)}/payment`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  list: (params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    reason?: string;
+    from?: string;
+    to?: string;
+  }) => {
+    const qs = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== "") qs.set(k, String(v));
+      });
+    }
+    const q = qs.toString();
+    return request<{ returns: ReturnListRow[] }>(
+      `/returns${q ? `?${q}` : ""}`,
+    );
+  },
+
+  approve: (id: string) =>
+    request<{ refundAmount: number }>(`/returns/${id}/approve`, {
+      method: "PATCH",
+    }),
+
+  reject: (id: string, reason: string) =>
     request<{ message: string }>(`/returns/${id}/reject`, {
       method: "PATCH",
       body: JSON.stringify({ reason }),
