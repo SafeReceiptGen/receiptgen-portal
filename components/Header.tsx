@@ -4,12 +4,13 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
+import { AvatarDropdown } from "./landing/v2/auth-avatar";
 // import ReceiptFormScreen from "./form/form-screen";
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
+
   const headerRef = useRef<HTMLElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const tlRef = useRef<gsap.core.Timeline>(null);
@@ -38,33 +39,34 @@ export default function Header() {
       );
 
       // Mobile Menu Animation Setup
-      gsap.set(mobileMenuRef.current, { 
+      gsap.set(mobileMenuRef.current, {
         clipPath: "circle(0% at calc(100% - 2.5rem) 2.5rem)",
-        display: "none"
+        display: "none",
       });
 
-      tlRef.current = gsap.timeline({ paused: true })
+      tlRef.current = gsap
+        .timeline({ paused: true })
         .set(mobileMenuRef.current, { display: "flex" })
         .to(mobileMenuRef.current, {
           clipPath: "circle(150% at calc(100% - 2.5rem) 2.5rem)",
           duration: 0.8,
-          ease: "power3.inOut"
+          ease: "power3.inOut",
         })
         .fromTo(
           ".mobile-item",
           { y: 30, opacity: 0, rotationX: -15, transformPerspective: 1000 },
-          { 
-            y: 0, 
-            opacity: 1, 
+          {
+            y: 0,
+            opacity: 1,
             rotationX: 0,
-            duration: 0.5, 
-            stagger: 0.05, 
-            ease: "back.out(1.2)" 
+            duration: 0.5,
+            stagger: 0.05,
+            ease: "back.out(1.2)",
           },
-          "-=0.4"
+          "-=0.4",
         );
     },
-    { scope: headerRef }
+    { scope: headerRef },
   );
 
   useEffect(() => {
@@ -96,7 +98,7 @@ export default function Header() {
         <div className="header-item text-2xl font-bold tracking-tighter font-display z-50 text-foreground relative">
           Safe<span className="text-primary">Receipts</span>
         </div>
-        
+
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-8">
           {navItems.map((item) => (
@@ -109,9 +111,10 @@ export default function Header() {
             </Link>
           ))}
         </nav>
-        
+
         {/* Desktop Auth Links */}
         <div className="hidden md:flex items-center gap-4">
+          <AvatarDropdown />
           <Link
             href="/login"
             className="header-item text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
@@ -154,11 +157,11 @@ export default function Header() {
               >
                 {item}
               </Link>
-             ))}
+            ))}
           </nav>
-          
+
           <div className="mobile-item w-24 h-px bg-foreground/10 my-4" />
-          
+
           <div className="flex flex-col items-center gap-4 w-full">
             <Link
               href="/login"
