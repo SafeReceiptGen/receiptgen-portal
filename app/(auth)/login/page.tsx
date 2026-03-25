@@ -153,7 +153,7 @@ export default function Login() {
             Welcome back to simpler returns.
           </h2>
           <p className="text-lg text-white/80">
-           Issue digital receipts and manage customer returns in one place.
+            Issue digital receipts and manage customer returns in one place.
           </p>
         </div>
 
