@@ -1,7 +1,9 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { getServerSession } from "@/lib/get-server-session";
 
-function layout({ children }: { children: React.ReactNode }) {
+async function layout({ children }: { children: React.ReactNode }) {
+  const session = await getServerSession();
   return (
     <SidebarProvider
       style={
@@ -11,7 +13,7 @@ function layout({ children }: { children: React.ReactNode }) {
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant="inset" />
+      <AppSidebar variant="inset" isAuthenticated={!!session?.user} />
       <SidebarInset>{children}</SidebarInset>
     </SidebarProvider>
   );

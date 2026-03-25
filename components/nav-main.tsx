@@ -13,19 +13,21 @@ import ReceiptFormScreen from "./form/form-screen";
 
 export function NavMain({
   items,
+  isAuthenticated = false,
 }: {
   items: {
     title: string;
     url: string;
     icon?: Icon;
   }[];
+  isAuthenticated?: boolean;
 }) {
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
         <SidebarMenu>
           <SidebarMenuItem className="flex items-center gap-2">
-            <ReceiptFormScreen />
+            <ReceiptFormScreen isAuthenticated={isAuthenticated} />
           </SidebarMenuItem>
         </SidebarMenu>
         <SidebarMenu>

@@ -27,7 +27,11 @@ const pillars = [
   },
 ];
 
-export const VisionSection = () => {
+export const VisionSection = ({
+  isAuthenticated,
+}: {
+  isAuthenticated: boolean;
+}) => {
   return (
     <>
       <style>{`
@@ -149,9 +153,7 @@ export const VisionSection = () => {
           </div>
 
           {/* CTA */}
-          {/* <div className="reveal-up" style={{ animationDelay: "0.8s" }}>
-          </div> */}
-          <ReceiptFormScreen />
+          <ReceiptFormScreen isAuthenticated={isAuthenticated} />
         </div>
       </section>
     </>

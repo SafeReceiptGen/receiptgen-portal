@@ -15,7 +15,6 @@ import { MobileWizard } from "./form-mobile";
 import Image from "next/image";
 import Link from "next/link";
 import { generateReceipt, ActionState } from "./actions";
-import { authClient } from "@/lib/auth-client";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -49,16 +48,16 @@ function saveToLocalStorage(receipt: ReceiptData) {
 // Component
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function ReceiptFormScreen() {
+export default function ReceiptFormScreen({
+  isAuthenticated,
+}: {
+  isAuthenticated: boolean;
+}) {
   const [data, setData] = useState<ReceiptData>(INITIAL_RECEIPT_DATA);
   const [showConversionDialog, setShowConversionDialog] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string>("");
   const [guestSaved, setGuestSaved] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
-
-  // ── Auth ──────────────────────────────────────────────────────────────────
-  const { data: session, isPending: sessionPending } = authClient.useSession();
-  const isAuthenticated = !!session?.user;
 
   // ── Server action (authenticated only) ──────────────────────────────────
   const boundAction = generateReceipt.bind(null, data);
@@ -136,7 +135,7 @@ export default function ReceiptFormScreen() {
     <form action={formAction} className="w-full">
       <button
         type="submit"
-        disabled={pending || sessionPending}
+        disabled={pending}
         className="group w-full flex flex-1 items-center justify-center gap-2 rounded-xl bg-linear-to-b from-blue-600 to-blue-700 py-2.5 text-sm font-semibold text-white shadow-[0_18px_45px_rgba(37,99,235,0.28)] ring-1 ring-black/5 transition-all hover:from-blue-500 hover:to-blue-700 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed dark:from-blue-500 dark:ring-white/10 dark:hover:from-blue-400"
       >
         {pending ? (
@@ -157,7 +156,6 @@ export default function ReceiptFormScreen() {
     <button
       type="button"
       onClick={handleGuestSave}
-      disabled={sessionPending}
       className="group flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-100 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition-all hover:bg-slate-200 active:scale-[0.99] disabled:opacity-60 dark:border-white/10 dark:bg-white/5 dark:text-white/80 dark:ring-white/10 dark:hover:bg-white/10"
     >
       {guestSaved ? (
@@ -247,7 +245,7 @@ export default function ReceiptFormScreen() {
                 </header>
 
                 {/* Guest banner */}
-                {!sessionPending && !isAuthenticated && (
+                {!isAuthenticated && (
                   <div className="shrink-0 p-4 pb-0">{GuestBanner}</div>
                 )}
 
