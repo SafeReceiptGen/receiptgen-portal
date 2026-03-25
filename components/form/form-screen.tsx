@@ -183,7 +183,7 @@ export default function ReceiptFormScreen({
       contentRadius="24px"
       animationDuration={0.3}
     >
-      <ExpandableScreenTrigger className="rounded-full bg-primary px-6 py-3 font-semibold text-white shadow-[0_18px_45px_rgba(11,42,74,0.35)] ring-1 ring-black/10 transition-colors hover:bg-[#10365F]">
+      <ExpandableScreenTrigger className="rounded-full bg-primary px-6 py-3 font-semibold text-white  ring-1 ring-black/10 transition-colors hover:bg-[#10365F]">
         Create a Receipt
       </ExpandableScreenTrigger>
 
