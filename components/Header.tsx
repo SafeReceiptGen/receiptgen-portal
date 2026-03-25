@@ -1,188 +1,176 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
-import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-import { AvatarDropdown } from "./landing/v2/auth-avatar";
-// import ReceiptFormScreen from "./form/form-screen";
+
+const navItems = ["Problem", "Solution", "How it Works", "Vision"];
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const headerRef = useRef<HTMLElement>(null);
-  const mobileMenuRef = useRef<HTMLDivElement>(null);
-  const tlRef = useRef<gsap.core.Timeline>(null);
-
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener("scroll", handleScroll);
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useGSAP(
-    () => {
-      // Desktop initial load animation
-      gsap.fromTo(
-        ".header-item",
-        { y: -50, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 1,
-          stagger: 0.1,
-          ease: "power3.out",
-        },
-      );
-
-      // Mobile Menu Animation Setup
-      gsap.set(mobileMenuRef.current, {
-        clipPath: "circle(0% at calc(100% - 2.5rem) 2.5rem)",
-        display: "none",
-      });
-
-      tlRef.current = gsap
-        .timeline({ paused: true })
-        .set(mobileMenuRef.current, { display: "flex" })
-        .to(mobileMenuRef.current, {
-          clipPath: "circle(150% at calc(100% - 2.5rem) 2.5rem)",
-          duration: 0.8,
-          ease: "power3.inOut",
-        })
-        .fromTo(
-          ".mobile-item",
-          { y: 30, opacity: 0, rotationX: -15, transformPerspective: 1000 },
-          {
-            y: 0,
-            opacity: 1,
-            rotationX: 0,
-            duration: 0.5,
-            stagger: 0.05,
-            ease: "back.out(1.2)",
-          },
-          "-=0.4",
-        );
-    },
-    { scope: headerRef },
-  );
-
   useEffect(() => {
-    if (isMobileMenuOpen) {
-      tlRef.current?.timeScale(1).play();
-      document.body.style.overflow = "hidden";
-    } else {
-      tlRef.current?.timeScale(2.5).reverse();
-      document.body.style.overflow = "unset";
-    }
-
+    document.body.style.overflow = isMobileMenuOpen ? "hidden" : "";
     return () => {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = "";
     };
   }, [isMobileMenuOpen]);
 
-  const navItems = ["Problem", "Solution", "How it Works", "Vision"];
-
   return (
-    <header
-      ref={headerRef}
-      className={`fixed top-0 w-full z-50 transition-all duration-500 ${
-        isScrolled
-          ? "bg-background/80 py-4 backdrop-blur-md shadow-sm"
-          : "bg-transparent py-6"
-      }`}
-    >
-      <div className="container mx-auto flex z-50 items-center justify-between px-6 md:px-12 relative">
-        <div className="header-item text-2xl font-bold tracking-tighter font-display z-50 text-foreground relative">
-          Safe<span className="text-primary">Receipts</span>
-        </div>
+    <>
+      <style>{`
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-12px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .header-item {
+          animation: slideDown 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        .header-item:nth-child(1) { animation-delay: 0.05s; }
+        .header-item:nth-child(2) { animation-delay: 0.12s; }
+        .header-item:nth-child(3) { animation-delay: 0.19s; }
+        .header-item:nth-child(4) { animation-delay: 0.26s; }
+        .header-item:nth-child(5) { animation-delay: 0.33s; }
+        .header-item:nth-child(6) { animation-delay: 0.40s; }
+        .header-item:nth-child(7) { animation-delay: 0.47s; }
 
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-8">
-          {navItems.map((item) => (
-            <Link
-              key={item}
-              href={`#${item.toLowerCase().replace(/\s+/g, "-")}`}
-              className="header-item text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
-            >
-              {item}
-            </Link>
-          ))}
-        </nav>
+        /* Mobile menu clip-path reveal from top-right corner */
+        .mobile-menu {
+          clip-path: circle(0% at calc(100% - 2.5rem) 2.5rem);
+          transition: clip-path 0.65s cubic-bezier(0.77, 0, 0.18, 1),
+                      visibility 0.65s;
+          visibility: hidden;
+        }
+        .mobile-menu.open {
+          clip-path: circle(150% at calc(100% - 2.5rem) 2.5rem);
+          visibility: visible;
+        }
 
-        {/* Desktop Auth Links */}
-        <div className="hidden md:flex items-center gap-4">
-          <AvatarDropdown />
-          <Link
-            href="/login"
-            className="header-item text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
-          >
-            Login
-          </Link>
-          <hr className="h-4 w-px bg-foreground/20" />
-          <Link
-            href="/signup"
-            className="header-item text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
-          >
-            Signup
-          </Link>
-        </div>
+        /* Staggered nav item reveal inside mobile menu */
+        .mobile-item {
+          opacity: 0;
+          transform: translateY(20px);
+          transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+                      transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .mobile-menu.open .mobile-item:nth-child(1) { transition-delay: 0.25s; opacity: 1; transform: none; }
+        .mobile-menu.open .mobile-item:nth-child(2) { transition-delay: 0.31s; opacity: 1; transform: none; }
+        .mobile-menu.open .mobile-item:nth-child(3) { transition-delay: 0.37s; opacity: 1; transform: none; }
+        .mobile-menu.open .mobile-item:nth-child(4) { transition-delay: 0.43s; opacity: 1; transform: none; }
+        .mobile-menu.open .mobile-item:nth-child(5) { transition-delay: 0.49s; opacity: 1; transform: none; }
+        .mobile-menu.open .mobile-item:nth-child(6) { transition-delay: 0.55s; opacity: 1; transform: none; }
+        .mobile-menu.open .mobile-item:nth-child(7) { transition-delay: 0.61s; opacity: 1; transform: none; }
+      `}</style>
 
-        {/* Mobile Toggle Button */}
-        <button
-          className="header-item md:hidden z-50 relative p-2 text-foreground active:scale-95 transition-transform"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          aria-label="Toggle menu"
-          aria-expanded={isMobileMenuOpen}
-        >
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
-
-      {/* Mobile Menu Overlay */}
-      <div
-        ref={mobileMenuRef}
-        className="fixed inset-0 z-40 bg-background/95 backdrop-blur-3xl flex-col items-center justify-center hidden pt-20 px-6 overflow-hidden md:hidden"
+      <header
+        className={`fixed top-0 z-50 w-full transition-all duration-500 ${
+          isScrolled
+            ? "bg-background/80 py-4 shadow-sm backdrop-blur-md"
+            : "bg-transparent py-6"
+        }`}
       >
-        <div className="flex flex-col items-center gap-8 w-full max-w-sm">
-          <nav className="flex flex-col items-center gap-6 text-center">
+        <div className="container relative mx-auto flex items-center justify-between px-6 md:px-12">
+          {/* Logo */}
+          <Link
+            href="/"
+            className="header-item relative z-50 font-display text-2xl font-bold tracking-tighter text-foreground"
+          >
+            Safe<span className="text-primary">Receipts</span>
+          </Link>
+
+          {/* Desktop nav */}
+          <nav className="hidden items-center gap-8 md:flex">
             {navItems.map((item) => (
               <Link
-                key={`mobile-${item}`}
+                key={item}
                 href={`#${item.toLowerCase().replace(/\s+/g, "-")}`}
-                className="mobile-item text-4xl font-bold tracking-tight text-foreground transition-all hover:text-primary active:scale-95 duration-200"
-                onClick={() => setIsMobileMenuOpen(false)}
+                className="header-item text-sm font-medium text-foreground/70 transition-colors duration-200 hover:text-primary"
               >
                 {item}
               </Link>
             ))}
           </nav>
 
-          <div className="mobile-item w-24 h-px bg-foreground/10 my-4" />
-
-          <div className="flex flex-col items-center gap-4 w-full">
+          {/* Desktop auth */}
+          <div className="hidden items-center gap-4 md:flex">
             <Link
               href="/login"
-              className="mobile-item w-full py-4 text-center rounded-2xl border border-foreground/10 text-lg font-medium transition-all focus:bg-foreground/5 hover:bg-foreground/5 active:scale-95"
-              onClick={() => setIsMobileMenuOpen(false)}
+              className="header-item text-sm font-medium text-foreground/70 transition-colors duration-200 hover:text-primary"
             >
-              Log In
+              Login
             </Link>
+            <span className="h-4 w-px bg-foreground/20" />
             <Link
               href="/signup"
-              className="mobile-item w-full py-4 text-center rounded-2xl bg-foreground text-background text-lg font-medium shadow-xl shadow-foreground/10 transition-all hover:shadow-foreground/20 hover:scale-[1.02] active:scale-95"
-              onClick={() => setIsMobileMenuOpen(false)}
+              className="header-item rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white transition-opacity duration-200 hover:opacity-90"
             >
               Sign Up
             </Link>
           </div>
+
+          {/* Mobile toggle */}
+          <button
+            className="header-item relative z-50 p-2 text-foreground transition-transform duration-150 active:scale-90 md:hidden"
+            onClick={() => setIsMobileMenuOpen((v) => !v)}
+            aria-label="Toggle menu"
+            aria-expanded={isMobileMenuOpen}
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
 
-        {/* Decorative elements */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,40,255,0.05),transparent_60%)] pointer-events-none -z-10" />
-      </div>
-    </header>
+        {/* Mobile menu overlay */}
+        <div
+          className={`mobile-menu fixed inset-0 z-40 flex flex-col items-center justify-center overflow-hidden bg-background/95 px-6 backdrop-blur-3xl md:hidden ${
+            isMobileMenuOpen ? "open" : ""
+          }`}
+        >
+          {/* Decorative glow */}
+          <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_120%,rgba(0,85,255,0.07),transparent_60%)]" />
+
+          <div className="flex w-full max-w-sm flex-col items-center gap-8">
+            {/* Nav links */}
+            <nav className="flex flex-col items-center gap-6 text-center">
+              {navItems.map((item) => (
+                <Link
+                  key={`mobile-${item}`}
+                  href={`#${item.toLowerCase().replace(/\s+/g, "-")}`}
+                  className="mobile-item text-4xl font-bold tracking-tight text-foreground transition-colors duration-200 hover:text-primary active:scale-95"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {item}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="mobile-item h-px w-24 bg-foreground/10" />
+
+            {/* Auth buttons */}
+            <div className="mobile-item flex w-full flex-col gap-3">
+              <Link
+                href="/login"
+                className="mobile-item w-full rounded-2xl border border-foreground/10 py-4 text-center text-lg font-medium transition-colors duration-200 hover:bg-foreground/5 active:scale-95"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Log In
+              </Link>
+              <Link
+                href="/signup"
+                className="mobile-item w-full rounded-2xl bg-foreground py-4 text-center text-lg font-semibold text-background shadow-xl shadow-foreground/10 transition-all duration-200 hover:scale-[1.02] hover:shadow-foreground/20 active:scale-95"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Sign Up
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
+    </>
   );
 }
