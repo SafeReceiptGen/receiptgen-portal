@@ -8,7 +8,13 @@ import { ResponsiveReceipts } from "@/components/dashboard/responsive-receipts";
 import { ResponsiveReturns } from "@/components/dashboard/responsive-returns";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   getReceiptsByRetailerId,
   getReturnsByRetailerId,
@@ -17,7 +23,7 @@ import {
 
 export default function DashboardPage() {
   const [selectedRetailerId, setSelectedRetailerId] = useState(
-    MOCK_RETAILERS[0]?.id || "retailer-001"
+    MOCK_RETAILERS[0]?.id || "retailer-001",
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -64,7 +70,6 @@ export default function DashboardPage() {
             <StatsCards receipts={receipts} returns={returns} />
 
             <Tabs defaultValue="receipts" className="w-full">
-
               <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
                 <TabsTrigger value="receipts">Receipts</TabsTrigger>
                 <TabsTrigger value="returns">Returns Review</TabsTrigger>

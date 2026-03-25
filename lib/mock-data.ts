@@ -2,11 +2,7 @@
 // Realistic data shapes matching the types in types/returns.ts.
 // Used to render all customer-facing ReturnFlow UI without a backend.
 
-import {
-  ReceiptForReturn,
-  ReturnRequest,
-  PudoPoint,
-} from "@/types/returns";
+import { ReceiptForReturn, ReturnRequest, PudoPoint } from "@/types/returns";
 import { Retailer, Receipt, Return } from "@/types/retailers";
 
 // ─── Retailers ────────────────────────────────────────────────────────────────
@@ -39,9 +35,17 @@ export const MOCK_RETAILERS: Retailer[] = [
 
 export const MOCK_PUDO_POINTS: PudoPoint[] = [
   { id: "pudo-1", name: "Osu Mall", address: "Oxford St, Osu, Accra" },
-  { id: "pudo-2", name: "Airport Junction", address: "Airport Residential Area, Accra" },
+  {
+    id: "pudo-2",
+    name: "Airport Junction",
+    address: "Airport Residential Area, Accra",
+  },
   { id: "pudo-3", name: "Achimota Retail Centre", address: "Achimota, Accra" },
-  { id: "pudo-4", name: "East Legon Hub", address: "Boundary Rd, East Legon, Accra" },
+  {
+    id: "pudo-4",
+    name: "East Legon Hub",
+    address: "Boundary Rd, East Legon, Accra",
+  },
 ];
 
 // ─── Receipts ─────────────────────────────────────────────────────────────────
@@ -55,9 +59,30 @@ const INITIAL_MOCK_RECEIPTS = {
     storeLogo: undefined,
     customerName: "Jayden Osafo",
     items: [
-      { id: "item-1", name: "Nike Airforce Gray", detail: "Size 42, Men's", quantity: 1, price: 2000, selected: false },
-      { id: "item-2", name: "Nike Airforce White", detail: "Size 42, Men's", quantity: 1, price: 2000, selected: false },
-      { id: "item-3", name: "Nike Jordan 1 Retro", detail: "Size 43, High Top, Red/Black", quantity: 1, price: 1000, selected: false },
+      {
+        id: "item-1",
+        name: "Nike Airforce Gray",
+        detail: "Size 42, Men's",
+        quantity: 1,
+        price: 2000,
+        selected: false,
+      },
+      {
+        id: "item-2",
+        name: "Nike Airforce White",
+        detail: "Size 42, Men's",
+        quantity: 1,
+        price: 2000,
+        selected: false,
+      },
+      {
+        id: "item-3",
+        name: "Nike Jordan 1 Retro",
+        detail: "Size 43, High Top, Red/Black",
+        quantity: 1,
+        price: 1000,
+        selected: false,
+      },
     ],
     currency: "GHS",
     subtotal: 5000,
@@ -78,9 +103,30 @@ const INITIAL_MOCK_RECEIPTS = {
     storeLogo: undefined,
     customerName: "Ama Mensah",
     items: [
-      { id: "item-4", name: "Samsung Galaxy Buds FE", detail: "Graphite, Wireless", quantity: 1, price: 850, selected: false },
-      { id: "item-5", name: "Anker PowerCore 20000", detail: "Portable Charger, USB-C", quantity: 2, price: 320, selected: false },
-      { id: "item-6", name: "Baseus Car Phone Mount", detail: "Magnetic, Dashboard", quantity: 1, price: 180, selected: false },
+      {
+        id: "item-4",
+        name: "Samsung Galaxy Buds FE",
+        detail: "Graphite, Wireless",
+        quantity: 1,
+        price: 850,
+        selected: false,
+      },
+      {
+        id: "item-5",
+        name: "Anker PowerCore 20000",
+        detail: "Portable Charger, USB-C",
+        quantity: 2,
+        price: 320,
+        selected: false,
+      },
+      {
+        id: "item-6",
+        name: "Baseus Car Phone Mount",
+        detail: "Magnetic, Dashboard",
+        quantity: 1,
+        price: 180,
+        selected: false,
+      },
     ],
     currency: "GHS",
     subtotal: 1670,
@@ -101,8 +147,22 @@ const INITIAL_MOCK_RECEIPTS = {
     storeLogo: undefined,
     customerName: "Kwame Asante",
     items: [
-      { id: "item-7", name: "Blue Phoenix Coffee Beans", detail: "Medium Roast, 100% Arabica, 200g", quantity: 2, price: 570, selected: false },
-      { id: "item-8", name: "Jet Lag Ground Coffee", detail: "70/30 Arabica/Robusta, 200g", quantity: 1, price: 623, selected: false },
+      {
+        id: "item-7",
+        name: "Blue Phoenix Coffee Beans",
+        detail: "Medium Roast, 100% Arabica, 200g",
+        quantity: 2,
+        price: 570,
+        selected: false,
+      },
+      {
+        id: "item-8",
+        name: "Jet Lag Ground Coffee",
+        detail: "70/30 Arabica/Robusta, 200g",
+        quantity: 1,
+        price: 623,
+        selected: false,
+      },
     ],
     currency: "GHS",
     subtotal: 1763,
@@ -136,11 +196,26 @@ const INITIAL_MOCK_RETURNS: Record<string, ReturnRequest> = {
     customerName: "Jayden Osafo",
     customerPhone: "+233244444444",
     items: [
-      { id: "item-1", name: "Nike Airforce Gray", detail: "Size 42, Men's", quantity: 1, price: 2000, selected: true },
-      { id: "item-3", name: "Nike Jordan 1 Retro", detail: "Size 43, High Top, Red/Black", quantity: 1, price: 1000, selected: true },
+      {
+        id: "item-1",
+        name: "Nike Airforce Gray",
+        detail: "Size 42, Men's",
+        quantity: 1,
+        price: 2000,
+        selected: true,
+      },
+      {
+        id: "item-3",
+        name: "Nike Jordan 1 Retro",
+        detail: "Size 43, High Top, Red/Black",
+        quantity: 1,
+        price: 1000,
+        selected: true,
+      },
     ],
     returnReason: "DEFECTIVE",
-    reasonDescription: "The sole of the Nike Airforce Gray is peeling after 3 days. The Jordan 1 has a scuff mark on the left toe that wasn't there at purchase.",
+    reasonDescription:
+      "The sole of the Nike Airforce Gray is peeling after 3 days. The Jordan 1 has a scuff mark on the left toe that wasn't there at purchase.",
     photoUrls: [],
     status: "WITH_RETAILER",
     isEligible: true,
@@ -158,10 +233,32 @@ const INITIAL_MOCK_RETURNS: Record<string, ReturnRequest> = {
     inTransitAt: "2026-03-08T14:00:00Z",
     withRetailerAt: "2026-03-09T10:00:00Z",
     activityLog: [
-      { id: "log-1", action: "Return request submitted", performedBy: "Customer", createdAt: "2026-03-08T09:15:00Z" },
-      { id: "log-2", action: "Item collected from customer", performedBy: "Courier", notes: "Picked up from Osu, Accra", createdAt: "2026-03-08T11:30:00Z" },
-      { id: "log-3", action: "Item in transit to retailer", performedBy: "Courier", createdAt: "2026-03-08T14:00:00Z" },
-      { id: "log-4", action: "Item received by retailer", performedBy: "Seizer Sneakers", notes: "Inspecting item condition", createdAt: "2026-03-09T10:00:00Z" },
+      {
+        id: "log-1",
+        action: "Return request submitted",
+        performedBy: "Customer",
+        createdAt: "2026-03-08T09:15:00Z",
+      },
+      {
+        id: "log-2",
+        action: "Item collected from customer",
+        performedBy: "Courier",
+        notes: "Picked up from Osu, Accra",
+        createdAt: "2026-03-08T11:30:00Z",
+      },
+      {
+        id: "log-3",
+        action: "Item in transit to retailer",
+        performedBy: "Courier",
+        createdAt: "2026-03-08T14:00:00Z",
+      },
+      {
+        id: "log-4",
+        action: "Item received by retailer",
+        performedBy: "Seizer Sneakers",
+        notes: "Inspecting item condition",
+        createdAt: "2026-03-09T10:00:00Z",
+      },
     ],
   },
   "return-002": {
@@ -172,7 +269,14 @@ const INITIAL_MOCK_RETURNS: Record<string, ReturnRequest> = {
     customerName: "Jayden Osafo",
     customerPhone: "+233244444444",
     items: [
-      { id: "item-2", name: "Nike Airforce White", detail: "Size 42, Men's", quantity: 1, price: 2000, selected: true },
+      {
+        id: "item-2",
+        name: "Nike Airforce White",
+        detail: "Size 42, Men's",
+        quantity: 1,
+        price: 2000,
+        selected: true,
+      },
     ],
     returnReason: "CHANGED_MIND",
     reasonDescription: "I found a better deal elsewhere.",
@@ -197,11 +301,36 @@ const INITIAL_MOCK_RETURNS: Record<string, ReturnRequest> = {
     reviewedAt: "2026-03-08T11:00:00Z",
     resolvedAt: "2026-03-08T11:00:00Z",
     activityLog: [
-      { id: "log-5", action: "Return request submitted", performedBy: "Customer", createdAt: "2026-03-07T15:00:00Z" },
-      { id: "log-6", action: "Item dropped off at Osu Mall PUDO", performedBy: "Customer", createdAt: "2026-03-07T16:30:00Z" },
-      { id: "log-7", action: "Item in transit to retailer", performedBy: "Courier", createdAt: "2026-03-07T18:00:00Z" },
-      { id: "log-8", action: "Item received by retailer", performedBy: "Seizer Sneakers", createdAt: "2026-03-08T09:00:00Z" },
-      { id: "log-9", action: "Refund approved — GHS 2,000 as Store Credit", performedBy: "Seizer Sneakers", createdAt: "2026-03-08T11:00:00Z" },
+      {
+        id: "log-5",
+        action: "Return request submitted",
+        performedBy: "Customer",
+        createdAt: "2026-03-07T15:00:00Z",
+      },
+      {
+        id: "log-6",
+        action: "Item dropped off at Osu Mall PUDO",
+        performedBy: "Customer",
+        createdAt: "2026-03-07T16:30:00Z",
+      },
+      {
+        id: "log-7",
+        action: "Item in transit to retailer",
+        performedBy: "Courier",
+        createdAt: "2026-03-07T18:00:00Z",
+      },
+      {
+        id: "log-8",
+        action: "Item received by retailer",
+        performedBy: "Seizer Sneakers",
+        createdAt: "2026-03-08T09:00:00Z",
+      },
+      {
+        id: "log-9",
+        action: "Refund approved — GHS 2,000 as Store Credit",
+        performedBy: "Seizer Sneakers",
+        createdAt: "2026-03-08T11:00:00Z",
+      },
     ],
   },
   "return-003": {
@@ -212,7 +341,14 @@ const INITIAL_MOCK_RETURNS: Record<string, ReturnRequest> = {
     customerName: "Ama Mensah",
     customerPhone: "+233551234567",
     items: [
-      { id: "item-4", name: "Samsung Galaxy Buds FE", detail: "Graphite, Wireless", quantity: 1, price: 850, selected: true },
+      {
+        id: "item-4",
+        name: "Samsung Galaxy Buds FE",
+        detail: "Graphite, Wireless",
+        quantity: 1,
+        price: 850,
+        selected: true,
+      },
     ],
     returnReason: "DEFECTIVE",
     reasonDescription: "Right earbud not charging. Tried multiple cables.",
@@ -227,7 +363,8 @@ const INITIAL_MOCK_RETURNS: Record<string, ReturnRequest> = {
       phoneCountry: "GH",
     },
     refundAmount: 850,
-    rejectionReason: "Item shows signs of water damage which voids the return policy.",
+    rejectionReason:
+      "Item shows signs of water damage which voids the return policy.",
     currency: "GHS",
     requestedAt: "2026-03-06T12:00:00Z",
     collectedAt: "2026-03-06T15:30:00Z",
@@ -235,11 +372,36 @@ const INITIAL_MOCK_RETURNS: Record<string, ReturnRequest> = {
     withRetailerAt: "2026-03-07T14:00:00Z",
     reviewedAt: "2026-03-08T10:00:00Z",
     activityLog: [
-      { id: "log-10", action: "Return request submitted", performedBy: "Customer", createdAt: "2026-03-06T12:00:00Z" },
-      { id: "log-11", action: "Item collected from customer", performedBy: "Courier", createdAt: "2026-03-06T15:30:00Z" },
-      { id: "log-12", action: "Item in transit to retailer", performedBy: "Courier", createdAt: "2026-03-07T08:00:00Z" },
-      { id: "log-13", action: "Item received by retailer", performedBy: "Melcom Ghana", createdAt: "2026-03-07T14:00:00Z" },
-      { id: "log-14", action: "Return rejected — Item shows water damage", performedBy: "Melcom Ghana", createdAt: "2026-03-08T10:00:00Z" },
+      {
+        id: "log-10",
+        action: "Return request submitted",
+        performedBy: "Customer",
+        createdAt: "2026-03-06T12:00:00Z",
+      },
+      {
+        id: "log-11",
+        action: "Item collected from customer",
+        performedBy: "Courier",
+        createdAt: "2026-03-06T15:30:00Z",
+      },
+      {
+        id: "log-12",
+        action: "Item in transit to retailer",
+        performedBy: "Courier",
+        createdAt: "2026-03-07T08:00:00Z",
+      },
+      {
+        id: "log-13",
+        action: "Item received by retailer",
+        performedBy: "Melcom Ghana",
+        createdAt: "2026-03-07T14:00:00Z",
+      },
+      {
+        id: "log-14",
+        action: "Return rejected — Item shows water damage",
+        performedBy: "Melcom Ghana",
+        createdAt: "2026-03-08T10:00:00Z",
+      },
     ],
   },
 };
@@ -285,9 +447,27 @@ const DASHBOARD_MOCK_RECEIPTS: Receipt[] = [
     customerName: "Jayden Osafo",
     customerPhone: "0244444444",
     items: [
-      { id: "1", name: "Nike Airforce Gray", detail: "Size 42, Men's", quantity: 1, price: 2000 },
-      { id: "2", name: "Nike Airforce White", detail: "Size 42, Men's", quantity: 1, price: 2000 },
-      { id: "3", name: "Nike Jordan 1 Retro", detail: "Size 43, High Top, Red/Black", quantity: 1, price: 1000 },
+      {
+        id: "1",
+        name: "Nike Airforce Gray",
+        detail: "Size 42, Men's",
+        quantity: 1,
+        price: 2000,
+      },
+      {
+        id: "2",
+        name: "Nike Airforce White",
+        detail: "Size 42, Men's",
+        quantity: 1,
+        price: 2000,
+      },
+      {
+        id: "3",
+        name: "Nike Jordan 1 Retro",
+        detail: "Size 43, High Top, Red/Black",
+        quantity: 1,
+        price: 1000,
+      },
     ],
     subtotal: 5000,
     total: 5000,
@@ -306,9 +486,27 @@ const DASHBOARD_MOCK_RECEIPTS: Receipt[] = [
     customerName: "Ama Mensah",
     customerPhone: "0551234567",
     items: [
-      { id: "4", name: "Samsung Galaxy Buds FE", detail: "Graphite, Wireless", quantity: 1, price: 850 },
-      { id: "5", name: "Anker PowerCore 20000", detail: "Portable Charger, USB-C", quantity: 2, price: 320 },
-      { id: "6", name: "Baseus Car Phone Mount", detail: "Magnetic, Dashboard", quantity: 1, price: 180 },
+      {
+        id: "4",
+        name: "Samsung Galaxy Buds FE",
+        detail: "Graphite, Wireless",
+        quantity: 1,
+        price: 850,
+      },
+      {
+        id: "5",
+        name: "Anker PowerCore 20000",
+        detail: "Portable Charger, USB-C",
+        quantity: 2,
+        price: 320,
+      },
+      {
+        id: "6",
+        name: "Baseus Car Phone Mount",
+        detail: "Magnetic, Dashboard",
+        quantity: 1,
+        price: 180,
+      },
     ],
     subtotal: 1670,
     total: 1670,
@@ -327,8 +525,20 @@ const DASHBOARD_MOCK_RECEIPTS: Receipt[] = [
     customerName: "Kwame Asante",
     customerPhone: "0551234567",
     items: [
-      { id: "7", name: "Blue Phoenix Coffee Beans", detail: "Medium Roast, 100% Arabica, 200g", quantity: 2, price: 570 },
-      { id: "8", name: "Jet Lag Ground Coffee", detail: "70/30 Arabica/Robusta, 200g", quantity: 1, price: 623 },
+      {
+        id: "7",
+        name: "Blue Phoenix Coffee Beans",
+        detail: "Medium Roast, 100% Arabica, 200g",
+        quantity: 2,
+        price: 570,
+      },
+      {
+        id: "8",
+        name: "Jet Lag Ground Coffee",
+        detail: "70/30 Arabica/Robusta, 200g",
+        quantity: 1,
+        price: 623,
+      },
     ],
     subtotal: 1763,
     total: 1763,
@@ -346,7 +556,13 @@ const DASHBOARD_MOCK_RECEIPTS: Receipt[] = [
     customerName: "Benjamin Kojo",
     customerPhone: "0201234567",
     items: [
-      { id: "9", name: "Adidas Ultraboost 23", detail: "Black, Size 10", quantity: 1, price: 2500 },
+      {
+        id: "9",
+        name: "Adidas Ultraboost 23",
+        detail: "Black, Size 10",
+        quantity: 1,
+        price: 2500,
+      },
     ],
     subtotal: 2500,
     total: 2500,
@@ -365,7 +581,13 @@ const DASHBOARD_MOCK_RECEIPTS: Receipt[] = [
     customerName: "Akosua Adu",
     customerPhone: "0241234567",
     items: [
-      { id: "10", name: "LG 55 inch OLED TV", detail: "4K, Smart", quantity: 1, price: 8500 },
+      {
+        id: "10",
+        name: "LG 55 inch OLED TV",
+        detail: "4K, Smart",
+        quantity: 1,
+        price: 8500,
+      },
     ],
     subtotal: 8500,
     total: 8500,
@@ -384,7 +606,13 @@ const DASHBOARD_MOCK_RECEIPTS: Receipt[] = [
     customerName: "David Mensah",
     customerPhone: "0261234567",
     items: [
-      { id: "11", name: "Puma RS-X", detail: "White/Black, Size 9", quantity: 2, price: 1200 },
+      {
+        id: "11",
+        name: "Puma RS-X",
+        detail: "White/Black, Size 9",
+        quantity: 2,
+        price: 1200,
+      },
     ],
     subtotal: 2400,
     total: 2400,
@@ -403,8 +631,20 @@ const DASHBOARD_MOCK_RECEIPTS: Receipt[] = [
     customerName: "Abigail Boateng",
     customerPhone: "0271234567",
     items: [
-      { id: "12", name: "Organic Honey", detail: "500ml, Raw", quantity: 3, price: 450 },
-      { id: "13", name: "Green Tea Leaves", detail: "Premium Blend, 100g", quantity: 1, price: 380 },
+      {
+        id: "12",
+        name: "Organic Honey",
+        detail: "500ml, Raw",
+        quantity: 3,
+        price: 450,
+      },
+      {
+        id: "13",
+        name: "Green Tea Leaves",
+        detail: "Premium Blend, 100g",
+        quantity: 1,
+        price: 380,
+      },
     ],
     subtotal: 1730,
     total: 1730,
@@ -423,7 +663,13 @@ const DASHBOARD_MOCK_RECEIPTS: Receipt[] = [
     customerName: "Emmanuel Osei",
     customerPhone: "0281234567",
     items: [
-      { id: "14", name: "Apple AirPods Pro", detail: "White", quantity: 1, price: 1850 },
+      {
+        id: "14",
+        name: "Apple AirPods Pro",
+        detail: "White",
+        quantity: 1,
+        price: 1850,
+      },
     ],
     subtotal: 1850,
     total: 1850,
@@ -442,7 +688,13 @@ const DASHBOARD_MOCK_RECEIPTS: Receipt[] = [
     customerName: "Nana Yaa",
     customerPhone: "0291234567",
     items: [
-      { id: "15", name: "New Balance 990v6", detail: "Grey, Size 8", quantity: 1, price: 3200 },
+      {
+        id: "15",
+        name: "New Balance 990v6",
+        detail: "Grey, Size 8",
+        quantity: 1,
+        price: 3200,
+      },
     ],
     subtotal: 3200,
     total: 3200,
@@ -461,7 +713,13 @@ const DASHBOARD_MOCK_RECEIPTS: Receipt[] = [
     customerName: "Samuel Adjei",
     customerPhone: "0301234567",
     items: [
-      { id: "16", name: "Dark Chocolate Bar", detail: "70% Cocoa, 100g", quantity: 5, price: 250 },
+      {
+        id: "16",
+        name: "Dark Chocolate Bar",
+        detail: "70% Cocoa, 100g",
+        quantity: 5,
+        price: 250,
+      },
     ],
     subtotal: 1250,
     total: 1250,
@@ -484,11 +742,24 @@ const DASHBOARD_MOCK_RETURNS: Return[] = [
     customerName: "Jayden Osafo",
     customerPhone: "0244444444",
     items: [
-      { id: "1", name: "Nike Airforce Gray", detail: "Size 42, Men's", quantity: 1, price: 2000 },
-      { id: "3", name: "Nike Jordan 1 Retro", detail: "Size 43, High Top, Red/Black", quantity: 1, price: 1000 },
+      {
+        id: "1",
+        name: "Nike Airforce Gray",
+        detail: "Size 42, Men's",
+        quantity: 1,
+        price: 2000,
+      },
+      {
+        id: "3",
+        name: "Nike Jordan 1 Retro",
+        detail: "Size 43, High Top, Red/Black",
+        quantity: 1,
+        price: 1000,
+      },
     ],
     returnReason: "Defective - sole peeling",
-    reasonDescription: "The sole of the Nike Airforce Gray is peeling after 3 days. The Jordan 1 has a scuff mark on the left toe.",
+    reasonDescription:
+      "The sole of the Nike Airforce Gray is peeling after 3 days. The Jordan 1 has a scuff mark on the left toe.",
     status: "pending",
     refundAmount: 3000,
     currency: "GHS",
@@ -504,7 +775,13 @@ const DASHBOARD_MOCK_RETURNS: Return[] = [
     customerName: "Jayden Osafo",
     customerPhone: "0244444444",
     items: [
-      { id: "2", name: "Nike Airforce White", detail: "Size 42, Men's", quantity: 1, price: 2000 },
+      {
+        id: "2",
+        name: "Nike Airforce White",
+        detail: "Size 42, Men's",
+        quantity: 1,
+        price: 2000,
+      },
     ],
     returnReason: "Changed mind",
     reasonDescription: "Found a better deal elsewhere.",
@@ -524,7 +801,13 @@ const DASHBOARD_MOCK_RETURNS: Return[] = [
     customerName: "Ama Mensah",
     customerPhone: "0551234567",
     items: [
-      { id: "4", name: "Samsung Galaxy Buds FE", detail: "Graphite, Wireless", quantity: 1, price: 850 },
+      {
+        id: "4",
+        name: "Samsung Galaxy Buds FE",
+        detail: "Graphite, Wireless",
+        quantity: 1,
+        price: 850,
+      },
     ],
     returnReason: "Defective - not charging",
     reasonDescription: "Right earbud not charging. Tried multiple cables.",
@@ -533,7 +816,8 @@ const DASHBOARD_MOCK_RETURNS: Return[] = [
     currency: "GHS",
     requestedAt: "2026-03-06T12:00:00Z",
     reviewedAt: "2026-03-08T10:00:00Z",
-    rejectionReason: "Item shows signs of water damage which voids the return policy.",
+    rejectionReason:
+      "Item shows signs of water damage which voids the return policy.",
   },
   {
     id: "return-d004",
@@ -545,7 +829,13 @@ const DASHBOARD_MOCK_RETURNS: Return[] = [
     customerName: "Abigail Boateng",
     customerPhone: "0271234567",
     items: [
-      { id: "12", name: "Organic Honey", detail: "500ml, Raw", quantity: 1, price: 450 },
+      {
+        id: "12",
+        name: "Organic Honey",
+        detail: "500ml, Raw",
+        quantity: 1,
+        price: 450,
+      },
     ],
     returnReason: "Expiry date issue",
     reasonDescription: "The product has expired. Need a fresh batch.",
@@ -568,10 +858,10 @@ export function getReturnsByRetailerId(retailerId: string): Return[] {
   return DASHBOARD_MOCK_RETURNS.filter((r) => r.retailerId === retailerId);
 }
 
-export function getReceiptById(id: string): Receipt | undefined {
+export function getDashboardReceiptById(id: string): Receipt | undefined {
   return DASHBOARD_MOCK_RECEIPTS.find((r) => r.id === id);
 }
 
-export function getReturnById(id: string): Return | undefined {
+export function getDashboardReturnById(id: string): Return | undefined {
   return DASHBOARD_MOCK_RETURNS.find((r) => r.id === id);
 }
