@@ -133,11 +133,11 @@ export default function ReceiptFormScreen() {
   /** Action bar button (changes based on auth state) */
   const ActionButton = isAuthenticated ? (
     // Authenticated: submit to server action
-    <form action={formAction}>
+    <form action={formAction} className="w-full">
       <button
         type="submit"
         disabled={pending || sessionPending}
-        className="group flex flex-1 items-center justify-center gap-2 rounded-xl bg-linear-to-b from-blue-600 to-blue-700 py-2.5 text-sm font-semibold text-white shadow-[0_18px_45px_rgba(37,99,235,0.28)] ring-1 ring-black/5 transition-all hover:from-blue-500 hover:to-blue-700 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed dark:from-blue-500 dark:ring-white/10 dark:hover:from-blue-400 w-full"
+        className="group w-full flex flex-1 items-center justify-center gap-2 rounded-xl bg-linear-to-b from-blue-600 to-blue-700 py-2.5 text-sm font-semibold text-white shadow-[0_18px_45px_rgba(37,99,235,0.28)] ring-1 ring-black/5 transition-all hover:from-blue-500 hover:to-blue-700 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed dark:from-blue-500 dark:ring-white/10 dark:hover:from-blue-400"
       >
         {pending ? (
           <>
@@ -270,7 +270,7 @@ export default function ReceiptFormScreen() {
                       {state.message}
                     </div>
                   )}
-                  <div className="flex gap-3">{ActionButton}</div>
+                  <div className="flex gap-3 ">{ActionButton}</div>
                 </div>
               </div>
 
