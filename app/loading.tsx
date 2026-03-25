@@ -2,9 +2,8 @@ export default function Loading() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="relative w-48 overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50 px-4 pb-4 pt-4 shadow-sm">
-
         {/* Shimmer sweep */}
-        <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.4s_infinite] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+        <div className="absolute inset-0 -translate-x-full animate-pulse bg-linear-to-r from-transparent via-white/50 to-transparent" />
 
         {/* Receipt top notch */}
         <div className="mb-3 flex justify-center">
@@ -33,7 +32,10 @@ export default function Loading() {
         <div className="mb-4 flex flex-col gap-2.5">
           {[80, 56, 68].map((w) => (
             <div key={w} className="flex items-center justify-between">
-              <div className="h-2 rounded bg-neutral-200" style={{ width: w }} />
+              <div
+                className="h-2 rounded bg-neutral-200"
+                style={{ width: w }}
+              />
               <div className="h-2 w-8 rounded bg-neutral-200" />
             </div>
           ))}
@@ -68,18 +70,9 @@ export default function Loading() {
         {/* Receipt bottom tear */}
         <div className="absolute bottom-0 left-0 right-0 flex">
           {Array.from({ length: 12 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-2 flex-1 rounded-t-full bg-background"
-            />
+            <div key={i} className="h-2 flex-1 rounded-t-full bg-background" />
           ))}
         </div>
-
-        <style>{`
-          @keyframes shimmer {
-            100% { transform: translateX(250%); }
-          }
-        `}</style>
       </div>
     </div>
   );
