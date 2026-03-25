@@ -46,7 +46,6 @@ export default function Header({
         .header-item:nth-child(6) { animation-delay: 0.40s; }
         .header-item:nth-child(7) { animation-delay: 0.47s; }
 
-        /* Mobile menu clip-path reveal from top-right corner */
         .mobile-menu {
           clip-path: circle(0% at calc(100% - 2.5rem) 2.5rem);
           transition: clip-path 0.65s cubic-bezier(0.77, 0, 0.18, 1),
@@ -58,7 +57,6 @@ export default function Header({
           visibility: visible;
         }
 
-        /* Staggered nav item reveal inside mobile menu */
         .mobile-item {
           opacity: 0;
           transform: translateY(20px);
@@ -74,6 +72,55 @@ export default function Header({
         .mobile-menu.open .mobile-item:nth-child(7) { transition-delay: 0.61s; opacity: 1; transform: none; }
       `}</style>
 
+      {/*
+        IMPORTANT: The overlay is a sibling of <header>, NOT a child.
+        When backdrop-filter is applied to the header on scroll, it creates a new
+        CSS containing block — causing any `fixed` descendants to position relative
+        to the header's box instead of the viewport. Moving the overlay outside
+        the header guarantees it always covers the full screen regardless of scroll.
+      */}
+      <div
+        className={`mobile-menu fixed inset-0 z-40 flex flex-col items-center justify-center overflow-hidden bg-background/95 px-6 backdrop-blur-3xl md:hidden ${
+          isMobileMenuOpen ? "open" : ""
+        }`}
+      >
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_120%,rgba(0,85,255,0.07),transparent_60%)]" />
+
+        <div className="flex w-full max-w-sm flex-col items-center gap-8">
+          <nav className="flex flex-col items-center gap-6 text-center">
+            {navItems.map((item) => (
+              <Link
+                key={`mobile-${item}`}
+                href={`#${item.toLowerCase().replace(/\s+/g, "-")}`}
+                className="mobile-item text-4xl font-bold tracking-tight text-foreground transition-colors duration-200 hover:text-primary active:scale-95"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {item}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="mobile-item h-px w-24 bg-foreground/10" />
+
+          <div className="mobile-item flex w-full flex-col gap-3">
+            <Link
+              href="/login"
+              className="mobile-item w-full rounded-2xl border border-foreground/10 py-4 text-center text-lg font-medium transition-colors duration-200 hover:bg-foreground/5 active:scale-95"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Log In
+            </Link>
+            <Link
+              href="/signup"
+              className="mobile-item w-full rounded-2xl bg-primary py-4 text-center text-lg font-semibold text-white shadow-xl shadow-foreground/10 transition-all duration-200 hover:scale-[1.02] hover:shadow-foreground/20 active:scale-95"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Sign Up
+            </Link>
+          </div>
+        </div>
+      </div>
+
       <header
         className={`fixed top-0 z-50 w-full transition-all duration-500 ${
           isScrolled
@@ -82,7 +129,6 @@ export default function Header({
         }`}
       >
         <div className="container relative mx-auto flex items-center justify-between px-6 md:px-12">
-          {/* Logo */}
           <Link
             href="/"
             className="header-item relative z-50 font-display text-2xl font-bold tracking-tighter text-foreground"
@@ -90,7 +136,6 @@ export default function Header({
             Safe<span className="text-primary">Receipts</span>
           </Link>
 
-          {/* Desktop nav */}
           <nav className="hidden items-center gap-8 md:flex">
             {navItems.map((item) => (
               <Link
@@ -126,8 +171,22 @@ export default function Header({
               </Link>
             </div>
           )}
+          <div className="hidden items-center gap-4 md:flex">
+            <Link
+              href="/login"
+              className="header-item text-sm font-medium text-foreground/70 transition-colors duration-200 hover:text-primary"
+            >
+              Login
+            </Link>
+            <span className="h-4 w-px bg-foreground/20" />
+            <Link
+              href="/signup"
+              className="header-item rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white transition-opacity duration-200 hover:opacity-90"
+            >
+              Sign Up
+            </Link>
+          </div>
 
-          {/* Mobile toggle */}
           <button
             className="header-item relative z-50 p-2 text-foreground transition-transform duration-150 active:scale-90 md:hidden"
             onClick={() => setIsMobileMenuOpen((v) => !v)}
