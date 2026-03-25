@@ -1,6 +1,6 @@
 import ReceiptFormScreen from "@/components/form/form-screen";
 
-export const Hero = () => {
+export const Hero = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
   return (
     <>
       <style>{`
@@ -112,7 +112,7 @@ export const Hero = () => {
 
         {/* CTA form */}
 
-        <ReceiptFormScreen />
+        <ReceiptFormScreen isAuthenticated={isAuthenticated} />
 
         {/* Retailer ticker 
         DO NOT REMOVE THIS COMPONENT

@@ -16,8 +16,10 @@ import { ValueSection } from "@/components/landing/v2/ValueSection";
 import { VisionSection } from "@/components/landing/v2/VisionSection";
 import { ProblemSection } from "@/components/landing/v2/ProblemSection";
 import { SolutionSection } from "@/components/landing/v2/SolutionSection";
+import { getServerSession } from "@/lib/get-server-session";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const session = await getServerSession();
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -41,12 +43,12 @@ export default function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       {/* v2 Components */}
-      <Hero />
+      <Hero isAuthenticated={!!session?.user} />
       <ProblemSection />
       <SolutionSection />
       <HowItWorks />
       <ValueSection />
-      <VisionSection />
+      <VisionSection isAuthenticated={!!session?.user} />
     </main>
   );
 }

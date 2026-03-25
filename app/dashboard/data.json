@@ -1,0 +1,92 @@
+[
+  {
+    "id": 1,
+    "header": "Defective Item - Melcom Osu",
+    "type": "Return",
+    "status": "In Process",
+    "target": "$125",
+    "limit": "2",
+    "reviewer": "Eddie Lake"
+  },
+  {
+    "id": 2,
+    "header": "Wrong Size - Franko Trading",
+    "type": "Return",
+    "status": "Done",
+    "target": "$45",
+    "limit": "1",
+    "reviewer": "Eddie Lake"
+  },
+  {
+    "id": 3,
+    "header": "Suspicious Receipt Reuse",
+    "type": "Fraud Alert",
+    "status": "In Process",
+    "target": "$890",
+    "limit": "High",
+    "reviewer": "Jamik Tashpulatov"
+  },
+  {
+    "id": 4,
+    "header": "Changed Mind - Jumia Hub",
+    "type": "Return",
+    "status": "Done",
+    "target": "$30",
+    "limit": "1",
+    "reviewer": "Jamik Tashpulatov"
+  },
+  {
+    "id": 5,
+    "header": "Fake Receipt Attempt",
+    "type": "Fraud Alert",
+    "status": "Done",
+    "target": "$1,200",
+    "limit": "High",
+    "reviewer": "Jamik Tashpulatov"
+  },
+  {
+    "id": 6,
+    "header": "Warranty Claim - Samsung TV",
+    "type": "Warranty",
+    "status": "In Process",
+    "target": "$550",
+    "limit": "3",
+    "reviewer": "Assign reviewer"
+  },
+  {
+    "id": 7,
+    "header": "Damaged in Transit",
+    "type": "Refund",
+    "status": "Done",
+    "target": "$75",
+    "limit": "2",
+    "reviewer": "Assign reviewer"
+  },
+  {
+    "id": 8,
+    "header": "Missing Parts - IKEA Desk",
+    "type": "Support",
+    "status": "In Process",
+    "target": "$120",
+    "limit": "5",
+    "reviewer": "Assign reviewer"
+  },
+  {
+    "id": 9,
+    "header": "Multiple Returns - Same User",
+    "type": "Fraud Alert",
+    "status": "In Process",
+    "target": "$340",
+    "limit": "Medium",
+    "reviewer": "Assign reviewer"
+  },
+  {
+    "id": 10,
+    "header": "Late Return Request",
+    "type": "Return",
+    "status": "Done",
+    "target": "$60",
+    "limit": "1",
+    "reviewer": "Assign reviewer"
+  }
+]

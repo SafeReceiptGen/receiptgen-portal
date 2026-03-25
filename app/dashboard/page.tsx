@@ -1,33 +1,23 @@
-"use client";
+import { ChartAreaInteractive } from "@/components/chart-area-interactive";
+// import { DataTable } from "@/components/data-table";
+import { SectionCards } from "@/components/section-cards";
+import { SiteHeader } from "@/components/site-header";
 
-import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
-import { Button } from "@/components/ui/button";
+// import data from "./data.json";
 
-export default function DashboardPage() {
-  const router = useRouter();
-  const { data } = authClient.useSession();
-
-  const handleSignOut = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          router.push("/");
-        },
-      },
-    });
-  };
-
+export default function Page() {
   return (
     <>
-      <div className="flex items-center justify-center h-screen">
-        <div className="flex flex-col items-center gap-4">
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome to your dashboard</p>
-          <p className="text-muted-foreground">
-            You are logged in as {data?.user?.email}
-          </p>
-          <Button onClick={handleSignOut}>Sign out</Button>
+      <SiteHeader />
+      <div className="flex flex-1 flex-col">
+        <div className="@container/main flex flex-1 flex-col gap-2">
+          <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+            <SectionCards />
+            <div className="px-4 lg:px-6">
+              <ChartAreaInteractive />
+            </div>
+            {/* <DataTable data={data} /> */}
+          </div>
         </div>
       </div>
     </>

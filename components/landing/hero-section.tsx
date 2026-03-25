@@ -30,8 +30,8 @@ export function HeroSection() {
                   Give customers proof-of-purchase and agreed return windows in
                   under 60 seconds. No signup required.
                 </p>
-
-                <ReceiptFormScreen />
+                {/* Fetch auth from server (getServerSession) if you want to use the component below */}
+                <ReceiptFormScreen isAuthenticated={false} />
               </div>
             </div>
           </div>
