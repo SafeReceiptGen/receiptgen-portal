@@ -196,59 +196,6 @@ export default function Header({
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
-
-        {/* Mobile menu overlay */}
-        <div
-          className={`mobile-menu fixed inset-0 z-40 flex flex-col items-center justify-center overflow-hidden bg-background/95 px-6 backdrop-blur-3xl md:hidden ${
-            isMobileMenuOpen ? "open" : ""
-          }`}
-        >
-          {/* Decorative glow */}
-          <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_120%,rgba(0,85,255,0.07),transparent_60%)]" />
-
-          <div className="flex w-full max-w-sm flex-col items-center gap-8">
-            {/* Nav links */}
-            <nav className="flex flex-col items-center gap-6 text-center">
-              {navItems.map((item) => (
-                <Link
-                  key={`mobile-${item}`}
-                  href={`#${item.toLowerCase().replace(/\s+/g, "-")}`}
-                  className="mobile-item text-4xl font-bold tracking-tight text-foreground transition-colors duration-200 hover:text-primary active:scale-95"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item}
-                </Link>
-              ))}
-            </nav>
-
-            <div className="mobile-item h-px w-24 bg-foreground/10" />
-
-            {/* Auth buttons */}
-            {userSession ? (
-              <AvatarDropdown
-                image={userSession.user.image}
-                name={userSession.user.name}
-              />
-            ) : (
-              <div className="mobile-item flex w-full flex-col gap-3">
-                <Link
-                  href="/login"
-                  className="mobile-item w-full rounded-2xl border border-foreground/10 py-4 text-center text-lg font-medium transition-colors duration-200 hover:bg-foreground/5 active:scale-95"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Log In
-                </Link>
-                <Link
-                  href="/signup"
-                  className="mobile-item w-full rounded-2xl bg-foreground py-4 text-center text-lg font-semibold text-background shadow-xl shadow-foreground/10 transition-all duration-200 hover:scale-[1.02] hover:shadow-foreground/20 active:scale-95"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
       </header>
     </>
   );
