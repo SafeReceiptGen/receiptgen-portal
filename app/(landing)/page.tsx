@@ -47,7 +47,7 @@ export default function LandingPage() {
       <HowItWorks />
       <ValueSection />
       <VisionSection />
-      <Footer />
+      {/* <Footer /> */}
     </main>
   );
 }
