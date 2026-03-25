@@ -24,6 +24,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Session } from "@/lib/auth-client";
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
@@ -157,13 +158,13 @@ function Sidebar({
   collapsible = "offcanvas",
   className,
   children,
-  isAuthenticated,
+  session,
   ...props
 }: React.ComponentProps<"div"> & {
   side?: "left" | "right";
   variant?: "sidebar" | "floating" | "inset";
   collapsible?: "offcanvas" | "icon" | "none";
-  isAuthenticated?: boolean;
+  session: Session | null;
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
 

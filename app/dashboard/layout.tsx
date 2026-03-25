@@ -13,7 +13,7 @@ async function layout({ children }: { children: React.ReactNode }) {
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant="inset" isAuthenticated={!!session?.user} />
+      <AppSidebar variant="inset" session={session} />
       <SidebarInset>{children}</SidebarInset>
     </SidebarProvider>
   );

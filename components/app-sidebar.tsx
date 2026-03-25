@@ -32,11 +32,6 @@ import { GalleryVerticalEnd } from "lucide-react";
 import { TeamSwitcher } from "./team-switcher";
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   navMain: [
     {
       title: "Dashboard",
@@ -156,21 +151,21 @@ const data = {
 };
 
 export function AppSidebar({
-  isAuthenticated,
+  session,
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
+    <Sidebar collapsible="offcanvas" session={session} {...props}>
       <SidebarHeader>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} isAuthenticated={isAuthenticated} />
+        <NavMain items={data.navMain} isAuthenticated={!!session?.user} />
         <NavDocuments items={data.documents} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={session?.user!} />
       </SidebarFooter>
     </Sidebar>
   );
