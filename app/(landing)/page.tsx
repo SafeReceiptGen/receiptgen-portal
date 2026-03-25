@@ -8,14 +8,14 @@
 // import { SignUpSection } from "@/components/landing/sign-up-section";
 // import { SiteFooter } from "@/components/landing/site-footer";
 
-import { Footer } from "@/components/landing/v2/Footer";
+// import { Footer } from "@/components/landing/v2/Footer";
+import Script from "next/script";
 import { Hero } from "@/components/landing/v2/Hero";
-import { ProblemSection } from "@/components/landing/v2/ProblemSection";
-import { SolutionSection } from "@/components/landing/v2/SolutionSection";
 import { HowItWorks } from "@/components/landing/v2/HowItWorks";
 import { ValueSection } from "@/components/landing/v2/ValueSection";
 import { VisionSection } from "@/components/landing/v2/VisionSection";
-import Script from "next/script";
+import { ProblemSection } from "@/components/landing/v2/ProblemSection";
+import { SolutionSection } from "@/components/landing/v2/SolutionSection";
 
 export default function LandingPage() {
   const structuredData = {
@@ -47,7 +47,6 @@ export default function LandingPage() {
       <HowItWorks />
       <ValueSection />
       <VisionSection />
-      {/* <Footer /> */}
     </main>
   );
 }
