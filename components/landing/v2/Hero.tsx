@@ -1,107 +1,150 @@
-"use client";
-import { useRef } from "react";
-import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
-// import { MagneticButton } from "./MagneticButton";
-// import { ArrowRight } from "lucide-react";
 import ReceiptFormScreen from "@/components/form/form-screen";
 
 export const Hero = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLHeadingElement>(null);
-  const subRef = useRef<HTMLParagraphElement>(null);
-  const btnRef = useRef<HTMLDivElement>(null);
-
-  useGSAP(
-    () => {
-      const tl = gsap.timeline({ delay: 0 });
-
-      tl.fromTo(
-        textRef.current?.children || [],
-        { y: 100, opacity: 0, rotateX: -90 },
-        {
-          y: 0,
-          opacity: 1,
-          rotateX: 0,
-          duration: 1.2,
-          stagger: 0.1,
-          ease: "power4.out",
-          transformOrigin: "50% 100%",
-        },
-      )
-        .fromTo(
-          subRef.current,
-          { y: 50, opacity: 0 },
-          { y: 0, opacity: 1, duration: 1, ease: "power3.out" },
-          "-=0.8",
-        )
-        .fromTo(
-          btnRef.current,
-          { scale: 0.8, opacity: 0 },
-          { scale: 1, opacity: 1, duration: 0.8, ease: "back.out(1.7)" },
-          "-=0.6",
-        );
-
-      // Parallax effect on scroll
-      gsap.to(containerRef.current, {
-        y: 150,
-        opacity: 0,
-        ease: "none",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top top",
-          end: "bottom top",
-          scrub: true,
-        },
-      });
-    },
-    { scope: containerRef },
-  );
-
   return (
-    <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 pt-24 text-center md:px-12">
-      <div ref={containerRef}>
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,rgba(0,85,255,0.1)_0%,transparent_50%)]" />
+    <>
+      <style>{`
+        @keyframes rise {
+          from { opacity: 0; transform: translateY(32px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes ticker {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-rise {
+          animation: rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        .animate-fade-up {
+          animation: fadeUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        .ticker-track {
+          animation: ticker 28s linear infinite;
+          width: max-content;
+        }
+      `}</style>
 
-        <div className="max-w-5xl">
-          <h1
-            ref={textRef}
-            className="mb-6 text-5xl font-bold leading-[1.1] tracking-tighter sm:text-7xl md:text-8xl lg:text-9xl font-display text-foreground"
-            style={{ perspective: "1000px" }}
-          >
-            <span className="sr-only">Returns management powered by digital receipt for retailers</span>
-            <span className="inline-block" aria-hidden="true">Returns Mangement</span>{" "}
-            <span className="inline-block text-primary" aria-hidden="true">Powered by Digital Receipts.</span>
-          </h1>
+      <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 pt-24 pb-16 text-center md:px-12">
+        {/* Subtle grid background */}
+        {/* <div
+          className="pointer-events-none absolute inset-0 -z-10 "
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        /> */}
 
-          <p
-            ref={subRef}
-            className="mx-auto mb-10 max-w-2xl text-lg text-foreground/70 sm:text-xl md:text-2xl"
-          >
-            Capture every purchase, verify returns instantly, and give customers a faster, smoother post-purchase experience.
-          </p>
-          <p className="mx-auto mb-10 text-sm text-foreground/60 sm:text-base">
-          No credit card required • Set up in minutes
-          </p>
+        {/* Blue glow */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(0,85,255,0.08)_0%,transparent_100%)]" />
 
-          <div
-            // ref={btnRef}
-            className="flex flex-col items-center justify-center gap-4 sm:flex-row"
-          >
-            {/* <MagneticButton className="group gap-2 px-8 py-4 text-lg">
-            Start Free Trial
-            <ArrowRight
-            className="transition-transform group-hover:translate-x-1"
-            size={20}
-            />
-            </MagneticButton>
-            <MagneticButton className="bg-transparent text-foreground border border-foreground/20 hover:bg-foreground/5 px-8 py-4 text-lg">
-            Book a Demo
-            </MagneticButton> */}
-          </div>
+        {/* Verified badge */}
+        <div
+          className="animate-fade-up mb-8 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary"
+          style={{ animationDelay: "0.1s" }}
+        >
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
+          Built for Ghanaian Retail
         </div>
-      </div>
-      <ReceiptFormScreen />
-    </section>
+
+        {/* Headline */}
+        <h1
+          className="mb-6 max-w-5xl font-display text-5xl font-bold leading-[1.08] tracking-tighter text-foreground sm:text-7xl md:text-8xl"
+          style={{ perspective: "1000px" }}
+        >
+          <span className="sr-only">
+            Returns management powered by digital receipts for retailers
+          </span>
+          <span
+            className="animate-rise inline-block"
+            aria-hidden="true"
+            style={{ animationDelay: "0.2s" }}
+          >
+            Digital Receipts.
+          </span>{" "}
+          <br className="hidden sm:block" />
+          <span
+            className="animate-rise inline-block text-primary"
+            aria-hidden="true"
+            style={{ animationDelay: "0.35s" }}
+          >
+            Effortless Returns.
+          </span>
+        </h1>
+
+        {/* Sub-headline */}
+        <p
+          className="animate-fade-up mx-auto mb-4 max-w-2xl text-lg text-foreground/60 sm:text-xl md:text-2xl"
+          style={{ animationDelay: "0.55s" }}
+        >
+          Issue verified receipts at checkout. Let customers request returns in
+          seconds. Give your team one clear dashboard to approve, process, and
+          close every return — no paper, no disputes.
+        </p>
+
+        <p
+          className="animate-fade-up mb-10 text-sm text-foreground/40 sm:text-base"
+          style={{ animationDelay: "0.7s" }}
+        >
+          No credit card required · Set up in minutes
+        </p>
+
+        {/* Stats row */}
+        <div
+          className="animate-fade-up mb-12 flex flex-wrap items-center justify-center gap-x-10 gap-y-4 text-sm text-foreground/50"
+          style={{ animationDelay: "0.8s" }}
+        >
+          {[
+            { label: "Receipt fraud eliminated", value: "100%" },
+            { label: "Faster return approvals", value: "3×" },
+            { label: "Consumer fees", value: "Zero" },
+          ].map(({ label, value }) => (
+            <div key={label} className="flex items-center gap-2">
+              <span className="text-xl font-bold text-foreground">{value}</span>
+              <span>{label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA form */}
+
+        <ReceiptFormScreen />
+
+        {/* Retailer ticker 
+        DO NOT REMOVE THIS COMPONENT
+        IT WILL BE NEEDED ONCE WE HAVE MORE RETAILERS
+        */}
+        {/* <div
+          className="animate-fade-up absolute bottom-0 left-0 right-0 overflow-hidden border-t border-foreground/5 py-4"
+          style={{ animationDelay: "1.1s" }}
+        >
+          <div className="ticker-track flex items-center gap-12 whitespace-nowrap text-xs font-medium uppercase tracking-widest text-foreground/25">
+            {[
+              "Melcom Ghana",
+              "Franko Trading",
+              "Jumia Ghana",
+              "Shoprite",
+              "Electroland Ghana",
+              "Palace Mall",
+              "Melcom Ghana",
+              "Franko Trading",
+              "Jumia Ghana",
+              "Shoprite",
+              "Electroland Ghana",
+              "Palace Mall",
+            ].map((name, i) => (
+              <span key={i} className="flex items-center gap-12">
+                {name}
+                <span className="h-px w-6 bg-foreground/20" />
+              </span>
+            ))}
+          </div>
+        </div> */}
+      </section>
+    </>
   );
 };
