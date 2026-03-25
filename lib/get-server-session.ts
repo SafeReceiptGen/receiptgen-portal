@@ -1,6 +1,6 @@
-// lib/get-server-session.ts
+"use server";
 import { headers } from "next/headers";
-import { Session } from "./auth-client";
+import type { Session } from "./auth-client";
 
 export async function getServerSession(): Promise<Session | null> {
   const headersList = await headers();
@@ -28,6 +28,7 @@ export async function getServerSession(): Promise<Session | null> {
     }
 
     const sessionData = await response.json();
+    console.log(sessionData);
     return sessionData; // Returns { user, session }
   } catch (error) {
     console.error("Session fetch failed:", error);

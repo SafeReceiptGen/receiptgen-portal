@@ -8,11 +8,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getServerSession } from "@/lib/get-server-session";
 
-export async function AvatarDropdown() {
-  const session = await getServerSession();
-  console.log(session);
+export function AvatarDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
