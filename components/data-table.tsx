@@ -203,7 +203,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
   },
   {
     accessorKey: "target",
-    header: () => <div className="w-full text-right">Target</div>,
+    header: () => <div className="w-full text-right">Amount</div>,
     cell: ({ row }) => (
       <form
         onSubmit={(e) => {
@@ -228,7 +228,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
   },
   {
     accessorKey: "limit",
-    header: () => <div className="w-full text-right">Limit</div>,
+    header: () => <div className="w-full text-right">Risk / SLA</div>,
     cell: ({ row }) => (
       <form
         onSubmit={(e) => {
@@ -628,21 +628,21 @@ export function DataTable({
 }
 
 const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
+  { month: "January", valid: 186, fraud: 80 },
+  { month: "February", valid: 305, fraud: 200 },
+  { month: "March", valid: 237, fraud: 120 },
+  { month: "April", valid: 73, fraud: 190 },
+  { month: "May", valid: 209, fraud: 130 },
+  { month: "June", valid: 214, fraud: 140 },
 ]
 
 const chartConfig = {
-  desktop: {
-    label: "Desktop",
+  valid: {
+    label: "Valid Returns",
     color: "var(--primary)",
   },
-  mobile: {
-    label: "Mobile",
+  fraud: {
+    label: "Fraud Alerts",
     color: "var(--primary)",
   },
 } satisfies ChartConfig
@@ -661,7 +661,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
         <DrawerHeader className="gap-1">
           <DrawerTitle>{item.header}</DrawerTitle>
           <DrawerDescription>
-            Showing total visitors for the last 6 months
+            Historical return and fraud metrics for this store
           </DrawerDescription>
         </DrawerHeader>
         <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
@@ -690,19 +690,19 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
                     content={<ChartTooltipContent indicator="dot" />}
                   />
                   <Area
-                    dataKey="mobile"
+                    dataKey="fraud"
                     type="natural"
-                    fill="var(--color-mobile)"
+                    fill="var(--color-fraud)"
                     fillOpacity={0.6}
-                    stroke="var(--color-mobile)"
+                    stroke="var(--color-fraud)"
                     stackId="a"
                   />
                   <Area
-                    dataKey="desktop"
+                    dataKey="valid"
                     type="natural"
-                    fill="var(--color-desktop)"
+                    fill="var(--color-valid)"
                     fillOpacity={0.4}
-                    stroke="var(--color-desktop)"
+                    stroke="var(--color-valid)"
                     stackId="a"
                   />
                 </AreaChart>
@@ -710,13 +710,12 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
               <Separator />
               <div className="grid gap-2">
                 <div className="flex gap-2 leading-none font-medium">
-                  Trending up by 5.2% this month{" "}
+                  Fraud attempts down by 2.1% this month{" "}
                   <IconTrendingUp className="size-4" />
                 </div>
                 <div className="text-muted-foreground">
-                  Showing total visitors for the last 6 months. This is just
-                  some random text to test the layout. It spans multiple lines
-                  and should wrap around.
+                  Showing total return requests vs flagged fraud attempts for the last 6 months. 
+                  Review the details below to process or escalate the request.
                 </div>
               </div>
               <Separator />
@@ -735,22 +734,11 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
                     <SelectValue placeholder="Select a type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Table of Contents">
-                      Table of Contents
-                    </SelectItem>
-                    <SelectItem value="Executive Summary">
-                      Executive Summary
-                    </SelectItem>
-                    <SelectItem value="Technical Approach">
-                      Technical Approach
-                    </SelectItem>
-                    <SelectItem value="Design">Design</SelectItem>
-                    <SelectItem value="Capabilities">Capabilities</SelectItem>
-                    <SelectItem value="Focus Documents">
-                      Focus Documents
-                    </SelectItem>
-                    <SelectItem value="Narrative">Narrative</SelectItem>
-                    <SelectItem value="Cover Page">Cover Page</SelectItem>
+                    <SelectItem value="Return">Return</SelectItem>
+                    <SelectItem value="Refund">Refund</SelectItem>
+                    <SelectItem value="Fraud Alert">Fraud Alert</SelectItem>
+                    <SelectItem value="Warranty">Warranty</SelectItem>
+                    <SelectItem value="Support">Support</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -762,7 +750,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Done">Done</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
+                    <SelectItem value="In Process">In Process</SelectItem>
                     <SelectItem value="Not Started">Not Started</SelectItem>
                   </SelectContent>
                 </Select>
@@ -770,11 +758,11 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-3">
-                <Label htmlFor="target">Target</Label>
+                <Label htmlFor="target">Amount / Target</Label>
                 <Input id="target" defaultValue={item.target} />
               </div>
               <div className="flex flex-col gap-3">
-                <Label htmlFor="limit">Limit</Label>
+                <Label htmlFor="limit">Risk / SLA</Label>
                 <Input id="limit" defaultValue={item.limit} />
               </div>
             </div>
