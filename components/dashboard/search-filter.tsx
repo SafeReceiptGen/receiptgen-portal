@@ -37,7 +37,7 @@ export function ReceiptSearchFilter({
       onSearchChange(value);
       setHasFilters(!!value || !!statusFilter);
     },
-    [statusFilter, onSearchChange]
+    [statusFilter, onSearchChange],
   );
 
   const handleStatusChange = (value: string) => {
@@ -54,7 +54,7 @@ export function ReceiptSearchFilter({
   };
 
   const uniqueStatuses = Array.from(
-    new Set(receipts.map((r) => r.status))
+    new Set(receipts.map((r) => r.status)),
   ) as Receipt["status"][];
 
   return (
@@ -74,7 +74,7 @@ export function ReceiptSearchFilter({
             <SelectValue placeholder="Filter by Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Statuses</SelectItem>
+            <SelectItem value="all-statuses">All Statuses</SelectItem>
             {uniqueStatuses.map((status) => (
               <SelectItem key={status} value={status}>
                 {status === "pending_return"
