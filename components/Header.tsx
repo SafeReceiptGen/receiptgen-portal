@@ -103,20 +103,36 @@ export default function Header({
           <div className="mobile-item h-px w-24 bg-foreground/10" />
 
           <div className="mobile-item flex w-full flex-col gap-3">
-            <Link
-              href="/login"
-              className="mobile-item w-full rounded-2xl border border-foreground/10 py-4 text-center text-lg font-medium transition-colors duration-200 hover:bg-foreground/5 active:scale-95"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Log In
-            </Link>
-            <Link
-              href="/signup"
-              className="mobile-item w-full rounded-2xl bg-primary py-4 text-center text-lg font-semibold text-white shadow-xl shadow-foreground/10 transition-all duration-200 hover:scale-[1.02] hover:shadow-foreground/20 active:scale-95"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Sign Up
-            </Link>
+            {userSession ? (
+              // <AvatarDropdown
+              //   image={userSession.user.image}
+              //   name={userSession.user.name}
+              // />
+              <Link
+                href="/dashboard"
+                className="mobile-item w-full rounded-2xl border bg-primary py-4 text-center text-lg font-medium text-white transition-colors duration-200 hover:bg-foreground/5 active:scale-95"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="mobile-item w-full rounded-2xl border border-foreground/10 py-4 text-center text-lg font-medium transition-colors duration-200 hover:bg-foreground/5 active:scale-95"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Log In
+                </Link>
+                <Link
+                  href="/signup"
+                  className="mobile-item w-full rounded-2xl bg-primary py-4 text-center text-lg font-semibold text-white shadow-xl shadow-foreground/10 transition-all duration-200 hover:scale-[1.02] hover:shadow-foreground/20 active:scale-95"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -149,42 +165,29 @@ export default function Header({
           </nav>
 
           {/* Desktop auth */}
-          {userSession ? (
-            <AvatarDropdown
-              image={userSession.user.image}
-              name={userSession.user.name}
-            />
-          ) : (
-            <div className="hidden items-center gap-4 md:flex">
-              <Link
-                href="/login"
-                className="header-item text-sm font-medium text-foreground/70 transition-colors duration-200 hover:text-primary"
-              >
-                Login
-              </Link>
-              <span className="h-4 w-px bg-foreground/20" />
-              <Link
-                href="/signup"
-                className="header-item rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white transition-opacity duration-200 hover:opacity-90"
-              >
-                Sign Up
-              </Link>
-            </div>
-          )}
           <div className="hidden items-center gap-4 md:flex">
-            <Link
-              href="/login"
-              className="header-item text-sm font-medium text-foreground/70 transition-colors duration-200 hover:text-primary"
-            >
-              Login
-            </Link>
-            <span className="h-4 w-px bg-foreground/20" />
-            <Link
-              href="/signup"
-              className="header-item rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white transition-opacity duration-200 hover:opacity-90"
-            >
-              Sign Up
-            </Link>
+            {userSession ? (
+              <AvatarDropdown
+                image={userSession.user.image}
+                name={userSession.user.name}
+              />
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="header-item text-sm font-medium text-foreground/70 transition-colors duration-200 hover:text-primary"
+                >
+                  Login
+                </Link>
+                <span className="h-4 w-px bg-foreground/20" />
+                <Link
+                  href="/signup"
+                  className="header-item rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white transition-opacity duration-200 hover:opacity-90"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
 
           <button
