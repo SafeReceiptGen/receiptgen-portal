@@ -39,69 +39,74 @@ const data = {
       icon: IconDashboard,
     },
     {
-      title: "Lifecycle",
+      title: "Receipts",
+      url: "#",
+      icon: IconFileDescription,
+    },
+    {
+      title: "Returns",
       url: "#",
       icon: IconListDetails,
+    },
+    {
+      title: "Stores",
+      url: "#",
+      icon: IconFolder,
+    },
+    {
+      title: "Customers",
+      url: "#",
+      icon: IconUsers,
     },
     {
       title: "Analytics",
       url: "#",
       icon: IconChartBar,
     },
-    {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
-    },
   ],
   navClouds: [
     {
-      title: "Capture",
+      title: "Issue Receipt",
       icon: IconCamera,
       isActive: true,
       url: "#",
       items: [
         {
-          title: "Active Proposals",
+          title: "New Receipt",
           url: "#",
         },
         {
-          title: "Archived",
+          title: "Bulk Issue",
           url: "#",
         },
       ],
     },
     {
-      title: "Proposal",
-      icon: IconFileDescription,
+      title: "Process Return",
+      icon: IconReport,
       url: "#",
       items: [
         {
-          title: "Active Proposals",
+          title: "Pending Returns",
           url: "#",
         },
         {
-          title: "Archived",
+          title: "Return History",
           url: "#",
         },
       ],
     },
     {
-      title: "Prompts",
+      title: "Reports",
       icon: IconFileAi,
       url: "#",
       items: [
         {
-          title: "Active Proposals",
+          title: "Fraud Detection",
           url: "#",
         },
         {
-          title: "Archived",
+          title: "Revenue Reports",
           url: "#",
         },
       ],
