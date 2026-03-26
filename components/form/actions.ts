@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { cookies } from "next/headers";
 import { ReceiptData } from "@/types";
 import { ReceiptForReturn } from "@/types/returns";
 import { addMockReceipt } from "@/lib/mock-data";
@@ -111,9 +112,15 @@ export async function generateReceipt(
       dateIso = new Date().toISOString();
     }
 
+    const cookieStore = await cookies();
+    const cookieString = cookieStore.toString();
+
     const response = await fetch(`${API_URL}/receipts`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: cookieString,
+      },
       credentials: "include",
       body: JSON.stringify({
         storeId,
