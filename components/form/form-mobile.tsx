@@ -10,6 +10,7 @@ import {
   Store as StoreIcon,
   ChevronDown,
   Calendar as CalendarIcon,
+  Sparkles,
 } from "lucide-react";
 import { ReceiptData, LineItem } from "@/types";
 import { ReceiptPreview } from "./receipt-preview";
@@ -35,6 +36,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ActionState } from "./actions";
 import { useStores } from "@/hooks/use-stores";
+import { useSavedProducts } from "@/hooks/use-saved-products";
 import { PAYMENT_METHOD_OPTIONS } from "@/lib/payment-methods";
 
 interface MobileWizardProps {
@@ -94,6 +96,10 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
   const { isExiting, isOpening } = useExpandableScreen();
   const { stores: userStores, isLoading: storesLoading } = useStores(isAuthenticated);
+  const { products: savedProducts, isLoading: productsLoading } = useSavedProducts(
+    isAuthenticated,
+    data.storeId || undefined,
+  );
   const dataRef = useRef(data);
   dataRef.current = data;
 
@@ -120,11 +126,11 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
     handleChange("items", newItems);
   };
 
-  const addItem = () => {
+  const addItem = (name = "New Item", detail = "") => {
     const newItem: LineItem = {
       id: Math.random().toString(36).substr(2, 9),
-      name: "New Item",
-      detail: "",
+      name,
+      detail,
       quantity: 1,
       price: 0,
     };
@@ -347,18 +353,70 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
 
         {currentStep === 1 && (
           <div
-            className={`space-y-6 ${!isExiting && !isOpening ? "animate-in slide-in-from-right fade-in duration-300" : ""}`}
+            className={`space-y-5 ${!isExiting && !isOpening ? "animate-in slide-in-from-right fade-in duration-300" : ""}`}
           >
-            {data.items.map((item, idx) => (
+            {/* ── Saved Products Strip ───────────────────────────────── */}
+            {isAuthenticated && data.storeId && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles size={12} className="text-blue-500 dark:text-blue-400" />
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-white/40">
+                    Saved Products
+                  </span>
+                </div>
+
+                {productsLoading ? (
+                  <div className="flex gap-3 overflow-hidden">
+                    {[1, 2, 3].map((n) => (
+                      <div
+                        key={n}
+                        className="h-16 w-28 shrink-0 animate-pulse rounded-xl bg-slate-100 dark:bg-white/8"
+                      />
+                    ))}
+                  </div>
+                ) : savedProducts.length > 0 ? (
+                  <div className="-mx-6 flex gap-3 overflow-x-auto px-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {savedProducts.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => addItem(p.name, p.detail ?? "")}
+                        className="group/card flex shrink-0 flex-col items-start gap-0.5 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-left shadow-sm transition-all active:scale-95 hover:border-blue-400 hover:shadow-blue-100/60 dark:border-white/10 dark:bg-white/5 dark:hover:border-blue-400/50 dark:hover:bg-blue-500/8"
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <Plus
+                            size={12}
+                            className="shrink-0 text-slate-400 transition-colors group-hover/card:text-blue-500 dark:text-white/30 dark:group-hover/card:text-blue-400"
+                          />
+                          <span className="max-w-32 truncate text-sm font-semibold text-slate-800 dark:text-white">
+                            {p.name}
+                          </span>
+                        </div>
+                        {p.detail && (
+                          <p className="ml-5.5 max-w-32 truncate text-[11px] text-slate-400 dark:text-white/35">
+                            {p.detail}
+                          </p>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+
+                <div className="border-b border-slate-100 dark:border-white/8" />
+              </div>
+            )}
+
+            {/* ── Added Items ────────────────────────────────────────── */}
+            {data.items.map((item) => (
               <div
                 key={item.id}
                 className="relative rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-white/4"
               >
                 <button
                   onClick={() => removeItem(item.id)}
-                  className="absolute top-2 right-2 p-2 text-slate-400 hover:text-red-500 dark:text-white/45 dark:hover:text-red-300"
+                  className="absolute top-2 right-2 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:text-white/45 dark:hover:bg-red-500/10 dark:hover:text-red-300"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={15} />
                 </button>
                 <div className="space-y-3">
                   <Input
@@ -418,9 +476,10 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                 </div>
               </div>
             ))}
+
             <button
-              onClick={addItem}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 py-4 text-slate-600 transition-colors hover:bg-slate-50 dark:border-white/15 dark:text-white/70 dark:hover:bg-white/4"
+              onClick={() => addItem()}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 py-4 text-slate-600 transition-colors hover:bg-slate-50 active:scale-95 dark:border-white/15 dark:text-white/70 dark:hover:bg-white/4"
             >
               <Plus size={20} /> Add Another Item
             </button>

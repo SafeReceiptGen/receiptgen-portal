@@ -175,6 +175,43 @@ export const storesApi = {
     }),
 };
 
+// ─── Saved Products ───────────────────────────────────────────────────────────
+
+export interface SavedProduct {
+  id: string;
+  name: string;
+  detail?: string;
+}
+
+/** Placeholder mock data keyed by storeId — replace with a real endpoint later. */
+const MOCK_SAVED_PRODUCTS: Record<string, SavedProduct[]> = {
+  default: [
+    { id: "sp-1", name: "Nike Air Force 1", detail: "White, High Top" },
+    { id: "sp-2", name: "Nike Jordan 1 Retro", detail: "Red/Black, Size 43" },
+    { id: "sp-3", name: "Adidas Ultraboost 22", detail: "Core Black" },
+    { id: "sp-4", name: "Samsung Galaxy Buds FE", detail: "Graphite, Wireless" },
+    { id: "sp-5", name: "Anker PowerCore 20000", detail: "USB-C" },
+    { id: "sp-6", name: "Blue Phoenix Coffee", detail: "Medium Roast, 200g" },
+    { id: "sp-7", name: "Jet Lag Ground Coffee", detail: "70/30 Arabica/Robusta, 200g" },
+  ],
+};
+
+export const savedProductsApi = {
+  /**
+   * Fetches saved product names for a store.
+   * Currently mocked — swap the body for a real API call when the endpoint exists:
+   *   return request<{ products: SavedProduct[] }>(`/stores/${storeId}/products`);
+   */
+  list: (storeId: string): Promise<{ products: SavedProduct[] }> =>
+    new Promise((resolve) =>
+      setTimeout(() => {
+        const products =
+          MOCK_SAVED_PRODUCTS[storeId] ?? MOCK_SAVED_PRODUCTS["default"];
+        resolve({ products });
+      }, 500),
+    ),
+};
+
 // ─── Returns ─────────────────────────────────────────────────────────────────
 
 export interface SubmitReturnPayload {
