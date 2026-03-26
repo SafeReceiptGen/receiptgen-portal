@@ -45,7 +45,7 @@ export type ActionState = {
   errors?: Record<string, string[] | undefined>;
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+const API_URL = process.env.BETTER_AUTH_URL ?? "http://localhost:3001";
 
 function portalOrigin(): string {
   const base =
@@ -117,9 +117,7 @@ export async function generateReceipt(
       credentials: "include",
       body: JSON.stringify({
         storeId,
-        receiptNumber: result.data.receiptNumber,
         date: dateIso,
-        orderId: result.data.orderId,
         currency: result.data.currency,
         vatRate: result.data.vatRate,
         paymentMethod: result.data.paymentMethod,
@@ -134,7 +132,9 @@ export async function generateReceipt(
       }),
     });
 
-    const raw = (await response.json().catch(() => ({}))) as CreateReceiptApiEnvelope;
+    const raw = (await response
+      .json()
+      .catch(() => ({}))) as CreateReceiptApiEnvelope;
 
     if (!response.ok) {
       return {

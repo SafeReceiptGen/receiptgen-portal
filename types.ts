@@ -13,8 +13,6 @@ export interface ReceiptData {
   storePhone: string;
   receiptNumber: string;
   date: string; // ISO string
-  orderId: string;
-  orderStatus: string;
   items: LineItem[];
   currency: string;
   vatRate: number;
@@ -38,9 +36,6 @@ export const INITIAL_RECEIPT_DATA: ReceiptData = {
   storePhone: "0244444444",
   receiptNumber: "N 469",
   date: new Date().toISOString(),
-  orderId: "OB987654",
-  orderStatus:
-    "has been processed and is ready for shipment. Expect delivery within three working days",
   items: [
     {
       id: "1",
