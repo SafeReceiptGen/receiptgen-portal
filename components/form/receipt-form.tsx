@@ -94,11 +94,10 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const { isExiting, isOpening } = useExpandableScreen();
-  const { stores: userStores, isLoading: storesLoading } = useStores(isAuthenticated);
-  const { products: savedProducts, isLoading: productsLoading } = useSavedProducts(
-    isAuthenticated,
-    data.storeId || undefined,
-  );
+  const { stores: userStores, isLoading: storesLoading } =
+    useStores(isAuthenticated);
+  const { products: savedProducts, isLoading: productsLoading } =
+    useSavedProducts(isAuthenticated, data.storeId || undefined);
   const dataRef = useRef(data);
   dataRef.current = data;
 
@@ -192,7 +191,9 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                           : ""
                       }
                       onChange={(e) => {
-                        const selected = userStores.find((s) => s.id === e.target.value);
+                        const selected = userStores.find(
+                          (s) => s.id === e.target.value,
+                        );
                         if (selected) {
                           onChange({
                             ...data,
@@ -203,12 +204,19 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                         }
                       }}
                     >
-                      <option value="" disabled>Pick a store…</option>
+                      <option value="" disabled>
+                        Pick a store…
+                      </option>
                       {userStores.map((s) => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                        </option>
                       ))}
                     </select>
-                    <ChevronDown size={14} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/40" />
+                    <ChevronDown
+                      size={14}
+                      className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/40"
+                    />
                   </div>
                   <p className="text-[10px] text-slate-400 dark:text-white/35">
                     Or edit the fields below to override.
@@ -389,12 +397,10 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
 
         <TabsContent value="items" className="h-full">
           <div className="h-full min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar p-6 space-y-4">
-
             {/* ── Saved Products Quick-Add Shelf ─────────────────────── */}
             {isAuthenticated && data.storeId && (
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5">
-                  <Sparkles size={11} className="text-blue-500 dark:text-blue-400" />
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-white/40">
                     Saved Products
                   </span>

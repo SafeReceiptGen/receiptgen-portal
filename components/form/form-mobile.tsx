@@ -95,11 +95,10 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const { isExiting, isOpening } = useExpandableScreen();
-  const { stores: userStores, isLoading: storesLoading } = useStores(isAuthenticated);
-  const { products: savedProducts, isLoading: productsLoading } = useSavedProducts(
-    isAuthenticated,
-    data.storeId || undefined,
-  );
+  const { stores: userStores, isLoading: storesLoading } =
+    useStores(isAuthenticated);
+  const { products: savedProducts, isLoading: productsLoading } =
+    useSavedProducts(isAuthenticated, data.storeId || undefined);
   const dataRef = useRef(data);
   dataRef.current = data;
 
@@ -201,22 +200,36 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                   <div className="relative">
                     <select
                       className="w-full appearance-none rounded-xl bg-slate-50 border border-slate-200 px-4 py-3.5 pr-10 text-base text-slate-900 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 dark:bg-white/5 dark:border-white/10 dark:text-white"
-                      value={userStores.find(
-                        (s) => s.name === data.storeName
-                      )?.id ?? ""}
+                      value={
+                        userStores.find((s) => s.name === data.storeName)?.id ??
+                        ""
+                      }
                       onChange={(e) => {
-                        const selected = userStores.find((s) => s.id === e.target.value);
+                        const selected = userStores.find(
+                          (s) => s.id === e.target.value,
+                        );
                         if (selected) {
-                          onChange({ ...data, storeName: selected.name, storePhone: selected.phone ?? "" });
+                          onChange({
+                            ...data,
+                            storeName: selected.name,
+                            storePhone: selected.phone ?? "",
+                          });
                         }
                       }}
                     >
-                      <option value="" disabled>Pick a store…</option>
+                      <option value="" disabled>
+                        Pick a store…
+                      </option>
                       {userStores.map((s) => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                        </option>
                       ))}
                     </select>
-                    <ChevronDown size={16} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/40" />
+                    <ChevronDown
+                      size={16}
+                      className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/40"
+                    />
                   </div>
                 ) : (
                   <p className="rounded-xl border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-400 dark:border-white/10 dark:text-white/30">
@@ -359,7 +372,6 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
             {isAuthenticated && data.storeId && (
               <div className="space-y-3">
                 <div className="flex items-center gap-1.5">
-                  <Sparkles size={12} className="text-blue-500 dark:text-blue-400" />
                   <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-white/40">
                     Saved Products
                   </span>
@@ -582,7 +594,11 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
 
         {currentStep === 3 && (
           <div className="h-full -mx-6 -mt-6">
-            <ReceiptPreview data={data} ref={ref} showQr={isAuthenticated && !!data.qrUrl?.trim()} />
+            <ReceiptPreview
+              data={data}
+              ref={ref}
+              showQr={isAuthenticated && !!data.qrUrl?.trim()}
+            />
           </div>
         )}
       </div>
