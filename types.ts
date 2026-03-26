@@ -39,17 +39,10 @@ export const INITIAL_RECEIPT_DATA: ReceiptData = {
   items: [
     {
       id: "1",
-      name: "Blue Phoenix coffee beans",
-      detail: "medium roast, 100% Arabica, 200 g",
+      name: "Air Force 1",
+      detail: "while, high",
       quantity: 2,
       price: 570.0,
-    },
-    {
-      id: "2",
-      name: "Jet Lag ground coffee",
-      detail: "70% Arabica 30% Robusta, espresso blend, fresh roast, 200 g",
-      quantity: 1,
-      price: 623.0,
     },
   ],
   currency: "GHS",
