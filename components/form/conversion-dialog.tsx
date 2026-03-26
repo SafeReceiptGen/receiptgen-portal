@@ -1,25 +1,36 @@
 "use client";
 
 import * as React from "react";
-import { Share2, Download, Check, Copy, X, ArrowRight } from "lucide-react";
+import { Share2, Download, Check, Copy, X, ArrowRight, Save, Loader2 } from "lucide-react";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { ReceiptData, LineItem } from "@/types";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function ConversionDialog({
   onClose,
   imgUrl,
   receiptUrl,
+  receiptData,
 }: {
   onClose: () => void;
   imgUrl: string;
   receiptUrl?: string; // Add receiptUrl as an optional prop
+  receiptData?: ReceiptData;
 }) {
   const [copied, setCopied] = React.useState(false);
   const { data: session } = authClient.useSession();
   const router = useRouter();
+
+  // States for saving line items
+  const [selectedItems, setSelectedItems] = React.useState<string[]>(
+    receiptData?.items.map(i => i.id) || []
+  );
+  const [isSavingItems, setIsSavingItems] = React.useState(false);
+  const [itemsSaved, setItemsSaved] = React.useState(false);
   const handleCopyImage = () => {
     try {
       fetch(imgUrl)
@@ -73,6 +84,24 @@ export default function ConversionDialog({
     link.download = `SafeReceipt-${Date.now()}.png`;
     link.href = imgUrl;
     link.click();
+  };
+
+  const handleToggleItem = (itemId: string) => {
+    setSelectedItems(prev =>
+      prev.includes(itemId)
+        ? prev.filter(id => id !== itemId)
+        : [...prev, itemId]
+    );
+  };
+
+  const handleSaveItems = () => {
+    setIsSavingItems(true);
+    // Simulate an API call to save reusable product names to the store
+    setTimeout(() => {
+      setIsSavingItems(false);
+      setItemsSaved(true);
+      // Optional: Clear selection or close dialog after saving
+    }, 1200);
   };
 
   return (
@@ -129,7 +158,7 @@ export default function ConversionDialog({
         {/* Divider */}
         <div className="mx-6 h-px bg-slate-100 dark:bg-white/8" />
 
-        {/* Soft conversion nudge */}
+        {/* Dynamic section based on authentication */}
         {!session ? (
           <div className="px-6 py-5">
             <p className="text-[13px] font-medium text-slate-700 dark:text-white/80">
@@ -156,15 +185,86 @@ export default function ConversionDialog({
               </Button>
             </div>
           </div>
+        ) : receiptData && receiptData.items.length > 0 ? (
+          <div className="px-6 py-5">
+            <p className="text-[13px] font-medium text-slate-700 dark:text-white/80">
+              Save reusable products
+            </p>
+            <p className="mt-1 mb-3 text-[12px] leading-relaxed text-slate-400 dark:text-white/40">
+              Select product names to save to your store for quick receipt generation next time.
+            </p>
+
+            <div className="max-h-32 overflow-y-auto mb-4 space-y-2 pr-2">
+              {receiptData.items.map((item) => (
+                <div key={item.id} className="flex items-start space-x-2">
+                  <Checkbox
+                    id={`item-${item.id}`}
+                    checked={selectedItems.includes(item.id)}
+                    onCheckedChange={() => handleToggleItem(item.id)}
+                    className="mt-0.5 border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 dark:border-slate-600"
+                  />
+                  <label
+                    htmlFor={`item-${item.id}`}
+                    className="text-[13px] leading-tight text-slate-600 dark:text-slate-300 cursor-pointer"
+                  >
+                    <span className="font-medium text-slate-800 dark:text-slate-200 block">
+                      {item.name}
+                    </span>
+                    {item.detail && (
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                        {item.detail}
+                      </span>
+                    )}
+                  </label>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Button
+                size="sm"
+                onClick={() => router.push("/dashboard")}
+                variant="outline"
+                className="h-8 rounded-full px-4 text-[13px] font-medium border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-white/70 dark:hover:bg-white/5"
+              >
+                Dashboard
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSaveItems}
+                disabled={isSavingItems || itemsSaved || selectedItems.length === 0}
+                className="h-8 flex-1 cursor-pointer rounded-full bg-blue-700 px-4 text-[13px] font-medium text-white hover:bg-slate-700 disabled:bg-blue-700/60 dark:bg-white dark:text-slate-900 dark:hover:bg-white/90"
+              >
+                {isSavingItems ? (
+                  <>
+                    <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                    Saving...
+                  </>
+                ) : itemsSaved ? (
+                  <>
+                    <Check className="mr-1.5 size-3.5" />
+                    Saved
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-1.5 size-3.5" />
+                    Save Products
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         ) : (
-          <Button
-            size="sm"
-            onClick={() => router.push("/dashboard")}
-            className="h-8 cursor-pointer rounded-full bg-blue-700 px-4 text-[13px] font-medium text-white hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-white/90"
-          >
-            Go to dashboard
-            <ArrowRight className="ml-1.5 size-3.5" />
-          </Button>
+          <div className="px-6 py-5 flex justify-end">
+            <Button
+              size="sm"
+              onClick={() => router.push("/dashboard")}
+              className="h-8 cursor-pointer rounded-full bg-blue-700 px-4 text-[13px] font-medium text-white hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-white/90"
+            >
+              Go to dashboard
+              <ArrowRight className="ml-1.5 size-3.5" />
+            </Button>
+          </div>
         )}
       </DialogContent>
     </Dialog>

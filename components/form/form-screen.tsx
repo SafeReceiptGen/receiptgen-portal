@@ -290,6 +290,7 @@ export default function ReceiptFormScreen({
               onClose={() => setShowConversionDialog(false)}
               imgUrl={generatedImageUrl}
               receiptUrl={data.qrUrl?.trim() || undefined}
+              receiptData={data}
             />
           )}
         </>
