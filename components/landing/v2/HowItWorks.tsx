@@ -4,28 +4,18 @@ import { CheckCircle2 } from "lucide-react";
 const steps = [
   {
     num: "01",
-    title: "Capture",
-    desc: "Issue a SafeReceipts digital receipt at checkout using a QR code or phone number.",
+    title: "Create the receipt",
+    desc: "Enter the purchase details and generate a digital receipt.",
   },
   {
     num: "02",
-    title: "Verify",
-    desc: "Each purchase is stored securely and ready to verify instantly when a return begins.",
+    title: "Share with the customer",
+    desc: "Customers receive the receipt on their phone after its issued.",
   },
   {
     num: "03",
-    title: "Start Return",
-    desc: "Customers can initiate a return using their digital receipt without searching for paper records.",
-  },
-  {
-    num: "04",
-    title: "Manage",
-    desc: "Retailers review, approve, and track returns inside ReturnFlow with verified purchase data.",
-  },
-  {
-    num: "05",
-    title: "Resolve",
-    desc: "Returns are completed faster with less friction, fewer disputes, and a better customer experience.",
+    title: "Use when needed",
+    desc: "The receipt can be retreived whenever proof of purchase is required.",
   },
 ];
 
