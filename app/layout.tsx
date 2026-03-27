@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { QueryProvider } from "@/components/providers/query-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -89,7 +90,7 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className="font-sans antialiased bg-slate-50 dark:bg-[#0A0F1C]">
-        {children}
+        <QueryProvider>{children}</QueryProvider>
       </body>
     </html>
   );
