@@ -57,6 +57,13 @@ export default function ConversionDialog({
     }
   };
 
+  function copyLink() {
+    if (!receiptData?.qrUrl) return;
+    navigator.clipboard.writeText(receiptData.qrUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   const handleShare = async () => {
     console.log("Sharing receipt with token:", qrCodeToken);
     console.log("Receipt Data", receiptData);
@@ -162,8 +169,8 @@ export default function ConversionDialog({
                 <Copy className="size-4" />
               )
             }
-            label={copied ? "Copied!" : "Copy"}
-            onClick={handleCopyImage}
+            label={copied ? "Copied!" : "Copy Link"}
+            onClick={copyLink}
           />
         </div>
 
