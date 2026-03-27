@@ -16,6 +16,11 @@ const statusConfig: Record<
   ReturnStatus,
   { className: string; icon: React.ReactNode }
 > = {
+  PICKUP_SCHEDULED: {
+    className:
+      "bg-sky-50 text-sky-800 ring-sky-200 dark:bg-sky-500/10 dark:text-sky-300 dark:ring-sky-500/20",
+    icon: <Clock size={12} />,
+  },
   PENDING: {
     className:
       "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/20",

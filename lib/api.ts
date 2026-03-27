@@ -6,18 +6,9 @@
 import { differenceInCalendarDays } from "date-fns";
 import type { ReceiptForReturn } from "@/types/returns";
 import type { PublicReturnBundle } from "@/lib/return-mappers";
+import { portalPublicOrigin } from "@/lib/portal-public-url";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
-
-/** Public receipt page base (portal), used for customer-facing /receipt/{qrCodeToken} links. */
-function portalOriginForReceiptLinks(): string {
-  const base =
-    process.env.NEXT_PUBLIC_URL ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-    "http://localhost:3000";
-  return base.replace(/\/$/, "");
-}
 
 interface ApiError {
   success: false;
@@ -194,6 +185,18 @@ export interface SubmitReturnPayload {
     timeSlot: string;
     phoneNumber: string;
     phoneCountry: string;
+    pickupAddress?: {
+      line1: string;
+      line2?: string;
+      city: string;
+      region: string;
+      postalCode?: string;
+    };
+    parcel?: {
+      packageCount: number;
+      description: string;
+      weightKg?: number;
+    };
   };
   serviceFee?: number;
 }
@@ -426,7 +429,7 @@ export function mapToReceiptForReturn(
     returnCondition: "See store policy",
     refundType: "See store policy",
     isReturnable,
-    qrUrl: `${portalOriginForReceiptLinks()}/receipt/${token}`,
+    qrUrl: `${portalPublicOrigin()}/receipt/${token}`,
   };
 }
 

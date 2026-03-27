@@ -2,6 +2,7 @@
 
 import {
   ReturnStatus,
+  LogisticsMethod,
   RETURN_STATUS_LABELS,
   RETURN_STATUS_STEPS,
 } from "@/types/returns";
@@ -22,19 +23,44 @@ const stepIcons: Record<string, React.ReactNode> = {
   WITH_RETAILER: <Store size={20} />,
 };
 
+function labelForFirstStep(
+  index: number,
+  isPast: boolean,
+  isCurrent: boolean,
+  currentStatus: ReturnStatus,
+  logisticsMethod?: LogisticsMethod,
+) {
+  if (index !== 0) return null;
+  if (isPast) {
+    return logisticsMethod === "HOME_PICKUP"
+      ? RETURN_STATUS_LABELS.PICKUP_SCHEDULED
+      : RETURN_STATUS_LABELS.PENDING;
+  }
+  if (isCurrent && currentStatus === "PICKUP_SCHEDULED") {
+    return RETURN_STATUS_LABELS.PICKUP_SCHEDULED;
+  }
+  return RETURN_STATUS_LABELS.PENDING;
+}
+
 interface StatusTrackerProps {
   currentStatus: ReturnStatus;
+  /** Used to label step 1 after home pickup vs drop-off once past that step. */
+  logisticsMethod?: LogisticsMethod;
   className?: string;
 }
 
-export function StatusTracker({ currentStatus, className }: StatusTrackerProps) {
-  // Determine if we're in a terminal state
-  const isApproved = currentStatus === "APPROVED" || currentStatus === "REFUNDED";
+export function StatusTracker({
+  currentStatus,
+  logisticsMethod,
+  className,
+}: StatusTrackerProps) {
+  const isApproved =
+    currentStatus === "APPROVED" || currentStatus === "REFUNDED";
   const isRejected = currentStatus === "REJECTED";
   const isTerminal = isApproved || isRejected;
 
-  // Map status to step index
   const statusToIndex: Record<string, number> = {
+    PICKUP_SCHEDULED: 0,
     PENDING: 0,
     COLLECTED: 1,
     IN_TRANSIT: 2,
@@ -54,9 +80,18 @@ export function StatusTracker({ currentStatus, className }: StatusTrackerProps) 
           const isCurrent = index === currentIndex && !isTerminal;
           const isPast = isComplete;
 
+          const firstLabel = labelForFirstStep(
+            index,
+            isPast,
+            isCurrent,
+            currentStatus,
+            logisticsMethod,
+          );
+          const stepLabel =
+            firstLabel !== null ? firstLabel : RETURN_STATUS_LABELS[step];
+
           return (
             <div key={step} className="flex flex-1 items-center">
-              {/* Step node */}
               <div className="flex flex-col items-center gap-2">
                 <div
                   className={cn(
@@ -86,11 +121,10 @@ export function StatusTracker({ currentStatus, className }: StatusTrackerProps) 
                       "text-slate-400 dark:text-white/30",
                   )}
                 >
-                  {RETURN_STATUS_LABELS[step]}
+                  {stepLabel}
                 </span>
               </div>
 
-              {/* Connector line */}
               {index < RETURN_STATUS_STEPS.length - 1 && (
                 <div
                   className={cn(
@@ -105,7 +139,6 @@ export function StatusTracker({ currentStatus, className }: StatusTrackerProps) 
           );
         })}
 
-        {/* Terminal state node (Decision) */}
         <div className="flex flex-col items-center gap-2">
           <div
             className={cn(

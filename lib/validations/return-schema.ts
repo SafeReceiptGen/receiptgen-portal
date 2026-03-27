@@ -10,6 +10,20 @@ const ReturnItemSchema = z.object({
   selected: z.boolean(),
 });
 
+const pickupAddressSchema = z.object({
+  line1: z.string().max(255),
+  line2: z.string().max(255).optional(),
+  city: z.string().max(120),
+  region: z.string().max(120),
+  postalCode: z.string().max(32).optional(),
+});
+
+const parcelSchema = z.object({
+  packageCount: z.number().int().min(1).max(99),
+  description: z.string().max(1000),
+  weightKg: z.number().positive().max(999).optional(),
+});
+
 export const ReturnFlowSchema = z.object({
   // Step 1: Items
   items: z.array(ReturnItemSchema).refine((items) => items.some((item) => item.selected), {
@@ -29,16 +43,55 @@ export const ReturnFlowSchema = z.object({
   isEligible: z.boolean().nullable(),
 
   // Step 5: Logistics
-  logistics: z.object({
-    method: z.enum(["HOME_PICKUP", "DROP_OFF"]),
-    pudoPointId: z.string().optional(),
-    timeSlot: z.string().min(1, "Please select a time slot."),
-    phoneCountry: z.string().min(2),
-    phoneNumber: z.string().min(8, "Phone number must be at least 8 characters."),
-  }).refine((data) => !(data.method === "DROP_OFF" && !data.pudoPointId), {
-    message: "Please select a drop-off point.",
-    path: ["pudoPointId"],
-  }),
+  logistics: z
+    .object({
+      method: z.enum(["HOME_PICKUP", "DROP_OFF"]),
+      pudoPointId: z.string().optional(),
+      timeSlot: z.string().min(1, "Please select a time slot."),
+      phoneCountry: z.string().min(2),
+      phoneNumber: z.string().min(8, "Phone number must be at least 8 characters."),
+      pickupAddress: pickupAddressSchema,
+      parcel: parcelSchema,
+    })
+    .superRefine((data, ctx) => {
+      if (data.method === "DROP_OFF" && !data.pudoPointId?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Please select a drop-off point.",
+          path: ["pudoPointId"],
+        });
+      }
+      if (data.method === "HOME_PICKUP") {
+        if (!data.pickupAddress.line1.trim()) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Street address is required.",
+            path: ["pickupAddress", "line1"],
+          });
+        }
+        if (!data.pickupAddress.city.trim()) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "City is required.",
+            path: ["pickupAddress", "city"],
+          });
+        }
+        if (!data.pickupAddress.region.trim()) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Region is required.",
+            path: ["pickupAddress", "region"],
+          });
+        }
+        if (!data.parcel.description.trim()) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Describe what you are returning (helps the courier).",
+            path: ["parcel", "description"],
+          });
+        }
+      }
+    }),
 });
 
 export type ReturnFlowFormData = z.infer<typeof ReturnFlowSchema>;
@@ -55,5 +108,17 @@ export const defaultReturnFlowValues: Partial<ReturnFlowFormData> = {
     timeSlot: "",
     phoneCountry: "GH",
     phoneNumber: "",
+    pickupAddress: {
+      line1: "",
+      line2: "",
+      city: "",
+      region: "",
+      postalCode: "",
+    },
+    parcel: {
+      packageCount: 1,
+      description: "",
+      weightKg: undefined,
+    },
   },
 };

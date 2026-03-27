@@ -43,6 +43,36 @@ export async function submitReturnRequest(
     throw new Error("Return reason is required");
   }
 
+  const method =
+    logistics.method === "HOME_PICKUP" ? ("home_pickup" as const) : ("drop_off" as const);
+
+  const logisticsPayload = {
+    method,
+    pudoPointId: logistics.pudoPointId?.trim() || undefined,
+    timeSlot: logistics.timeSlot,
+    phoneNumber: logistics.phoneNumber,
+    phoneCountry: logistics.phoneCountry,
+    ...(logistics.method === "HOME_PICKUP"
+      ? {
+          pickupAddress: {
+            line1: logistics.pickupAddress.line1.trim(),
+            line2: logistics.pickupAddress.line2?.trim() || undefined,
+            city: logistics.pickupAddress.city.trim(),
+            region: logistics.pickupAddress.region.trim(),
+            postalCode: logistics.pickupAddress.postalCode?.trim() || undefined,
+          },
+          parcel: {
+            packageCount: logistics.parcel.packageCount,
+            description: logistics.parcel.description.trim(),
+            ...(logistics.parcel.weightKg != null &&
+            !Number.isNaN(logistics.parcel.weightKg)
+              ? { weightKg: logistics.parcel.weightKg }
+              : {}),
+          },
+        }
+      : {}),
+  };
+
   const payload = {
     receiptToken,
     items: selectedItems.map((item) => ({
@@ -52,14 +82,7 @@ export async function submitReturnRequest(
     reason: returnReasonToApi(data.reason),
     description: data.description?.trim() || undefined,
     photoUrls: photoUrls?.length ? photoUrls : undefined,
-    logistics: {
-      method:
-        logistics.method === "HOME_PICKUP" ? "home_pickup" as const : "drop_off" as const,
-      pudoPointId: logistics.pudoPointId?.trim() || undefined,
-      timeSlot: logistics.timeSlot,
-      phoneNumber: logistics.phoneNumber,
-      phoneCountry: logistics.phoneCountry,
-    },
+    logistics: logisticsPayload,
     serviceFee: fee,
   };
 

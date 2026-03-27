@@ -120,7 +120,10 @@ export default function ReturnStatusClient({
 
             {/* Status tracker */}
             <div className="mt-6">
-              <StatusTracker currentStatus={returnData.status} />
+              <StatusTracker
+                currentStatus={returnData.status}
+                logisticsMethod={returnData.logistics.method}
+              />
             </div>
 
             {/* Latest update */}
@@ -353,9 +356,46 @@ export default function ReturnStatusClient({
                   {pudoPoint && ` — ${pudoPoint.name}`}
                 </span>
               </div>
-              <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 dark:text-white/50">
-                <Phone size={12} />
-                <span>{returnData.logistics.phoneNumber}</span>
+              {returnData.logistics.method === "HOME_PICKUP" &&
+                returnData.logistics.pickupAddress && (
+                  <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-white/60">
+                    {returnData.logistics.pickupAddress.line1}
+                    {returnData.logistics.pickupAddress.line2
+                      ? `, ${returnData.logistics.pickupAddress.line2}`
+                      : ""}
+                    <br />
+                    {returnData.logistics.pickupAddress.city}
+                    {returnData.logistics.pickupAddress.region
+                      ? `, ${returnData.logistics.pickupAddress.region}`
+                      : ""}
+                    {returnData.logistics.pickupAddress.postalCode
+                      ? ` ${returnData.logistics.pickupAddress.postalCode}`
+                      : ""}
+                  </p>
+                )}
+              {returnData.logistics.method === "HOME_PICKUP" &&
+                returnData.logistics.parcel && (
+                  <div className="mt-2 rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2 text-xs text-slate-600 dark:border-white/10 dark:bg-white/4 dark:text-white/55">
+                    <p className="font-medium text-slate-700 dark:text-white/75">
+                      {returnData.logistics.parcel.packageCount}{" "}
+                      {returnData.logistics.parcel.packageCount === 1
+                        ? "package"
+                        : "packages"}
+                      {returnData.logistics.parcel.weightKg != null
+                        ? ` · ~${returnData.logistics.parcel.weightKg} kg`
+                        : ""}
+                    </p>
+                    <p className="mt-1 text-slate-600 dark:text-white/55">
+                      {returnData.logistics.parcel.description}
+                    </p>
+                  </div>
+                )}
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-xs text-slate-500 dark:text-white/50">
+                <Phone size={12} className="shrink-0" />
+                <span>
+                  {returnData.logistics.phoneCountry}{" "}
+                  {returnData.logistics.phoneNumber}
+                </span>
                 <span>·</span>
                 <span>{returnData.logistics.timeSlot}</span>
               </div>
