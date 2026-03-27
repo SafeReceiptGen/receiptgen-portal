@@ -69,8 +69,8 @@ export default function ReceiptFormScreen({
   // When server action succeeds: update qrUrl then capture
   useEffect(() => {
     if (state.success) {
-      if (state.qrUrl) {
-        setData((prev) => ({ ...prev, qrUrl: state.qrUrl! }));
+      if (state.qrCodeToken) {
+        setData((prev) => ({ ...prev, qrUrl: state.qrCodeToken! }));
       }
       requestAnimationFrame(() => captureReceipt());
     }
@@ -278,7 +278,7 @@ export default function ReceiptFormScreen({
                   <ReceiptPreview
                     data={data}
                     ref={receiptRef}
-                    showQr={isAuthenticated && !!data.qrUrl?.trim()}
+                    showQr={isAuthenticated && !!data.qrCodeToken?.trim()}
                   />
                 </div>
               </div>
@@ -289,7 +289,7 @@ export default function ReceiptFormScreen({
             <ConversionDialog
               onClose={() => setShowConversionDialog(false)}
               imgUrl={generatedImageUrl}
-              receiptUrl={data.qrUrl?.trim() || undefined}
+              qrCodeToken={data.qrCodeToken?.trim() || undefined}
               receiptData={data}
             />
           )}

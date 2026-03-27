@@ -1,7 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { Share2, Download, Check, Copy, X, ArrowRight, Save, Loader2 } from "lucide-react";
+import {
+  Share2,
+  Download,
+  Check,
+  Copy,
+  X,
+  ArrowRight,
+  Save,
+  Loader2,
+} from "lucide-react";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -13,12 +22,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 export default function ConversionDialog({
   onClose,
   imgUrl,
-  receiptUrl,
+  qrCodeToken,
   receiptData,
 }: {
   onClose: () => void;
   imgUrl: string;
-  receiptUrl?: string; // Add receiptUrl as an optional prop
+  qrCodeToken?: string; // Add qrCodeToken as an optional prop
   receiptData?: ReceiptData;
 }) {
   const [copied, setCopied] = React.useState(false);
@@ -27,7 +36,7 @@ export default function ConversionDialog({
 
   // States for saving line items
   const [selectedItems, setSelectedItems] = React.useState<string[]>(
-    receiptData?.items.map(i => i.id) || []
+    receiptData?.items.map((i) => i.id) || [],
   );
   const [isSavingItems, setIsSavingItems] = React.useState(false);
   const [itemsSaved, setItemsSaved] = React.useState(false);
@@ -51,12 +60,12 @@ export default function ConversionDialog({
   const handleShare = async () => {
     if (navigator.share) {
       try {
-        if (receiptUrl) {
+        if (qrCodeToken) {
           // Share the URL if it was provided
-          await navigator.share({ 
-            title: "Your SafeReceipt", 
+          await navigator.share({
+            title: "Your SafeReceipt",
             text: "Here is your digital receipt",
-            url: receiptUrl 
+            url: `${process.env.NEXT_PUBLIC_URL}/receipt/${qrCodeToken}`,
           });
         } else {
           // Fallback to sharing the image if no URL is provided
@@ -69,10 +78,12 @@ export default function ConversionDialog({
       }
     } else {
       // Fallback for browsers that don't support native share
-      if (receiptUrl) {
-        navigator.clipboard.writeText(receiptUrl).then(() => {
-          alert("Sharing not supported. Link copied to clipboard instead!");
-        });
+      if (qrCodeToken) {
+        navigator.clipboard
+          .writeText(`${process.env.NEXT_PUBLIC_URL}/receipt/${qrCodeToken}`)
+          .then(() => {
+            alert("Sharing not supported. Link copied to clipboard instead!");
+          });
       } else {
         alert("Sharing is not supported on this device/browser.");
       }
@@ -87,10 +98,10 @@ export default function ConversionDialog({
   };
 
   const handleToggleItem = (itemId: string) => {
-    setSelectedItems(prev =>
+    setSelectedItems((prev) =>
       prev.includes(itemId)
-        ? prev.filter(id => id !== itemId)
-        : [...prev, itemId]
+        ? prev.filter((id) => id !== itemId)
+        : [...prev, itemId],
     );
   };
 
@@ -191,7 +202,8 @@ export default function ConversionDialog({
               Save reusable products
             </p>
             <p className="mt-1 mb-3 text-[12px] leading-relaxed text-slate-400 dark:text-white/40">
-              Select product names to save to your store for quick receipt generation next time.
+              Select product names to save to your store for quick receipt
+              generation next time.
             </p>
 
             <div className="max-h-32 overflow-y-auto mb-4 space-y-2 pr-2">
@@ -232,7 +244,9 @@ export default function ConversionDialog({
               <Button
                 size="sm"
                 onClick={handleSaveItems}
-                disabled={isSavingItems || itemsSaved || selectedItems.length === 0}
+                disabled={
+                  isSavingItems || itemsSaved || selectedItems.length === 0
+                }
                 className="h-8 flex-1 cursor-pointer rounded-full bg-blue-700 px-4 text-[13px] font-medium text-white hover:bg-slate-700 disabled:bg-blue-700/60 dark:bg-white dark:text-slate-900 dark:hover:bg-white/90"
               >
                 {isSavingItems ? (

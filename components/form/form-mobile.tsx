@@ -597,7 +597,7 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
             <ReceiptPreview
               data={data}
               ref={ref}
-              showQr={isAuthenticated && !!data.qrUrl?.trim()}
+              showQr={isAuthenticated && !!data.qrCodeToken?.trim()}
             />
           </div>
         )}

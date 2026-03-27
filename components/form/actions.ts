@@ -42,18 +42,14 @@ const receiptSchema = z.object({
 export type ActionState = {
   success: boolean;
   message: string;
-  qrUrl?: string;
+  qrCodeToken?: string;
   errors?: Record<string, string[] | undefined>;
 };
 
 const API_URL = process.env.BETTER_AUTH_URL ?? "http://localhost:3001";
 
 function portalOrigin(): string {
-  const base =
-    process.env.NEXT_PUBLIC_URL ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-    "http://localhost:3000";
+  const base = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
   return base.replace(/\/$/, "");
 }
 
@@ -215,7 +211,7 @@ export async function generateReceipt(
     return {
       success: true,
       message: "Receipt generated successfully!",
-      qrUrl,
+      qrCodeToken: qrUrl,
     };
   } catch (error) {
     console.error("Receipt generation failed:", error);
