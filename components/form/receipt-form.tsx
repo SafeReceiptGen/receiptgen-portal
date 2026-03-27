@@ -40,8 +40,7 @@ import {
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ActionState } from "./actions";
-import { useStores } from "@/hooks/use-stores";
-import { useSavedProducts } from "@/hooks/use-saved-products";
+import { Store } from "@/lib/api";
 import { PAYMENT_METHOD_OPTIONS } from "@/lib/payment-methods";
 
 interface ReceiptFormProps {
@@ -49,6 +48,8 @@ interface ReceiptFormProps {
   onChange: (data: ReceiptData) => void;
   actionState?: ActionState;
   isAuthenticated?: boolean;
+  userStores: Store[];
+  storesLoading: boolean;
 }
 
 const CURRENCIES = [
@@ -91,26 +92,42 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
   onChange,
   actionState,
   isAuthenticated = false,
+  userStores,
+  storesLoading,
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const { isExiting, isOpening } = useExpandableScreen();
-  const { stores: userStores, isLoading: storesLoading } =
-    useStores(isAuthenticated);
-  const { products: savedProducts, isLoading: productsLoading } =
-    useSavedProducts(isAuthenticated, data.storeId || undefined);
+  
+  const selectedStore = userStores.find(s => s.id === data.storeId);
+  const savedProducts = selectedStore?.storeCatalog || [];
+  const productsLoading = storesLoading;
+
   const dataRef = useRef(data);
   dataRef.current = data;
+  const isPolicyDisabled = !!data.storeId;
 
   // Auto-select the only store when the user has exactly one
   useEffect(() => {
     if (!isAuthenticated || storesLoading || userStores.length !== 1) return;
     if (dataRef.current.storeId) return;
     const s = userStores[0];
+    const policy = s.returnPolicy;
+
+    const mapReturnWindow = (val: any) => ({"0": "No returns", none: "No returns", "1": "3 days", "3_days": "3 days", "2": "7 days", "7_days": "7 days", "3": "14 days", "14_days": "14 days", "4": "30 days", "30_days": "30 days", "5": "Custom", custom: "Custom"})[String(val)] || "30 days";
+    const mapReturnCondition = (val: any) => ({"0": "Unused", unused: "Unused", "1": "Original Packaging", original_packaging: "Original Packaging", "2": "Any Condition", any_condition: "Any Condition", "3": "Defective Only", defective_only: "Defective Only"})[String(val)] || "Original Packaging";
+    const mapRefundType = (val: any) => ({"0": "Full Refund", full_refund: "Full Refund", "1": "Partial Refund", partial_refund: "Partial Refund", "2": "Store Credit", store_credit: "Store Credit", "3": "Exchange Only", exchange_only: "Exchange Only"})[String(val)] || "Store Credit";
+
     onChange({
       ...dataRef.current,
       storeId: s.id,
       storeName: s.name,
       storePhone: s.phone ?? "",
+      ...(policy && {
+        returnWindow: mapReturnWindow(policy.returnWindow),
+        customReturnWindow: policy.customWindowDays ? `${policy.customWindowDays} days` : "",
+        returnCondition: mapReturnCondition(policy.returnCondition),
+        refundType: mapRefundType(policy.refundType),
+      })
     });
   }, [isAuthenticated, storesLoading, userStores, onChange]);
 
@@ -195,11 +212,23 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                           (s) => s.id === e.target.value,
                         );
                         if (selected) {
+                          const policy = selected.returnPolicy;
+
+                          const mapReturnWindow = (val: any) => ({"0": "No returns", none: "No returns", "1": "3 days", "3_days": "3 days", "2": "7 days", "7_days": "7 days", "3": "14 days", "14_days": "14 days", "4": "30 days", "30_days": "30 days", "5": "Custom", custom: "Custom"})[String(val)] || "30 days";
+                          const mapReturnCondition = (val: any) => ({"0": "Unused", unused: "Unused", "1": "Original Packaging", original_packaging: "Original Packaging", "2": "Any Condition", any_condition: "Any Condition", "3": "Defective Only", defective_only: "Defective Only"})[String(val)] || "Original Packaging";
+                          const mapRefundType = (val: any) => ({"0": "Full Refund", full_refund: "Full Refund", "1": "Partial Refund", partial_refund: "Partial Refund", "2": "Store Credit", store_credit: "Store Credit", "3": "Exchange Only", exchange_only: "Exchange Only"})[String(val)] || "Store Credit";
+
                           onChange({
                             ...data,
                             storeId: selected.id,
                             storeName: selected.name,
                             storePhone: selected.phone ?? "",
+                            ...(policy && {
+                              returnWindow: mapReturnWindow(policy.returnWindow),
+                              customReturnWindow: policy.customWindowDays ? `${policy.customWindowDays} days` : "",
+                              returnCondition: mapReturnCondition(policy.returnCondition),
+                              refundType: mapRefundType(policy.refundType),
+                            })
                           });
                         }
                       }}
@@ -421,8 +450,8 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                       <button
                         key={p.id}
                         type="button"
-                        onClick={() => addItem(p.name, p.detail ?? "")}
-                        title={p.detail}
+                        onClick={() => addItem(p.name, p.description ?? "")}
+                        title={p.name}
                         className="group/chip inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition-all hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 hover:shadow-blue-100 active:scale-95 dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:hover:border-blue-400/60 dark:hover:bg-blue-500/10 dark:hover:text-blue-300"
                       >
                         <Plus
@@ -544,12 +573,22 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                 Return & Refund Policy
               </h3>
 
+              {isPolicyDisabled && (
+                <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700 flex gap-3 items-start dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
+                  <StoreIcon size={16} className="shrink-0 mt-0.5" />
+                  <p className="leading-snug text-xs">
+                    Store return policy applied automatically. Modify defaults in your Dashboard store settings.
+                  </p>
+                </div>
+              )}
+
               {/* Return Window */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-slate-600 dark:text-white/60">
                   Return Window
                 </Label>
                 <Select
+                  disabled={isPolicyDisabled}
                   value={data.returnWindow}
                   onValueChange={(value) => handleChange("returnWindow", value)}
                 >
@@ -579,6 +618,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                     Specify Custom Duration
                   </Label>
                   <Input
+                    disabled={isPolicyDisabled}
                     type="text"
                     value={data.customReturnWindow}
                     onChange={(e) =>
@@ -596,6 +636,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                   Return Condition
                 </Label>
                 <Select
+                  disabled={isPolicyDisabled}
                   value={data.returnCondition}
                   onValueChange={(value) =>
                     handleChange("returnCondition", value)
@@ -620,6 +661,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                   Refund Type
                 </Label>
                 <Select
+                  disabled={isPolicyDisabled}
                   value={data.refundType}
                   onValueChange={(value) => handleChange("refundType", value)}
                 >

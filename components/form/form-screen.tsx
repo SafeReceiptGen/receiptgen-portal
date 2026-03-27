@@ -15,6 +15,7 @@ import { MobileWizard } from "./form-mobile";
 import Image from "next/image";
 import Link from "next/link";
 import { generateReceipt, ActionState } from "./actions";
+import { useStores } from "@/hooks/use-stores";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -58,6 +59,8 @@ export default function ReceiptFormScreen({
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string>("");
   const [guestSaved, setGuestSaved] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
+  
+  const { stores, isLoading: storesLoading } = useStores(isAuthenticated);
 
   // ── Server action (authenticated only) ──────────────────────────────────
   const boundAction = generateReceipt.bind(null, data);
@@ -203,6 +206,8 @@ export default function ReceiptFormScreen({
             isAuthenticated={isAuthenticated}
             onGuestSave={handleGuestSave}
             guestSaved={guestSaved}
+            userStores={stores}
+            storesLoading={storesLoading}
           />
 
           {/* ── Desktop layout ── */}
@@ -256,6 +261,8 @@ export default function ReceiptFormScreen({
                     onChange={setData}
                     actionState={state}
                     isAuthenticated={isAuthenticated}
+                    userStores={stores}
+                    storesLoading={storesLoading}
                   />
                 </div>
 

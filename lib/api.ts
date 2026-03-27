@@ -6,6 +6,11 @@
 import { differenceInCalendarDays } from "date-fns";
 import type { ReceiptForReturn } from "@/types/returns";
 import type { PublicReturnBundle } from "@/lib/return-mappers";
+import {
+  refundTypeEnum,
+  returnConditionEnum,
+  returnWindowEnum,
+} from "@/types/enums";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
@@ -159,9 +164,23 @@ export const receiptsApi = {
 export interface Store {
   id: string;
   name: string;
-  phone?: string;
-  address?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  retailerId: string;
   isActive: boolean;
+  phone: string | null;
+  address: string | null;
+  storeCatalog: SavedProduct[];
+  returnPolicy: {
+    id: string;
+    createdAt: Date;
+    isActive: boolean;
+    storeId: string;
+    returnWindow: returnWindowEnum;
+    customWindowDays: number | null;
+    returnCondition: returnConditionEnum;
+    refundType: refundTypeEnum;
+  };
 }
 
 export const storesApi = {
@@ -174,32 +193,36 @@ export const storesApi = {
     }),
 };
 
-// ─── Saved Products ───────────────────────────────────────────────────────────
+// ─── Store Catalog ───────────────────────────────────────────────────────────
 
 export interface SavedProduct {
   id: string;
   name: string;
-  detail?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  storeId: string;
+  description: string | null;
+  defaultPrice: string | null;
 }
 
 /** Placeholder mock data keyed by storeId — replace with a real endpoint later. */
 const MOCK_SAVED_PRODUCTS: Record<string, SavedProduct[]> = {
   default: [
-    { id: "sp-1", name: "Nike Air Force 1", detail: "White, High Top" },
-    { id: "sp-2", name: "Nike Jordan 1 Retro", detail: "Red/Black, Size 43" },
-    { id: "sp-3", name: "Adidas Ultraboost 22", detail: "Core Black" },
-    {
-      id: "sp-4",
-      name: "Samsung Galaxy Buds FE",
-      detail: "Graphite, Wireless",
-    },
-    { id: "sp-5", name: "Anker PowerCore 20000", detail: "USB-C" },
-    { id: "sp-6", name: "Blue Phoenix Coffee", detail: "Medium Roast, 200g" },
-    {
-      id: "sp-7",
-      name: "Jet Lag Ground Coffee",
-      detail: "70/30 Arabica/Robusta, 200g",
-    },
+    // { id: "sp-1",storeId:"1", name: "Nike Air Force 1", description: "White, High Top" },
+    // { id: "sp-2", name: "Nike Jordan 1 Retro", description: "Red/Black, Size 43" },
+    // { id: "sp-3", name: "Adidas Ultraboost 22", description: "Core Black" },
+    // {
+    //   id: "sp-4",
+    //   name: "Samsung Galaxy Buds FE",
+    //   description: "Graphite, Wireless",
+    // },
+    // { id: "sp-5", name: "Anker PowerCore 20000", description: "USB-C" },
+    // { id: "sp-6", name: "Blue Phoenix Coffee", description: "Medium Roast, 200g" },
+    // {
+    //   id: "sp-7",
+    //   name: "Jet Lag Ground Coffee",
+    //   description: "70/30 Arabica/Robusta, 200g",
+    // },
   ],
 };
 
