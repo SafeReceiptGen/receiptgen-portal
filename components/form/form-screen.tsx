@@ -298,6 +298,7 @@ export default function ReceiptFormScreen({
               imgUrl={generatedImageUrl}
               qrCodeToken={data.qrCodeToken?.trim() || undefined}
               receiptData={data}
+              storeCatalog={stores.find((s) => s.id === data.storeId)?.storeCatalog || []}
             />
           )}
         </>

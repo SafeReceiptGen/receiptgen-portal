@@ -18,25 +18,41 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { ReceiptData, LineItem } from "@/types";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Store } from "@/lib/api";
 
 export default function ConversionDialog({
   onClose,
   imgUrl,
   qrCodeToken,
   receiptData,
+  storeCatalog = [],
 }: {
   onClose: () => void;
   imgUrl: string;
   qrCodeToken?: string;
   receiptData?: ReceiptData;
+  storeCatalog?: Store["storeCatalog"];
 }) {
   const [copied, setCopied] = React.useState(false);
   const { data: session } = authClient.useSession();
   const router = useRouter();
 
+  const savableItems = React.useMemo(() => {
+    if (!receiptData) return [];
+    return receiptData.items.filter((item) => {
+      if (!item.name && !item.price) return false;
+      return !storeCatalog.some((catalogItem) => {
+        const nameMatches = catalogItem.name === item.name;
+        const descMatches = (catalogItem.description || "") === (item.detail || "");
+        const priceMatches = Number(catalogItem.defaultPrice || 0) === Number(item.price);
+        return nameMatches && descMatches && priceMatches;
+      });
+    });
+  }, [receiptData, storeCatalog]);
+
   // States for saving line items
-  const [selectedItems, setSelectedItems] = React.useState<string[]>(
-    receiptData?.items.map((i) => i.id) || [],
+  const [selectedItems, setSelectedItems] = React.useState<string[]>(() =>
+    savableItems.map((i) => i.id)
   );
   const [isSavingItems, setIsSavingItems] = React.useState(false);
   const [itemsSaved, setItemsSaved] = React.useState(false);
@@ -202,7 +218,7 @@ export default function ConversionDialog({
               </Button>
             </div>
           </div>
-        ) : receiptData && receiptData.items.length > 0 ? (
+        ) : receiptData && savableItems.length > 0 ? (
           <div className="px-6 py-5">
             <p className="text-[13px] font-medium text-slate-700 dark:text-white/80">
               Save reusable products
@@ -213,7 +229,7 @@ export default function ConversionDialog({
             </p>
 
             <div className="max-h-32 overflow-y-auto mb-4 space-y-2 pr-2">
-              {receiptData.items.map((item) => (
+              {savableItems.map((item) => (
                 <div key={item.id} className="flex items-start space-x-2">
                   <Checkbox
                     id={`item-${item.id}`}
@@ -226,7 +242,7 @@ export default function ConversionDialog({
                     className="text-[13px] leading-tight text-slate-600 dark:text-slate-300 cursor-pointer"
                   >
                     <span className="font-medium text-slate-800 dark:text-slate-200 block">
-                      {item.name}
+                      {item.name || "Unnamed Item"}
                     </span>
                     {item.detail && (
                       <span className="text-[11px] text-slate-400 dark:text-slate-500">
