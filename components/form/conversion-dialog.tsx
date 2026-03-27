@@ -65,8 +65,6 @@ export default function ConversionDialog({
   }
 
   const handleShare = async () => {
-    console.log("Sharing receipt with token:", qrCodeToken);
-    console.log("Receipt Data", receiptData);
     if (navigator.share) {
       try {
         if (receiptData) {
@@ -74,7 +72,7 @@ export default function ConversionDialog({
           await navigator.share({
             title: "Your SafeReceipt",
             text: "Here is your digital receipt",
-            // url: `${process.env.NEXT_PUBLIC_URL}/receipt/${qrCodeToken}`,
+            // url: `${process.env.NEXT_PUBLIC_URL}/receipt/${qrCodeToken}`, --gotta pass the qrCodeToken well to component to use this
             url: receiptData.qrUrl,
           });
         } else {
