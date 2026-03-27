@@ -50,7 +50,9 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
   const hasPolicy = data.returnWindow !== "No returns";
 
   // Only encode URLs returned from the API (path segment must be qrCodeToken, not orderId).
-  const dynamicQrUrl = data.qrUrl?.trim() ?? "";
+  const dynamicQrUrl = data.qrCodeToken?.trim()
+    ? `${process.env.NEXT_PUBLIC_URL}/receipt/${data.qrCodeToken}`
+    : "";
 
   return (
     <div className="flex items-start justify-center w-full h-full p-8 overflow-auto overscroll-contain custom-scrollbar">

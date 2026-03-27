@@ -1,25 +1,116 @@
 "use client";
 
 import * as React from "react";
-import { Share2, Download, Check, Copy, X, ArrowRight } from "lucide-react";
+import {
+  Share2,
+  Download,
+  Check,
+  Copy,
+  ArrowRight,
+  Save,
+  Loader2,
+} from "lucide-react";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { ReceiptData, LineItem } from "@/types";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Store, storesApi, SavedProduct } from "@/lib/api";
 
 export default function ConversionDialog({
   onClose,
   imgUrl,
-  receiptUrl,
+  qrCodeToken,
+  receiptData,
+  storeCatalog = [],
 }: {
   onClose: () => void;
   imgUrl: string;
-  receiptUrl?: string; // Add receiptUrl as an optional prop
+  qrCodeToken?: string;
+  receiptData?: ReceiptData;
+  storeCatalog?: Store["storeCatalog"];
 }) {
   const [copied, setCopied] = React.useState(false);
   const { data: session } = authClient.useSession();
   const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const savableItems = React.useMemo(() => {
+    if (!receiptData) return [];
+    return receiptData.items.filter((item) => {
+      if (!item.name && !item.price) return false;
+      return !storeCatalog.some((catalogItem) => {
+        const nameMatches = catalogItem.name === item.name;
+        const descMatches =
+          (catalogItem.description || "") === (item.detail || "");
+        const priceMatches =
+          Number(catalogItem.defaultPrice || 0) === Number(item.price);
+        return nameMatches && descMatches && priceMatches;
+      });
+    });
+  }, [receiptData, storeCatalog]);
+
+  // States for saving line items
+  const [selectedItems, setSelectedItems] = React.useState<string[]>(() =>
+    savableItems.map((i) => i.id),
+  );
+  const [itemsSaved, setItemsSaved] = React.useState(false);
+
+  const saveItemsMutation = useMutation({
+    mutationFn: (
+      productsToSave: Pick<
+        SavedProduct,
+        "name" | "description" | "defaultPrice"
+      >[],
+    ) => {
+      if (!receiptData?.storeId) throw new Error("Missing storeId");
+      console.log("productsToSave", productsToSave);
+      return storesApi.addToCatalog(receiptData.storeId, productsToSave);
+    },
+    onMutate: async (productsToSave) => {
+      await queryClient.cancelQueries({ queryKey: ["stores"] });
+      const previousStores = queryClient.getQueryData<Store[]>(["stores"]);
+
+      queryClient.setQueryData<Store[]>(["stores"], (old) => {
+        if (!old) return old;
+        return old.map((store) => {
+          if (store.id === receiptData?.storeId) {
+            const tempProducts: SavedProduct[] = productsToSave.map((p, i) => ({
+              id: `temp-${Date.now()}-${i}`,
+              name: p.name,
+              description: p.description,
+              defaultPrice: p.defaultPrice,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              storeId: store.id,
+            }));
+            return {
+              ...store,
+              storeCatalog: [...store.storeCatalog, ...tempProducts],
+            };
+          }
+          return store;
+        });
+      });
+
+      return { previousStores };
+    },
+    onError: (err, newProducts, context) => {
+      if (context?.previousStores) {
+        queryClient.setQueryData(["stores"], context.previousStores);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["stores"] });
+    },
+    onSuccess: () => {
+      setItemsSaved(true);
+    },
+  });
+
   const handleCopyImage = () => {
     try {
       fetch(imgUrl)
@@ -37,15 +128,23 @@ export default function ConversionDialog({
     }
   };
 
+  function copyLink() {
+    if (!receiptData?.qrUrl) return;
+    navigator.clipboard.writeText(receiptData.qrUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   const handleShare = async () => {
     if (navigator.share) {
       try {
-        if (receiptUrl) {
+        if (receiptData) {
           // Share the URL if it was provided
-          await navigator.share({ 
-            title: "Your SafeReceipt", 
+          await navigator.share({
+            title: "Your SafeReceipt",
             text: "Here is your digital receipt",
-            url: receiptUrl 
+            // url: `${process.env.NEXT_PUBLIC_URL}/receipt/${qrCodeToken}`, --gotta pass the qrCodeToken well to component to use this
+            url: receiptData.qrUrl,
           });
         } else {
           // Fallback to sharing the image if no URL is provided
@@ -58,8 +157,8 @@ export default function ConversionDialog({
       }
     } else {
       // Fallback for browsers that don't support native share
-      if (receiptUrl) {
-        navigator.clipboard.writeText(receiptUrl).then(() => {
+      if (receiptData) {
+        navigator.clipboard.writeText(receiptData.qrUrl).then(() => {
           alert("Sharing not supported. Link copied to clipboard instead!");
         });
       } else {
@@ -73,6 +172,28 @@ export default function ConversionDialog({
     link.download = `SafeReceipt-${Date.now()}.png`;
     link.href = imgUrl;
     link.click();
+  };
+
+  const handleToggleItem = (itemId: string) => {
+    setSelectedItems((prev) =>
+      prev.includes(itemId)
+        ? prev.filter((id) => id !== itemId)
+        : [...prev, itemId],
+    );
+  };
+
+  const handleSaveItems = () => {
+    if (!receiptData || selectedItems.length === 0) return;
+
+    const itemsToSave = receiptData.items
+      .filter((item) => selectedItems.includes(item.id))
+      .map((item) => ({
+        name: item.name,
+        description: item.detail || null,
+        defaultPrice: String(item.price),
+      }));
+
+    saveItemsMutation.mutate(itemsToSave);
   };
 
   return (
@@ -121,15 +242,15 @@ export default function ConversionDialog({
                 <Copy className="size-4" />
               )
             }
-            label={copied ? "Copied!" : "Copy"}
-            onClick={handleCopyImage}
+            label={copied ? "Copied!" : "Copy Link"}
+            onClick={copyLink}
           />
         </div>
 
         {/* Divider */}
         <div className="mx-6 h-px bg-slate-100 dark:bg-white/8" />
 
-        {/* Soft conversion nudge */}
+        {/* Dynamic section based on authentication */}
         {!session ? (
           <div className="px-6 py-5">
             <p className="text-[13px] font-medium text-slate-700 dark:text-white/80">
@@ -156,15 +277,102 @@ export default function ConversionDialog({
               </Button>
             </div>
           </div>
+        ) : receiptData && savableItems.length > 0 ? (
+          <div className="px-6 py-5">
+            <p className="text-[13px] font-medium text-slate-700 dark:text-white/80">
+              Save reusable products
+            </p>
+            <p className="mt-1 mb-3 text-[12px] leading-relaxed text-slate-400 dark:text-white/40">
+              Select product names to save to your store for quick receipt
+              generation next time.
+            </p>
+
+            <div className="max-h-32 overflow-y-auto mb-4 space-y-2 pr-2">
+              {savableItems.map((item) => (
+                <div key={item.id} className="flex items-start space-x-2">
+                  <Checkbox
+                    id={`item-${item.id}`}
+                    checked={selectedItems.includes(item.id)}
+                    onCheckedChange={() => handleToggleItem(item.id)}
+                    className="mt-0.5 border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 dark:border-slate-600"
+                  />
+                  <label
+                    htmlFor={`item-${item.id}`}
+                    className="text-[13px] leading-tight text-slate-600 dark:text-slate-300 cursor-pointer"
+                  >
+                    <span className="font-medium text-slate-800 dark:text-slate-200 block">
+                      {item.name || "Unnamed Item"}
+                    </span>
+                    {item.detail && (
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                        {item.detail}
+                      </span>
+                    )}
+                  </label>
+                </div>
+              ))}
+            </div>
+
+            {saveItemsMutation.error && (
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">
+                <span className="font-semibold block mb-0.5">Save failed</span>
+                <span className="opacity-90 leading-tight block">
+                  {saveItemsMutation.error instanceof Error
+                    ? saveItemsMutation.error.message
+                    : "Failed to save products. Please try again."}
+                </span>
+              </div>
+            )}
+
+            <div className="flex items-center gap-3">
+              <Button
+                size="sm"
+                onClick={() => router.push("/dashboard")}
+                variant="outline"
+                className="h-8 rounded-full px-4 text-[13px] font-medium border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-white/70 dark:hover:bg-white/5"
+              >
+                Dashboard
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSaveItems}
+                disabled={
+                  saveItemsMutation.isPending ||
+                  itemsSaved ||
+                  selectedItems.length === 0
+                }
+                className="h-8 flex-1 cursor-pointer rounded-full bg-blue-700 px-4 text-[13px] font-medium text-white hover:bg-slate-700 disabled:bg-blue-700/60 dark:bg-white dark:text-slate-900 dark:hover:bg-white/90"
+              >
+                {saveItemsMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                    Saving...
+                  </>
+                ) : itemsSaved ? (
+                  <>
+                    <Check className="mr-1.5 size-3.5" />
+                    Saved
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-1.5 size-3.5" />
+                    Save Products
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         ) : (
-          <Button
-            size="sm"
-            onClick={() => router.push("/dashboard")}
-            className="h-8 cursor-pointer rounded-full bg-blue-700 px-4 text-[13px] font-medium text-white hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-white/90"
-          >
-            Go to dashboard
-            <ArrowRight className="ml-1.5 size-3.5" />
-          </Button>
+          <div className="px-6 py-5 flex justify-end">
+            <Button
+              size="sm"
+              onClick={() => router.push("/dashboard")}
+              className="h-8 cursor-pointer rounded-full bg-blue-700 px-4 text-[13px] font-medium text-white hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-white/90"
+            >
+              Go to dashboard
+              <ArrowRight className="ml-1.5 size-3.5" />
+            </Button>
+          </div>
         )}
       </DialogContent>
     </Dialog>

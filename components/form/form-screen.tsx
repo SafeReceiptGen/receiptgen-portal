@@ -15,6 +15,7 @@ import { MobileWizard } from "./form-mobile";
 import Image from "next/image";
 import Link from "next/link";
 import { generateReceipt, ActionState } from "./actions";
+import { useStores } from "@/hooks/use-stores";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -58,6 +59,8 @@ export default function ReceiptFormScreen({
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string>("");
   const [guestSaved, setGuestSaved] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
+  
+  const { stores, isLoading: storesLoading } = useStores(isAuthenticated);
 
   // ── Server action (authenticated only) ──────────────────────────────────
   const boundAction = generateReceipt.bind(null, data);
@@ -69,8 +72,8 @@ export default function ReceiptFormScreen({
   // When server action succeeds: update qrUrl then capture
   useEffect(() => {
     if (state.success) {
-      if (state.qrUrl) {
-        setData((prev) => ({ ...prev, qrUrl: state.qrUrl! }));
+      if (state.qrCodeToken) {
+        setData((prev) => ({ ...prev, qrUrl: state.qrCodeToken! }));
       }
       requestAnimationFrame(() => captureReceipt());
     }
@@ -203,6 +206,8 @@ export default function ReceiptFormScreen({
             isAuthenticated={isAuthenticated}
             onGuestSave={handleGuestSave}
             guestSaved={guestSaved}
+            userStores={stores}
+            storesLoading={storesLoading}
           />
 
           {/* ── Desktop layout ── */}
@@ -256,6 +261,8 @@ export default function ReceiptFormScreen({
                     onChange={setData}
                     actionState={state}
                     isAuthenticated={isAuthenticated}
+                    userStores={stores}
+                    storesLoading={storesLoading}
                   />
                 </div>
 
@@ -278,7 +285,7 @@ export default function ReceiptFormScreen({
                   <ReceiptPreview
                     data={data}
                     ref={receiptRef}
-                    showQr={isAuthenticated && !!data.qrUrl?.trim()}
+                    showQr={isAuthenticated && !!data.qrCodeToken?.trim()}
                   />
                 </div>
               </div>
@@ -289,7 +296,9 @@ export default function ReceiptFormScreen({
             <ConversionDialog
               onClose={() => setShowConversionDialog(false)}
               imgUrl={generatedImageUrl}
-              receiptUrl={data.qrUrl?.trim() || undefined}
+              qrCodeToken={data.qrCodeToken?.trim() || undefined}
+              receiptData={data}
+              storeCatalog={stores.find((s) => s.id === data.storeId)?.storeCatalog || []}
             />
           )}
         </>

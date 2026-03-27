@@ -10,6 +10,7 @@ import {
   Store as StoreIcon,
   ChevronDown,
   Calendar as CalendarIcon,
+  Sparkles,
 } from "lucide-react";
 import { ReceiptData, LineItem } from "@/types";
 import { ReceiptPreview } from "./receipt-preview";
@@ -34,8 +35,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ActionState } from "./actions";
-import { useStores } from "@/hooks/use-stores";
+import { Store } from "@/lib/api";
 import { PAYMENT_METHOD_OPTIONS } from "@/lib/payment-methods";
+import { returnWindowEnum } from "@/types/enums";
 
 interface MobileWizardProps {
   data: ReceiptData;
@@ -47,6 +49,8 @@ interface MobileWizardProps {
   isAuthenticated: boolean;
   onGuestSave: () => void;
   guestSaved: boolean;
+  userStores: Store[];
+  storesLoading: boolean;
 }
 
 const STEPS = [
@@ -90,22 +94,43 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
   isAuthenticated,
   onGuestSave,
   guestSaved,
+  userStores,
+  storesLoading,
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const { isExiting, isOpening } = useExpandableScreen();
-  const { stores: userStores, isLoading: storesLoading } = useStores(isAuthenticated);
+
+  const selectedStore = userStores.find((s) => s.id === data.storeId);
+  const savedProducts = selectedStore?.storeCatalog || [];
+  const productsLoading = storesLoading;
+
   const dataRef = useRef(data);
   dataRef.current = data;
+  const isPolicyDisabled = !!data.storeId;
 
   useEffect(() => {
     if (!isAuthenticated || storesLoading || userStores.length !== 1) return;
     if (dataRef.current.storeId) return;
     const s = userStores[0];
+    const policy = s.returnPolicy;
+
+    const mapReturnWindow = (val: any) => ({"0": "No returns", none: "No returns", "1": "3 days", "3_days": "3 days", "2": "7 days", "7_days": "7 days", "3": "14 days", "14_days": "14 days", "4": "30 days", "30_days": "30 days", "5": "Custom", custom: "Custom"})[String(val)] || "30 days";
+    const mapReturnCondition = (val: any) => ({"0": "Unused", unused: "Unused", "1": "Original Packaging", original_packaging: "Original Packaging", "2": "Any Condition", any_condition: "Any Condition", "3": "Defective Only", defective_only: "Defective Only"})[String(val)] || "Original Packaging";
+    const mapRefundType = (val: any) => ({"0": "Full Refund", full_refund: "Full Refund", "1": "Partial Refund", partial_refund: "Partial Refund", "2": "Store Credit", store_credit: "Store Credit", "3": "Exchange Only", exchange_only: "Exchange Only"})[String(val)] || "Store Credit";
+
     onChange({
       ...dataRef.current,
       storeId: s.id,
       storeName: s.name,
       storePhone: s.phone ?? "",
+      ...(policy && {
+        returnWindow: mapReturnWindow(policy.returnWindow),
+        customReturnWindow: policy.customWindowDays
+          ? `${policy.customWindowDays} days`
+          : "",
+        returnCondition: mapReturnCondition(policy.returnCondition),
+        refundType: mapRefundType(policy.refundType),
+      }),
     });
   }, [isAuthenticated, storesLoading, userStores, onChange]);
 
@@ -120,11 +145,11 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
     handleChange("items", newItems);
   };
 
-  const addItem = () => {
+  const addItem = (name = "New Item", detail = "") => {
     const newItem: LineItem = {
       id: Math.random().toString(36).substr(2, 9),
-      name: "New Item",
-      detail: "",
+      name,
+      detail,
       quantity: 1,
       price: 0,
     };
@@ -195,22 +220,50 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                   <div className="relative">
                     <select
                       className="w-full appearance-none rounded-xl bg-slate-50 border border-slate-200 px-4 py-3.5 pr-10 text-base text-slate-900 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 dark:bg-white/5 dark:border-white/10 dark:text-white"
-                      value={userStores.find(
-                        (s) => s.name === data.storeName
-                      )?.id ?? ""}
+                      value={
+                        userStores.find((s) => s.name === data.storeName)?.id
+                      }
                       onChange={(e) => {
-                        const selected = userStores.find((s) => s.id === e.target.value);
+                        const selected = userStores.find(
+                          (s) => s.id === e.target.value,
+                        );
                         if (selected) {
-                          onChange({ ...data, storeName: selected.name, storePhone: selected.phone ?? "" });
+                          const policy = selected.returnPolicy;
+
+                          const mapReturnWindow = (val: any) => ({"0": "No returns", none: "No returns", "1": "3 days", "3_days": "3 days", "2": "7 days", "7_days": "7 days", "3": "14 days", "14_days": "14 days", "4": "30 days", "30_days": "30 days", "5": "Custom", custom: "Custom"})[String(val)] || "30 days";
+                          const mapReturnCondition = (val: any) => ({"0": "Unused", unused: "Unused", "1": "Original Packaging", original_packaging: "Original Packaging", "2": "Any Condition", any_condition: "Any Condition", "3": "Defective Only", defective_only: "Defective Only"})[String(val)] || "Original Packaging";
+                          const mapRefundType = (val: any) => ({"0": "Full Refund", full_refund: "Full Refund", "1": "Partial Refund", partial_refund: "Partial Refund", "2": "Store Credit", store_credit: "Store Credit", "3": "Exchange Only", exchange_only: "Exchange Only"})[String(val)] || "Store Credit";
+
+                          onChange({
+                            ...data,
+                            storeId: selected.id,
+                            storeName: selected.name,
+                            storePhone: selected.phone ?? "",
+                            ...(policy && {
+                              returnWindow: mapReturnWindow(policy.returnWindow),
+                              customReturnWindow: policy.customWindowDays
+                                ? `${policy.customWindowDays} days`
+                                : "",
+                              returnCondition: mapReturnCondition(policy.returnCondition),
+                              refundType: mapRefundType(policy.refundType),
+                            }),
+                          });
                         }
                       }}
                     >
-                      <option value="" disabled>Pick a store…</option>
+                      <option value="" disabled>
+                        Pick a store…
+                      </option>
                       {userStores.map((s) => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                        </option>
                       ))}
                     </select>
-                    <ChevronDown size={16} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/40" />
+                    <ChevronDown
+                      size={16}
+                      className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/40"
+                    />
                   </div>
                 ) : (
                   <p className="rounded-xl border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-400 dark:border-white/10 dark:text-white/30">
@@ -347,18 +400,69 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
 
         {currentStep === 1 && (
           <div
-            className={`space-y-6 ${!isExiting && !isOpening ? "animate-in slide-in-from-right fade-in duration-300" : ""}`}
+            className={`space-y-5 ${!isExiting && !isOpening ? "animate-in slide-in-from-right fade-in duration-300" : ""}`}
           >
-            {data.items.map((item, idx) => (
+            {/* ── Saved Products Strip ───────────────────────────────── */}
+            {isAuthenticated && data.storeId && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-white/40">
+                    Saved Products
+                  </span>
+                </div>
+
+                {productsLoading ? (
+                  <div className="flex gap-3 overflow-hidden">
+                    {[1, 2, 3].map((n) => (
+                      <div
+                        key={n}
+                        className="h-16 w-28 shrink-0 animate-pulse rounded-xl bg-slate-100 dark:bg-white/8"
+                      />
+                    ))}
+                  </div>
+                ) : savedProducts.length > 0 ? (
+                  <div className="-mx-6 flex gap-3 overflow-x-auto px-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {savedProducts.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => addItem(p.name, p.description ?? "")}
+                        className="group/card flex shrink-0 flex-col items-start gap-0.5 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-left shadow-sm transition-all active:scale-95 hover:border-blue-400 hover:shadow-blue-100/60 dark:border-white/10 dark:bg-white/5 dark:hover:border-blue-400/50 dark:hover:bg-blue-500/8"
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <Plus
+                            size={12}
+                            className="shrink-0 text-slate-400 transition-colors group-hover/card:text-blue-500 dark:text-white/30 dark:group-hover/card:text-blue-400"
+                          />
+                          <span className="max-w-32 truncate text-sm font-semibold text-slate-800 dark:text-white">
+                            {p.name}
+                          </span>
+                        </div>
+                        {p.description && (
+                          <p className="ml-5.5 max-w-32 truncate text-[11px] text-slate-400 dark:text-white/35">
+                            {p.description}
+                          </p>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+
+                <div className="border-b border-slate-100 dark:border-white/8" />
+              </div>
+            )}
+
+            {/* ── Added Items ────────────────────────────────────────── */}
+            {data.items.map((item) => (
               <div
                 key={item.id}
                 className="relative rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-white/4"
               >
                 <button
                   onClick={() => removeItem(item.id)}
-                  className="absolute top-2 right-2 p-2 text-slate-400 hover:text-red-500 dark:text-white/45 dark:hover:text-red-300"
+                  className="absolute top-2 right-2 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:text-white/45 dark:hover:bg-red-500/10 dark:hover:text-red-300"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={15} />
                 </button>
                 <div className="space-y-3">
                   <Input
@@ -418,9 +522,10 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                 </div>
               </div>
             ))}
+
             <button
-              onClick={addItem}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 py-4 text-slate-600 transition-colors hover:bg-slate-50 dark:border-white/15 dark:text-white/70 dark:hover:bg-white/4"
+              onClick={() => addItem()}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 py-4 text-slate-600 transition-colors hover:bg-slate-50 active:scale-95 dark:border-white/15 dark:text-white/70 dark:hover:bg-white/4"
             >
               <Plus size={20} /> Add Another Item
             </button>
@@ -431,11 +536,21 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
           <div
             className={`space-y-6 ${!isExiting && !isOpening ? "animate-in slide-in-from-right fade-in duration-300" : ""}`}
           >
+            {isPolicyDisabled && (
+              <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700 flex gap-3 items-start dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
+                <StoreIcon size={16} className="shrink-0 mt-0.5" />
+                <p className="leading-snug text-xs">
+                  Store return policy applied automatically. Modify defaults in
+                  your Dashboard store settings.
+                </p>
+              </div>
+            )}
             <div className="space-y-2">
               <Label className="text-sm text-slate-600 dark:text-white/70">
                 Return Window
               </Label>
               <Select
+                disabled={isPolicyDisabled}
                 value={data.returnWindow}
                 onValueChange={(value) => handleChange("returnWindow", value)}
               >
@@ -454,6 +569,7 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
             </div>
             {data.returnWindow === "Custom" && (
               <Input
+                disabled={isPolicyDisabled}
                 type="text"
                 placeholder="e.g. 45 days"
                 value={data.customReturnWindow}
@@ -469,6 +585,7 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                 Return Condition
               </Label>
               <Select
+                disabled={isPolicyDisabled}
                 value={data.returnCondition}
                 onValueChange={(value) =>
                   handleChange("returnCondition", value)
@@ -492,6 +609,7 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                 Refund Type
               </Label>
               <Select
+                disabled={isPolicyDisabled}
                 value={data.refundType}
                 onValueChange={(value) => handleChange("refundType", value)}
               >
@@ -523,7 +641,11 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
 
         {currentStep === 3 && (
           <div className="h-full -mx-6 -mt-6">
-            <ReceiptPreview data={data} ref={ref} showQr={isAuthenticated && !!data.qrUrl?.trim()} />
+            <ReceiptPreview
+              data={data}
+              ref={ref}
+              showQr={isAuthenticated && !!data.qrCodeToken?.trim()}
+            />
           </div>
         )}
       </div>

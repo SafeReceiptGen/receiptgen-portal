@@ -43,7 +43,7 @@ const receiptSchema = z.object({
 export type ActionState = {
   success: boolean;
   message: string;
-  qrUrl?: string;
+  qrCodeToken?: string;
   errors?: Record<string, string[] | undefined>;
 };
 
@@ -207,7 +207,7 @@ export async function generateReceipt(
     return {
       success: true,
       message: "Receipt generated successfully!",
-      qrUrl,
+      qrCodeToken: qrUrl,
     };
   } catch (error) {
     console.error("Receipt generation failed:", error);

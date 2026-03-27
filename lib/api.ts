@@ -7,6 +7,11 @@ import { differenceInCalendarDays } from "date-fns";
 import type { ReceiptForReturn } from "@/types/returns";
 import type { PublicReturnBundle } from "@/lib/return-mappers";
 import { portalPublicOrigin } from "@/lib/portal-public-url";
+import {
+  refundTypeEnum,
+  returnConditionEnum,
+  returnWindowEnum,
+} from "@/types/enums";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
@@ -151,9 +156,23 @@ export const receiptsApi = {
 export interface Store {
   id: string;
   name: string;
-  phone?: string;
-  address?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  retailerId: string;
   isActive: boolean;
+  phone: string | null;
+  address: string | null;
+  storeCatalog: SavedProduct[];
+  returnPolicy: {
+    id: string;
+    createdAt: Date;
+    isActive: boolean;
+    storeId: string;
+    returnWindow: returnWindowEnum;
+    customWindowDays: number | null;
+    returnCondition: returnConditionEnum;
+    refundType: refundTypeEnum;
+  };
 }
 
 export const storesApi = {
@@ -164,6 +183,64 @@ export const storesApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+
+  addToCatalog: (
+    storeId: string,
+    products: Pick<SavedProduct, "name" | "description" | "defaultPrice">[],
+  ) =>
+    request<{ products: SavedProduct[] }>(`/stores/${storeId}/catalog`, {
+      method: "POST",
+      body: JSON.stringify([...products]),
+    }),
+};
+
+// ─── Store Catalog ───────────────────────────────────────────────────────────
+
+export interface SavedProduct {
+  id: string;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+  storeId: string;
+  description: string | null;
+  defaultPrice: string | null;
+}
+
+/** Placeholder mock data keyed by storeId — replace with a real endpoint later. */
+const MOCK_SAVED_PRODUCTS: Record<string, SavedProduct[]> = {
+  default: [
+    // { id: "sp-1",storeId:"1", name: "Nike Air Force 1", description: "White, High Top" },
+    // { id: "sp-2", name: "Nike Jordan 1 Retro", description: "Red/Black, Size 43" },
+    // { id: "sp-3", name: "Adidas Ultraboost 22", description: "Core Black" },
+    // {
+    //   id: "sp-4",
+    //   name: "Samsung Galaxy Buds FE",
+    //   description: "Graphite, Wireless",
+    // },
+    // { id: "sp-5", name: "Anker PowerCore 20000", description: "USB-C" },
+    // { id: "sp-6", name: "Blue Phoenix Coffee", description: "Medium Roast, 200g" },
+    // {
+    //   id: "sp-7",
+    //   name: "Jet Lag Ground Coffee",
+    //   description: "70/30 Arabica/Robusta, 200g",
+    // },
+  ],
+};
+
+export const savedProductsApi = {
+  /**
+   * Fetches saved product names for a store.
+   * Currently mocked — swap the body for a real API call when the endpoint exists:
+   *   return request<{ products: SavedProduct[] }>(`/stores/${storeId}/products`);
+   */
+  list: (storeId: string): Promise<{ products: SavedProduct[] }> =>
+    new Promise((resolve) =>
+      setTimeout(() => {
+        const products =
+          MOCK_SAVED_PRODUCTS[storeId] ?? MOCK_SAVED_PRODUCTS["default"];
+        resolve({ products });
+      }, 500),
+    ),
 };
 
 // ─── Returns ─────────────────────────────────────────────────────────────────
@@ -289,13 +366,12 @@ export async function uploadReturnPhotosFromDataUrls(
 
 export const returnsApi = {
   submit: (payload: SubmitReturnPayload) =>
-    request<{ returnRequest: { id: string; returnNumber: string; status: string } }>(
-      "/returns",
-      {
-        method: "POST",
-        body: JSON.stringify(payload),
-      },
-    ),
+    request<{
+      returnRequest: { id: string; returnNumber: string; status: string };
+    }>("/returns", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 
   getEligibility: (receiptToken: string) =>
     request<ReturnEligibilityResponse>(
@@ -307,11 +383,21 @@ export const returnsApi = {
       `/returns/public/${encodeURIComponent(returnId)}?token=${encodeURIComponent(receiptToken)}`,
     ).then((d) => d.returnRequest),
 
-  confirmPayment: (returnId: string, body: { paymentType: "service_fee" | "refund"; provider: string; reference: string }) =>
-    request<{ payment: unknown }>(`/returns/public/${encodeURIComponent(returnId)}/payment`, {
-      method: "POST",
-      body: JSON.stringify(body),
-    }),
+  confirmPayment: (
+    returnId: string,
+    body: {
+      paymentType: "service_fee" | "refund";
+      provider: string;
+      reference: string;
+    },
+  ) =>
+    request<{ payment: unknown }>(
+      `/returns/public/${encodeURIComponent(returnId)}/payment`,
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+    ),
 
   list: (params?: {
     page?: number;
@@ -328,9 +414,7 @@ export const returnsApi = {
       });
     }
     const q = qs.toString();
-    return request<{ returns: ReturnListRow[] }>(
-      `/returns${q ? `?${q}` : ""}`,
-    );
+    return request<{ returns: ReturnListRow[] }>(`/returns${q ? `?${q}` : ""}`);
   },
 
   approve: (id: string) =>

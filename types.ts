@@ -21,6 +21,7 @@ export interface ReceiptData {
   companyName: string;
   tin: string; // Tax Identification Number
   website: string;
+  qrCodeToken: string;
   qrUrl: string;
   customerName?: string;
   // Return Policy Fields
@@ -52,6 +53,7 @@ export const INITIAL_RECEIPT_DATA: ReceiptData = {
   companyName: "",
   tin: "",
   website: "",
+  qrCodeToken: "",
   qrUrl: "",
   customerName: "",
   returnWindow: "7 days",
