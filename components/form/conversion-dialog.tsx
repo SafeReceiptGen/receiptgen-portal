@@ -19,6 +19,17 @@ import { authClient } from "@/lib/auth-client";
 import { ReceiptData, LineItem } from "@/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Store, storesApi, SavedProduct } from "@/lib/api";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { pdf } from "@react-pdf/renderer";
+import { ReceiptPDF } from "./receipt-pdf";
+import { QRCodeCanvas } from "qrcode.react";
 
 export default function ConversionDialog({
   onClose,
@@ -167,11 +178,40 @@ export default function ConversionDialog({
     }
   };
 
-  const handleDownload = () => {
+  const handleDownloadImage = () => {
     const link = document.createElement("a");
     link.download = `SafeReceipt-${Date.now()}.png`;
     link.href = imgUrl;
     link.click();
+  };
+
+  const qrCanvasRef = React.useRef<HTMLCanvasElement>(null);
+
+  const handleDownloadPDF = async () => {
+    if (!receiptData) return;
+
+    // Get QR Code data URL if canvas is rendered
+    let qrDataUrl = undefined;
+    if (qrCanvasRef.current) {
+      qrDataUrl = qrCanvasRef.current.toDataURL("image/png");
+    }
+
+    try {
+      const blob = await pdf(
+        <ReceiptPDF
+          data={receiptData}
+          showQr={!!qrCodeToken}
+          qrDataUrl={qrDataUrl}
+        />
+      ).toBlob();
+
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `SafeReceipt-${Date.now()}.pdf`;
+      link.click();
+    } catch (e) {
+      console.error("Failed to generate PDF", e);
+    }
   };
 
   const handleToggleItem = (itemId: string) => {
@@ -196,9 +236,26 @@ export default function ConversionDialog({
     saveItemsMutation.mutate(itemsToSave);
   };
 
+  const dynamicQrUrl = qrCodeToken
+    ? `${process.env.NEXT_PUBLIC_URL || "http://localhost:3000"}/receipt/${qrCodeToken}`
+    : "";
+
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="gap-0 overflow-hidden border-slate-200 bg-white p-0 text-slate-900 shadow-2xl sm:max-w-sm dark:border-white/10 dark:bg-[#071427] dark:text-white">
+        {/* Render QRCodeCanvas hidden to extract its dataUrl for PDF generation */}
+        {qrCodeToken && (
+          <div style={{ display: "none" }}>
+            <QRCodeCanvas
+              value={dynamicQrUrl}
+              size={160}
+              level="M"
+              fgColor="#18181b"
+              ref={qrCanvasRef}
+            />
+          </div>
+        )}
+
         {/* Top accent line */}
         <div className="h-px w-full bg-linear-to-r from-transparent via-green-400/60 to-transparent dark:via-green-400/40" />
 
@@ -229,11 +286,24 @@ export default function ConversionDialog({
             label="Share"
             onClick={handleShare}
           />
-          <ActionButton
-            icon={<Download className="size-4" />}
-            label="Download"
-            onClick={handleDownload}
-          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex flex-col items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 py-3.5 text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900 dark:border-white/8 dark:bg-white/4 dark:text-white/60 dark:hover:border-white/15 dark:hover:bg-white/8 dark:hover:text-white">
+                <Download className="size-4" />
+                <span className="text-[12px] font-medium">Download</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="w-40 rounded-xl">
+              <DropdownMenuLabel className="text-xs text-slate-500 font-normal">Download as:</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleDownloadImage} className="cursor-pointer font-medium py-2">
+                Image
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleDownloadPDF} className="cursor-pointer font-medium py-2">
+                PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <ActionButton
             icon={
               copied ? (

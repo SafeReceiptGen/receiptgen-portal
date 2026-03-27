@@ -73,7 +73,7 @@ export default function ReceiptFormScreen({
   useEffect(() => {
     if (state.success) {
       if (state.qrCodeToken) {
-        setData((prev) => ({ ...prev, qrUrl: state.qrCodeToken! }));
+        setData((prev) => ({ ...prev, qrUrl: state.qrCodeToken!, qrCodeToken: state.qrCodeToken! }));
       }
       requestAnimationFrame(() => captureReceipt());
     }
