@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { ReceiptData } from "@/types";
 import { ReceiptForReturn } from "@/types/returns";
 import { addMockReceipt } from "@/lib/mock-data";
+import { portalPublicOrigin } from "@/lib/portal-public-url";
 
 // Zod schema — most fields are optional, validation is lenient
 const lineItemSchema = z.object({
@@ -47,11 +48,6 @@ export type ActionState = {
 };
 
 const API_URL = process.env.BETTER_AUTH_URL ?? "http://localhost:3001";
-
-function portalOrigin(): string {
-  const base = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
-  return base.replace(/\/$/, "");
-}
 
 type CreateReceiptApiEnvelope = {
   success?: boolean;
@@ -155,7 +151,7 @@ export async function generateReceipt(
 
     const qrUrl =
       qrCodeToken != null && qrCodeToken.length > 0
-        ? `${portalOrigin()}/receipt/${qrCodeToken}`
+        ? `${portalPublicOrigin()}/receipt/${qrCodeToken}`
         : data?.qrUrl?.trim() || undefined;
 
     if (!qrUrl) {

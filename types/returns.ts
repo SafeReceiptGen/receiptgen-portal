@@ -1,7 +1,15 @@
 // ─── ReturnFlow Type Definitions ───────────────────────────────────────────────
 // Consistent with the existing types.ts pattern: interfaces + constants + enums.
 
-export type ReturnStatus = "PENDING" | "COLLECTED" | "IN_TRANSIT" | "WITH_RETAILER" | "APPROVED" | "REJECTED" | "REFUNDED";
+export type ReturnStatus =
+  | "PICKUP_SCHEDULED"
+  | "PENDING"
+  | "COLLECTED"
+  | "IN_TRANSIT"
+  | "WITH_RETAILER"
+  | "APPROVED"
+  | "REJECTED"
+  | "REFUNDED";
 
 export type ReturnReason = "DEFECTIVE" | "WRONG_ITEM" | "CHANGED_MIND" | "DAMAGED_IN_DELIVERY" | "OTHER";
 
@@ -26,6 +34,20 @@ export interface PudoPoint {
   address: string;
 }
 
+export interface PickupAddress {
+  line1: string;
+  line2?: string;
+  city: string;
+  region: string;
+  postalCode?: string;
+}
+
+export interface ParcelDetails {
+  packageCount: number;
+  description: string;
+  weightKg?: number;
+}
+
 export interface ReturnLogistics {
   method: LogisticsMethod;
   pudoPointId?: string;
@@ -33,6 +55,8 @@ export interface ReturnLogistics {
   timeSlot: string;
   phoneNumber: string;
   phoneCountry: string;
+  pickupAddress?: PickupAddress;
+  parcel?: ParcelDetails;
 }
 
 export interface ReturnActivityLog {
@@ -109,6 +133,7 @@ export const RETURN_REASON_LABELS: Record<ReturnReason, string> = {
 };
 
 export const RETURN_STATUS_LABELS: Record<ReturnStatus, string> = {
+  PICKUP_SCHEDULED: "Pickup Scheduled",
   PENDING: "Pending",
   COLLECTED: "Collected",
   IN_TRANSIT: "In Transit",

@@ -42,6 +42,7 @@ export function mapApiStatusToReturnStatus(
   const s = (status ?? "pending").toLowerCase();
   const map: Record<string, ReturnStatus> = {
     pending: "PENDING",
+    pickup_scheduled: "PICKUP_SCHEDULED",
     collected: "COLLECTED",
     in_transit: "IN_TRANSIT",
     with_retailer: "WITH_RETAILER",
@@ -76,6 +77,16 @@ export type PublicReturnBundle = {
     refundAmount: string | null;
     logisticsMethod: string | null;
     logisticsTimeSlot: string | null;
+    logisticsPhone: string | null;
+    logisticsPhoneCountry: string | null;
+    pickupAddressLine1: string | null;
+    pickupAddressLine2: string | null;
+    pickupCity: string | null;
+    pickupRegion: string | null;
+    pickupPostalCode: string | null;
+    parcelPackageCount: number | null;
+    parcelDescription: string | null;
+    parcelWeightKg: string | null;
     serviceFee: string | null;
     rejectionReason: string | null;
     collectedAt: Date | string | null;
@@ -113,14 +124,38 @@ export function mapPublicReturnBundleToReturnRequest(
   const { returnRequest: rr, receipt, retailer, customer, items, photos } =
     payload;
 
+  const isDropOff = rr.logisticsMethod === "drop_off";
   const logistics: ReturnLogistics = {
-    method:
-      rr.logisticsMethod === "drop_off" ? "DROP_OFF" : "HOME_PICKUP",
+    method: isDropOff ? "DROP_OFF" : "HOME_PICKUP",
     timeSlot: rr.logisticsTimeSlot ?? "",
-    phoneNumber: "",
-    phoneCountry: "",
+    phoneNumber: rr.logisticsPhone ?? "",
+    phoneCountry: rr.logisticsPhoneCountry ?? "",
     fee: rr.serviceFee ? parseFloat(rr.serviceFee) : 0,
   };
+
+  if (!isDropOff && rr.pickupAddressLine1) {
+    logistics.pickupAddress = {
+      line1: rr.pickupAddressLine1,
+      line2: rr.pickupAddressLine2 ?? undefined,
+      city: rr.pickupCity ?? "",
+      region: rr.pickupRegion ?? "",
+      postalCode: rr.pickupPostalCode ?? undefined,
+    };
+  }
+  if (
+    !isDropOff &&
+    rr.parcelPackageCount != null &&
+    rr.parcelDescription != null
+  ) {
+    logistics.parcel = {
+      packageCount: rr.parcelPackageCount,
+      description: rr.parcelDescription,
+      weightKg:
+        rr.parcelWeightKg != null && rr.parcelWeightKg !== ""
+          ? parseFloat(rr.parcelWeightKg)
+          : undefined,
+    };
+  }
 
   const mappedItems: ReturnItem[] = items.map(
     ({ returnItem, lineItem }) => ({
@@ -145,10 +180,15 @@ export function mapPublicReturnBundleToReturnRequest(
         ? d
         : d.toISOString();
 
+  const submittedAction =
+    rr.status === "pickup_scheduled"
+      ? "Home pickup scheduled — we'll confirm your pickup window"
+      : "Return request submitted";
+
   const activityLog: ReturnActivityLog[] = [
     {
       id: "1",
-      action: "Return request submitted",
+      action: submittedAction,
       performedBy: retailer.name,
       createdAt: requestedAt,
     },
