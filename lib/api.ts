@@ -14,7 +14,6 @@ function portalOriginForReceiptLinks(): string {
   const base =
     process.env.NEXT_PUBLIC_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
     "http://localhost:3000";
   return base.replace(/\/$/, "");
 }
@@ -189,10 +188,18 @@ const MOCK_SAVED_PRODUCTS: Record<string, SavedProduct[]> = {
     { id: "sp-1", name: "Nike Air Force 1", detail: "White, High Top" },
     { id: "sp-2", name: "Nike Jordan 1 Retro", detail: "Red/Black, Size 43" },
     { id: "sp-3", name: "Adidas Ultraboost 22", detail: "Core Black" },
-    { id: "sp-4", name: "Samsung Galaxy Buds FE", detail: "Graphite, Wireless" },
+    {
+      id: "sp-4",
+      name: "Samsung Galaxy Buds FE",
+      detail: "Graphite, Wireless",
+    },
     { id: "sp-5", name: "Anker PowerCore 20000", detail: "USB-C" },
     { id: "sp-6", name: "Blue Phoenix Coffee", detail: "Medium Roast, 200g" },
-    { id: "sp-7", name: "Jet Lag Ground Coffee", detail: "70/30 Arabica/Robusta, 200g" },
+    {
+      id: "sp-7",
+      name: "Jet Lag Ground Coffee",
+      detail: "70/30 Arabica/Robusta, 200g",
+    },
   ],
 };
 
@@ -323,13 +330,12 @@ export async function uploadReturnPhotosFromDataUrls(
 
 export const returnsApi = {
   submit: (payload: SubmitReturnPayload) =>
-    request<{ returnRequest: { id: string; returnNumber: string; status: string } }>(
-      "/returns",
-      {
-        method: "POST",
-        body: JSON.stringify(payload),
-      },
-    ),
+    request<{
+      returnRequest: { id: string; returnNumber: string; status: string };
+    }>("/returns", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 
   getEligibility: (receiptToken: string) =>
     request<ReturnEligibilityResponse>(
@@ -341,11 +347,21 @@ export const returnsApi = {
       `/returns/public/${encodeURIComponent(returnId)}?token=${encodeURIComponent(receiptToken)}`,
     ).then((d) => d.returnRequest),
 
-  confirmPayment: (returnId: string, body: { paymentType: "service_fee" | "refund"; provider: string; reference: string }) =>
-    request<{ payment: unknown }>(`/returns/public/${encodeURIComponent(returnId)}/payment`, {
-      method: "POST",
-      body: JSON.stringify(body),
-    }),
+  confirmPayment: (
+    returnId: string,
+    body: {
+      paymentType: "service_fee" | "refund";
+      provider: string;
+      reference: string;
+    },
+  ) =>
+    request<{ payment: unknown }>(
+      `/returns/public/${encodeURIComponent(returnId)}/payment`,
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+    ),
 
   list: (params?: {
     page?: number;
@@ -362,9 +378,7 @@ export const returnsApi = {
       });
     }
     const q = qs.toString();
-    return request<{ returns: ReturnListRow[] }>(
-      `/returns${q ? `?${q}` : ""}`,
-    );
+    return request<{ returns: ReturnListRow[] }>(`/returns${q ? `?${q}` : ""}`);
   },
 
   approve: (id: string) =>
