@@ -51,7 +51,7 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
 
   // Only encode URLs returned from the API (path segment must be qrCodeToken, not orderId).
   const dynamicQrUrl = data.qrCodeToken?.trim()
-    ? `${process.env.NEXT_PUBLIC_URL}/receipt/${data.qrCodeToken}`
+    ? `${process.env.NEXT_PUBLIC_URL || "http://localhost:3000"}/receipt/${data.qrCodeToken}`
     : "";
 
   return (
