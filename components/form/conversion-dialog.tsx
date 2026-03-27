@@ -27,7 +27,7 @@ export default function ConversionDialog({
 }: {
   onClose: () => void;
   imgUrl: string;
-  qrCodeToken?: string; // Add qrCodeToken as an optional prop
+  qrCodeToken?: string;
   receiptData?: ReceiptData;
 }) {
   const [copied, setCopied] = React.useState(false);
@@ -58,14 +58,17 @@ export default function ConversionDialog({
   };
 
   const handleShare = async () => {
+    console.log("Sharing receipt with token:", qrCodeToken);
+    console.log("Receipt Data", receiptData);
     if (navigator.share) {
       try {
-        if (qrCodeToken) {
+        if (receiptData) {
           // Share the URL if it was provided
           await navigator.share({
             title: "Your SafeReceipt",
             text: "Here is your digital receipt",
-            url: `${process.env.NEXT_PUBLIC_URL}/receipt/${qrCodeToken}`,
+            // url: `${process.env.NEXT_PUBLIC_URL}/receipt/${qrCodeToken}`,
+            url: receiptData.qrUrl,
           });
         } else {
           // Fallback to sharing the image if no URL is provided
@@ -78,12 +81,10 @@ export default function ConversionDialog({
       }
     } else {
       // Fallback for browsers that don't support native share
-      if (qrCodeToken) {
-        navigator.clipboard
-          .writeText(`${process.env.NEXT_PUBLIC_URL}/receipt/${qrCodeToken}`)
-          .then(() => {
-            alert("Sharing not supported. Link copied to clipboard instead!");
-          });
+      if (receiptData) {
+        navigator.clipboard.writeText(receiptData.qrUrl).then(() => {
+          alert("Sharing not supported. Link copied to clipboard instead!");
+        });
       } else {
         alert("Sharing is not supported on this device/browser.");
       }
