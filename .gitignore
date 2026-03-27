@@ -41,11 +41,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# skills
-/.cursor/
-/.agent/
-/.agents/
-
 # docs
 /docs
 
