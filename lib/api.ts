@@ -198,7 +198,7 @@ export const storesApi = {
   ) =>
     request<{ products: SavedProduct[] }>(`/stores/${storeId}/catalog`, {
       method: "POST",
-      body: JSON.stringify({ products }),
+      body: JSON.stringify([...products]),
     }),
 };
 

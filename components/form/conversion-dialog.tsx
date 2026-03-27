@@ -67,6 +67,7 @@ export default function ConversionDialog({
       >[],
     ) => {
       if (!receiptData?.storeId) throw new Error("Missing storeId");
+      console.log("productsToSave", productsToSave);
       return storesApi.addToCatalog(receiptData.storeId, productsToSave);
     },
     onMutate: async (productsToSave) => {
@@ -311,6 +312,17 @@ export default function ConversionDialog({
                 </div>
               ))}
             </div>
+
+            {saveItemsMutation.error && (
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">
+                <span className="font-semibold block mb-0.5">Save failed</span>
+                <span className="opacity-90 leading-tight block">
+                  {saveItemsMutation.error instanceof Error
+                    ? saveItemsMutation.error.message
+                    : "Failed to save products. Please try again."}
+                </span>
+              </div>
+            )}
 
             <div className="flex items-center gap-3">
               <Button
