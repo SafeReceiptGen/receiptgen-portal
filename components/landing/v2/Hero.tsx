@@ -57,14 +57,14 @@ export const Hero = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
           style={{ perspective: "1000px" }}
         >
           <span className="sr-only">
-            Returns management powered by digital receipts for retailers
+            Issue digital receipts, improve the post-purchase experience.
           </span>
           <span
             className="animate-rise inline-block"
             aria-hidden="true"
             style={{ animationDelay: "0.2s" }}
           >
-            Digital Receipts.
+            Issue digital receipts,
           </span>{" "}
           <br className="hidden sm:block" />
           <span
@@ -72,7 +72,7 @@ export const Hero = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
             aria-hidden="true"
             style={{ animationDelay: "0.35s" }}
           >
-            Effortless Returns.
+            improve the post-purchase experience.
           </span>
         </h1>
 
@@ -81,9 +81,7 @@ export const Hero = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
           className="animate-fade-up mx-auto mb-4 max-w-2xl text-lg text-foreground/60 sm:text-xl md:text-2xl"
           style={{ animationDelay: "0.55s" }}
         >
-          Issue verified receipts at checkout. Let customers request returns in
-          seconds. Give your team one clear dashboard to approve, process, and
-          close every return — no paper, no disputes.
+          SafeReceipt helps small retailers in Ghana issue instant digital receipts with clear return/exchange records — no printers, no apps, no stress.
         </p>
 
         <p

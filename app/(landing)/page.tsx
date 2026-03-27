@@ -14,7 +14,7 @@ import { Hero } from "@/components/landing/v2/Hero";
 import { HowItWorks } from "@/components/landing/v2/HowItWorks";
 import { ValueSection } from "@/components/landing/v2/ValueSection";
 import { VisionSection } from "@/components/landing/v2/VisionSection";
-import { ProblemSection } from "@/components/landing/v2/ProblemSection";
+import { NewProblemSection } from "@/components/landing/v2/NewProblemSection";
 import { SolutionSection } from "@/components/landing/v2/SolutionSection";
 import { getServerSession } from "@/lib/get-server-session";
 
@@ -44,7 +44,7 @@ export default async function LandingPage() {
       />
       {/* v2 Components */}
       <Hero isAuthenticated={!!session?.user} />
-      <ProblemSection />
+      <NewProblemSection />
       <SolutionSection />
       <HowItWorks />
       <ValueSection />
