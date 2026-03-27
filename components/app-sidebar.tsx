@@ -129,23 +129,23 @@ const data = {
       icon: IconSearch,
     },
   ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
-    },
-  ],
+  // documents: [
+  //   {
+  //     name: "Data Library",
+  //     url: "#",
+  //     icon: IconDatabase,
+  //   },
+  //   {
+  //     name: "Reports",
+  //     url: "#",
+  //     icon: IconReport,
+  //   },
+  //   {
+  //     name: "Word Assistant",
+  //     url: "#",
+  //     icon: IconFileWord,
+  //   },
+  // ],
   teams: [
     {
       name: "SafeReceipts",
@@ -166,7 +166,7 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} isAuthenticated={!!session?.user} />
-        <NavDocuments items={data.documents} />
+        {/* <NavDocuments items={data.documents} /> */}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
