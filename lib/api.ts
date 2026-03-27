@@ -191,6 +191,15 @@ export const storesApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+
+  addToCatalog: (
+    storeId: string,
+    products: Pick<SavedProduct, "name" | "description" | "defaultPrice">[],
+  ) =>
+    request<{ products: SavedProduct[] }>(`/stores/${storeId}/catalog`, {
+      method: "POST",
+      body: JSON.stringify({ products }),
+    }),
 };
 
 // ─── Store Catalog ───────────────────────────────────────────────────────────

@@ -6,19 +6,19 @@ import {
   Download,
   Check,
   Copy,
-  X,
   ArrowRight,
   Save,
   Loader2,
 } from "lucide-react";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { ReceiptData, LineItem } from "@/types";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Store } from "@/lib/api";
+import { Store, storesApi, SavedProduct } from "@/lib/api";
 
 export default function ConversionDialog({
   onClose,
@@ -36,6 +36,7 @@ export default function ConversionDialog({
   const [copied, setCopied] = React.useState(false);
   const { data: session } = authClient.useSession();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const savableItems = React.useMemo(() => {
     if (!receiptData) return [];
@@ -43,8 +44,10 @@ export default function ConversionDialog({
       if (!item.name && !item.price) return false;
       return !storeCatalog.some((catalogItem) => {
         const nameMatches = catalogItem.name === item.name;
-        const descMatches = (catalogItem.description || "") === (item.detail || "");
-        const priceMatches = Number(catalogItem.defaultPrice || 0) === Number(item.price);
+        const descMatches =
+          (catalogItem.description || "") === (item.detail || "");
+        const priceMatches =
+          Number(catalogItem.defaultPrice || 0) === Number(item.price);
         return nameMatches && descMatches && priceMatches;
       });
     });
@@ -52,10 +55,61 @@ export default function ConversionDialog({
 
   // States for saving line items
   const [selectedItems, setSelectedItems] = React.useState<string[]>(() =>
-    savableItems.map((i) => i.id)
+    savableItems.map((i) => i.id),
   );
-  const [isSavingItems, setIsSavingItems] = React.useState(false);
   const [itemsSaved, setItemsSaved] = React.useState(false);
+
+  const saveItemsMutation = useMutation({
+    mutationFn: (
+      productsToSave: Pick<
+        SavedProduct,
+        "name" | "description" | "defaultPrice"
+      >[],
+    ) => {
+      if (!receiptData?.storeId) throw new Error("Missing storeId");
+      return storesApi.addToCatalog(receiptData.storeId, productsToSave);
+    },
+    onMutate: async (productsToSave) => {
+      await queryClient.cancelQueries({ queryKey: ["stores"] });
+      const previousStores = queryClient.getQueryData<Store[]>(["stores"]);
+
+      queryClient.setQueryData<Store[]>(["stores"], (old) => {
+        if (!old) return old;
+        return old.map((store) => {
+          if (store.id === receiptData?.storeId) {
+            const tempProducts: SavedProduct[] = productsToSave.map((p, i) => ({
+              id: `temp-${Date.now()}-${i}`,
+              name: p.name,
+              description: p.description,
+              defaultPrice: p.defaultPrice,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              storeId: store.id,
+            }));
+            return {
+              ...store,
+              storeCatalog: [...store.storeCatalog, ...tempProducts],
+            };
+          }
+          return store;
+        });
+      });
+
+      return { previousStores };
+    },
+    onError: (err, newProducts, context) => {
+      if (context?.previousStores) {
+        queryClient.setQueryData(["stores"], context.previousStores);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["stores"] });
+    },
+    onSuccess: () => {
+      setItemsSaved(true);
+    },
+  });
+
   const handleCopyImage = () => {
     try {
       fetch(imgUrl)
@@ -128,13 +182,17 @@ export default function ConversionDialog({
   };
 
   const handleSaveItems = () => {
-    setIsSavingItems(true);
-    // Simulate an API call to save reusable product names to the store
-    setTimeout(() => {
-      setIsSavingItems(false);
-      setItemsSaved(true);
-      // Optional: Clear selection or close dialog after saving
-    }, 1200);
+    if (!receiptData || selectedItems.length === 0) return;
+
+    const itemsToSave = receiptData.items
+      .filter((item) => selectedItems.includes(item.id))
+      .map((item) => ({
+        name: item.name,
+        description: item.detail || null,
+        defaultPrice: String(item.price),
+      }));
+
+    saveItemsMutation.mutate(itemsToSave);
   };
 
   return (
@@ -267,11 +325,13 @@ export default function ConversionDialog({
                 size="sm"
                 onClick={handleSaveItems}
                 disabled={
-                  isSavingItems || itemsSaved || selectedItems.length === 0
+                  saveItemsMutation.isPending ||
+                  itemsSaved ||
+                  selectedItems.length === 0
                 }
                 className="h-8 flex-1 cursor-pointer rounded-full bg-blue-700 px-4 text-[13px] font-medium text-white hover:bg-slate-700 disabled:bg-blue-700/60 dark:bg-white dark:text-slate-900 dark:hover:bg-white/90"
               >
-                {isSavingItems ? (
+                {saveItemsMutation.isPending ? (
                   <>
                     <Loader2 className="mr-1.5 size-3.5 animate-spin" />
                     Saving...
