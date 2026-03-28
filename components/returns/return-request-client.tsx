@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MOCK_PUDO_POINTS } from "@/lib/mock-data";
@@ -57,7 +56,7 @@ const STEPS = [
   "Item Condition",
   "Eligibility",
   "Logistics",
-  "Confirm & Pay",
+  "Review & Submit",
 ];
 
 export default function ReturnRequestClient({
@@ -67,7 +66,6 @@ export default function ReturnRequestClient({
   receipt: ReceiptForReturn | undefined;
   receiptId: string;
 }) {
-  const router = useRouter();
   const STORAGE_KEY = `return_flow_${receiptId}`;
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -223,6 +221,14 @@ export default function ReturnRequestClient({
       setEligibilityError(null);
     }
     if (currentStep > 0) setCurrentStep((c) => c - 1);
+  };
+
+  const goToStepFromReview = (step: 0 | 1 | 2 | 4) => {
+    if (step <= 2) {
+      setValue("isEligible", null);
+      setEligibilityError(null);
+    }
+    setCurrentStep(step);
   };
 
   const onSubmit = async () => {
@@ -670,13 +676,22 @@ export default function ReturnRequestClient({
             </div>
           )}
 
-          {/* Step 6: Confirm & Pay */}
+          {/* Step 6: Review & submit */}
           {currentStep === 5 && (
             <div className="space-y-5 animate-in slide-in-from-right-4 fade-in duration-300">
                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-white/50">Review Your Return</h3>
               
               <div className="rounded-lg border border-slate-200 p-4 dark:border-white/10">
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/30">Items</p>
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/30">Items</p>
+                  <button
+                    type="button"
+                    onClick={() => goToStepFromReview(0)}
+                    className="text-xs font-medium text-primary transition-colors hover:text-primary/80 dark:text-blue-400 dark:hover:text-blue-300"
+                  >
+                    Edit
+                  </button>
+                </div>
                 {selectedItems.map((item) => (
                   <div key={item.id} className="flex justify-between py-1.5 text-sm">
                     <span className="text-slate-700 dark:text-white/80">{item.name}</span>
@@ -692,7 +707,25 @@ export default function ReturnRequestClient({
               </div>
 
                <div className="rounded-lg border border-slate-200 p-4 dark:border-white/10">
-                <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/30">Reason</p>
+                <div className="mb-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/30">Reason</p>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => goToStepFromReview(1)}
+                      className="text-xs font-medium text-primary transition-colors hover:text-primary/80 dark:text-blue-400 dark:hover:text-blue-300"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => goToStepFromReview(2)}
+                      className="text-xs font-medium text-primary transition-colors hover:text-primary/80 dark:text-blue-400 dark:hover:text-blue-300"
+                    >
+                      Edit photos
+                    </button>
+                  </div>
+                </div>
                 <p className="text-sm font-medium text-slate-700 dark:text-white/80">
                   {watch("reason") ? watch("reason")!.replace(/_/g, " ") : "—"}
                 </p>
@@ -700,7 +733,16 @@ export default function ReturnRequestClient({
               </div>
 
               <div className="rounded-lg border border-slate-200 p-4 dark:border-white/10">
-                <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/30">Return Method</p>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/30">Return Method</p>
+                  <button
+                    type="button"
+                    onClick={() => goToStepFromReview(4)}
+                    className="text-xs font-medium text-primary transition-colors hover:text-primary/80 dark:text-blue-400 dark:hover:text-blue-300"
+                  >
+                    Edit
+                  </button>
+                </div>
                 <p className="text-sm font-medium text-slate-700 dark:text-white/80">
                   {LOGISTICS_METHOD_LABELS[logistics.method]}
                   {logistics.method === "DROP_OFF" && logistics.pudoPointId && ` — ${MOCK_PUDO_POINTS.find((p) => p.id === logistics.pudoPointId)?.name}`}
@@ -779,7 +821,7 @@ export default function ReturnRequestClient({
               disabled={isSubmitting || !isValid}
               className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-white shadow-lg ring-1 ring-black/5 transition-all hover:bg-primary-dark active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed dark:ring-white/10"
             >
-              {isSubmitting ? <><Loader2 size={16} className="animate-spin" /> Processing…</> : <>Confirm & Pay</>}
+              {isSubmitting ? <><Loader2 size={16} className="animate-spin" /> Processing…</> : <>Submit</>}
             </button>
           )}
         </div>
