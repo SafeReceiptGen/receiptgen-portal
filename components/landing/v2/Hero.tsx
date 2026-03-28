@@ -81,7 +81,9 @@ export const Hero = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
           className="animate-fade-up mx-auto mb-4 max-w-2xl text-lg text-foreground/60 sm:text-xl md:text-2xl"
           style={{ animationDelay: "0.55s" }}
         >
-          SafeReceipt helps small retailers in Ghana issue instant digital receipts with clear return/exchange records — no printers, no apps, no stress.
+          SafeReceipt helps small retailers in Ghana issue instant digital
+          receipts with clear return/exchange records — no printers, no apps, no
+          stress.
         </p>
 
         <p
@@ -92,7 +94,7 @@ export const Hero = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
         </p>
 
         {/* Stats row */}
-        <div
+        {/* <div
           className="animate-fade-up mb-12 flex flex-wrap items-center justify-center gap-x-10 gap-y-4 text-sm text-foreground/50"
           style={{ animationDelay: "0.8s" }}
         >
@@ -106,7 +108,7 @@ export const Hero = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
               <span>{label}</span>
             </div>
           ))}
-        </div>
+        </div> */}
 
         {/* CTA form */}
 
