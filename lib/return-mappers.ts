@@ -49,7 +49,8 @@ export function mapApiStatusToReturnStatus(
     approved: "APPROVED",
     rejected: "REJECTED",
     refunded: "REFUNDED",
-    completed: "APPROVED",
+    // Backend `completed`: treat as payout done → same as refunded in customer UI.
+    completed: "REFUNDED",
     cancelled: "REJECTED",
   };
   return map[s] ?? "PENDING";
@@ -230,6 +231,7 @@ export function mapPublicReturnBundleToReturnRequest(
     logistics,
     refundAmount,
     refundMethod: mapRefundTypeToRefundMethod(rr.refundType),
+    refundTypeCode: rr.refundType ?? undefined,
     rejectionReason: rr.rejectionReason ?? undefined,
     currency: receipt.currency,
     requestedAt,

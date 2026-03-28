@@ -87,6 +87,8 @@ export interface ReturnRequest {
   logistics: ReturnLogistics;
   refundAmount: number;
   refundMethod?: RefundMethod;
+  /** Raw API refund_type (e.g. exchange_only) for customer copy. */
+  refundTypeCode?: string;
   rejectionReason?: string;
   rejectedAction?: RejectedAction;
   currency: string;
