@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import { QueryProvider } from "@/components/providers/query-provider";
+
+const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
 const inter = Inter({
   subsets: ["latin"],
@@ -91,6 +94,9 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased bg-slate-50 dark:bg-[#0A0F1C]">
         <QueryProvider>{children}</QueryProvider>
+        {gaMeasurementId ? (
+          <GoogleAnalytics gaId={gaMeasurementId} />
+        ) : null}
       </body>
     </html>
   );

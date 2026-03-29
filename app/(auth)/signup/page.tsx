@@ -9,6 +9,7 @@ import { MagneticButton } from "@/components/landing/v2/MagneticButton";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { validateSignupAction, AuthActionState } from "../actions";
+import { trackEvent } from "@/lib/analytics";
 
 export default function Signup() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -73,6 +74,8 @@ export default function Signup() {
 
       const { email, password, firstName, lastName } = result.data;
 
+      trackEvent("sign_up_attempt", { method: "email" });
+
       try {
         const { error: signUpErr } = await authClient.signUp.email({
           email,
@@ -89,11 +92,19 @@ export default function Signup() {
                 ? "Password must be at least 8 characters."
                 : (signUpErr.message ?? "Sign up failed. Please try again.");
           setAuthError(message);
+          trackEvent("sign_up_error", {
+            method: "email",
+            error_code: String(signUpErr.code ?? "unknown"),
+          });
           return { ...result, success: false };
         }
       } catch (e: unknown) {
         console.error("Sign up error:", e);
         shakeForm();
+        trackEvent("sign_up_error", {
+          method: "email",
+          error_code: "network_or_exception",
+        });
         setAuthError(
           (e as Error).message ||
             "Failed to connect to the server. Please check your connection and try again.",
@@ -101,6 +112,7 @@ export default function Signup() {
         return { ...result, success: false };
       }
 
+      trackEvent("sign_up", { method: "email" });
       navigate.push("/onboarding");
       return { ...result, success: true };
     },
@@ -108,6 +120,7 @@ export default function Signup() {
   );
 
   const handleGoogleSignup = async () => {
+    trackEvent("sign_up_attempt", { method: "google" });
     setIsGoogleLoading(true);
     setAuthError(null);
     try {
@@ -118,6 +131,10 @@ export default function Signup() {
           "/onboarding",
       });
     } catch (err: unknown) {
+      trackEvent("sign_up_error", {
+        method: "google",
+        error_code: "oauth_failed",
+      });
       setAuthError(
         (err as Error).message ||
           "Failed to connect to the server. Please check your connection and try again.",
