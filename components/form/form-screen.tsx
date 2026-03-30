@@ -16,6 +16,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { generateReceipt, ActionState } from "./actions";
 import { useStores } from "@/hooks/use-stores";
+import { trackCtaClick } from "@/lib/analytics";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -82,6 +83,7 @@ export default function ReceiptFormScreen({
 
   // ── Guest: save to localStorage ──────────────────────────────────────────
   const handleGuestSave = () => {
+    trackCtaClick("save_download");
     saveToLocalStorage(data);
     setGuestSaved(true);
     // Capture snapshot as download regardless (no QR code in it)
@@ -124,6 +126,9 @@ export default function ReceiptFormScreen({
       </p>
       <Link
         href="/login"
+        onClick={() =>
+          trackCtaClick("sign_in_from_guest_banner", { destination: "login" })
+        }
         className="flex shrink-0 items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-400"
       >
         <LogIn size={12} />
@@ -135,7 +140,11 @@ export default function ReceiptFormScreen({
   /** Action bar button (changes based on auth state) */
   const ActionButton = isAuthenticated ? (
     // Authenticated: submit to server action
-    <form action={formAction} className="w-full">
+    <form
+      action={formAction}
+      className="w-full"
+      onSubmit={() => trackCtaClick("generate_receipt")}
+    >
       <button
         type="submit"
         disabled={pending}
@@ -186,7 +195,10 @@ export default function ReceiptFormScreen({
       contentRadius="24px"
       animationDuration={0.3}
     >
-      <ExpandableScreenTrigger className="rounded-full bg-primary px-6 py-3 font-semibold text-white  ring-1 ring-black/10 transition-colors hover:bg-[#10365F]">
+      <ExpandableScreenTrigger
+        onOpen={() => trackCtaClick("create_receipt_open")}
+        className="rounded-full bg-primary px-6 py-3 font-semibold text-white  ring-1 ring-black/10 transition-colors hover:bg-[#10365F]"
+      >
         Create a Receipt
       </ExpandableScreenTrigger>
 

@@ -38,6 +38,7 @@ import { ActionState } from "./actions";
 import { Store } from "@/lib/api";
 import { PAYMENT_METHOD_OPTIONS } from "@/lib/payment-methods";
 import { returnWindowEnum } from "@/types/enums";
+import { trackCtaClick } from "@/lib/analytics";
 
 interface MobileWizardProps {
   data: ReceiptData;
@@ -677,7 +678,11 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
               Next Step <ChevronRight size={20} />
             </button>
           ) : isAuthenticated ? (
-            <form action={formAction} className="flex-1">
+            <form
+              action={formAction}
+              className="flex-1"
+              onSubmit={() => trackCtaClick("generate_receipt")}
+            >
               <button
                 type="submit"
                 disabled={pending}
@@ -698,7 +703,10 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
           ) : (
             <button
               type="button"
-              onClick={onGuestSave}
+              onClick={() => {
+                trackCtaClick("save_download");
+                onGuestSave();
+              }}
               className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-100 py-4 text-lg font-bold text-slate-700 ring-1 ring-slate-200 dark:border-white/10 dark:bg-white/5 dark:text-white/80"
             >
               {guestSaved ? (

@@ -116,13 +116,21 @@ export function ExpandableScreen({
 interface ExpandableScreenTriggerProps {
   children: ReactNode;
   className?: string;
+  /** Fires when the user opens the panel (before expand animation). */
+  onOpen?: () => void;
 }
 
 export function ExpandableScreenTrigger({
   children,
   className = "",
+  onOpen,
 }: ExpandableScreenTriggerProps) {
   const { isExpanded, expand, layoutId, triggerRadius } = useExpandableScreen();
+
+  const handleOpen = () => {
+    onOpen?.();
+    expand();
+  };
 
   return (
     <AnimatePresence initial={false}>
@@ -144,7 +152,7 @@ export function ExpandableScreenTrigger({
             transition={{ delay: 0.2 }}
             exit={{ opacity: 0, scale: 0.8 }}
             layout={false}
-            onClick={expand}
+            onClick={handleOpen}
             className="relative cursor-pointer"
           >
             {children}
