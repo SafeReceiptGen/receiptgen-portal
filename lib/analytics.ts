@@ -3,8 +3,8 @@
 import { sendGAEvent } from "@next/third-parties/google";
 
 /**
- * Client-side GA4 helpers. Requires root layout {@link GoogleAnalytics} and
- * NEXT_PUBLIC_GA_MEASUREMENT_ID. No-ops when the ID is unset.
+ * Client-side GA4 helpers. Requires the gtag snippet in root layout `layout.tsx`
+ * and NEXT_PUBLIC_GA_MEASUREMENT_ID. No-ops when the ID is unset.
  */
 export function trackEvent(
   eventName: string,
