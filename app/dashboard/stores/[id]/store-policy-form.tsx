@@ -93,7 +93,7 @@ export function StorePolicyForm({ store }: { store: Store }) {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 max-w-xl">
-          <div className="grid gap-6 p-5 border rounded-xl bg-card/50">
+          <div className="grid gap-6">
             <FormField
               control={form.control}
               name="returnWindow"
@@ -141,7 +141,7 @@ export function StorePolicyForm({ store }: { store: Store }) {
           </div>
 
           {watchReturnWindow !== "no_returns" && (
-            <div className="grid gap-6 p-5 border rounded-xl bg-card/50 animate-in fade-in duration-300">
+            <div className="grid gap-6 animate-in fade-in duration-300">
               <FormField
                 control={form.control}
                 name="returnCondition"

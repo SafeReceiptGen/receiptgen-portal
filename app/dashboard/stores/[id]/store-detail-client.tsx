@@ -10,7 +10,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, RotateCcw, Store as StoreIcon } from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 
 export function StoreDetailClient({ storeId }: { storeId: string }) {
   const { data: store, isPending, isError, refetch } = useQuery(storeQueryOptions(storeId));
@@ -49,28 +48,28 @@ export function StoreDetailClient({ storeId }: { storeId: string }) {
       </div>
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="w-full sm:w-auto grid grid-cols-3 bg-muted/50 p-1 rounded-xl h-auto mb-8">
+        <TabsList variant="line" className="w-full sm:w-auto h-auto mb-8 border-b rounded-none justify-start pb-0">
           <TabsTrigger 
             value="general" 
-            className="rounded-lg py-2.5 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+            className="py-3 px-4 text-sm transition-all"
           >
             General
           </TabsTrigger>
           <TabsTrigger 
             value="policy" 
-            className="rounded-lg py-2.5 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+            className="py-3 px-4 text-sm transition-all"
           >
             Return Policy
           </TabsTrigger>
           <TabsTrigger 
             value="catalog" 
-            className="rounded-lg py-2.5 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+            className="py-3 px-4 text-sm transition-all"
           >
             Catalog Items
           </TabsTrigger>
         </TabsList>
         
-        <div className="bg-card border rounded-2xl p-6 sm:p-8 shadow-sm">
+        <div className="pt-2">
           <TabsContent value="general" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
             <StoreGeneralForm store={store} />
           </TabsContent>

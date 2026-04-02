@@ -71,8 +71,8 @@ export function StoreCatalogManager({ store }: { store: Store }) {
 
       <div className="grid md:grid-cols-[1fr_300px] gap-8">
         <div className="space-y-4">
-          <div className="border rounded-2xl overflow-hidden bg-card/50">
-            <div className="bg-muted/40 p-3 px-4 border-b font-medium text-sm flex justify-between">
+          <div className="rounded-xl overflow-hidden">
+            <div className="font-medium text-sm flex justify-between mb-4">
               <span>Saved Items ({catalog.length})</span>
             </div>
             
@@ -84,9 +84,9 @@ export function StoreCatalogManager({ store }: { store: Store }) {
               </div>
             ) : (
               <ScrollArea className="h-[350px]">
-                <div className="divide-y">
+                <div className="space-y-1">
                   {catalog.map((item: SavedProduct) => (
-                    <div key={item.id} className="p-4 flex items-center justify-between group hover:bg-muted/20 transition-colors">
+                    <div key={item.id} className="px-4 py-3 border border-transparent rounded-lg flex items-center justify-between group hover:bg-muted/30 transition-colors">
                       <div>
                         <p className="font-medium">{item.name}</p>
                         <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
@@ -116,7 +116,7 @@ export function StoreCatalogManager({ store }: { store: Store }) {
         </div>
 
         <div>
-          <form onSubmit={handleAdd} className="space-y-4 p-5 border rounded-2xl bg-card shadow-sm sticky top-6">
+          <form onSubmit={handleAdd} className="space-y-4 py-2 sticky top-6">
             <h4 className="font-medium flex items-center gap-2">
               <Plus className="w-4 h-4 text-primary" />
               Add New Item
