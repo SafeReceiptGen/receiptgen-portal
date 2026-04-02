@@ -83,7 +83,7 @@ export function StoreCatalogManager({ store }: { store: Store }) {
                 <p className="text-sm">Add some reusable items using the form.</p>
               </div>
             ) : (
-              <ScrollArea className="h-[350px]">
+              <ScrollArea className="h-auto">
                 <div className="space-y-1">
                   {catalog.map((item: SavedProduct) => (
                     <div key={item.id} className="px-4 py-3 border border-transparent rounded-lg flex items-center justify-between group hover:bg-muted/30 transition-colors">
