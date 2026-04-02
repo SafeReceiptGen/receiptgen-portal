@@ -35,22 +35,22 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/dashboard",
       icon: IconDashboard,
     },
     {
       title: "Receipts",
-      url: "#",
+      url: "/dashboard/receipts",
       icon: IconFileDescription,
     },
     {
       title: "Returns",
-      url: "#",
+      url: "/dashboard/returns",
       icon: IconListDetails,
     },
     {
       title: "Stores",
-      url: "#",
+      url: "/dashboard/stores",
       icon: IconFolder,
     },
     {
