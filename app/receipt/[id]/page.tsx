@@ -1,10 +1,10 @@
-import { verifyApi, mapToReceiptForReturn, ApiRequestError } from "@/lib/api";
+import { verifyApi, ApiRequestError } from "@/lib/api";
 import { formatCurrency } from "@/lib/currency";
 import { format } from "date-fns";
 import Link from "next/link";
 import { ChevronRight, ArrowLeft, Receipt, RotateCcw } from "lucide-react";
 import Image from "next/image";
-import { cn } from "@/lib/utils";
+import { cn, mapToReceiptForReturn } from "@/lib/utils";
 import {
   formatPaymentMethodLabel,
   formatReceiptStatusLabel,
@@ -69,7 +69,7 @@ export default async function DigitalReceiptPage({
       />
 
       {/* ── Top Bar ── */}
-      <div className="sticky top-0 z-20 w-full border-b border-slate-200/60 bg-white/80 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#050B16]/80">
+      <div className="sticky top-0 z-20 w-full border-b border-slate-200/60 bg-white/80 backdrop-blur-xl dark:border-white/6 dark:bg-[#050B16]/80">
         <div className="mx-auto flex h-14 max-w-lg items-center px-4">
           <div className="flex flex-1">
             {/* Home Link */}

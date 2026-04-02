@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar";
+import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getServerSession } from "@/lib/get-server-session";
 
@@ -14,7 +15,10 @@ async function layout({ children }: { children: React.ReactNode }) {
       }
     >
       <AppSidebar variant="inset" session={session} />
-      <SidebarInset>{children}</SidebarInset>
+      <SidebarInset>
+        <SiteHeader />
+        {children}
+      </SidebarInset>
     </SidebarProvider>
   );
 }

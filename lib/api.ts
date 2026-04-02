@@ -3,10 +3,8 @@
  * Auth flows (sign-in, sign-up, OAuth) are handled separately via authClient.
  */
 
-import { differenceInCalendarDays } from "date-fns";
-import type { ReceiptForReturn } from "@/types/returns";
 import type { PublicReturnBundle } from "@/lib/return-mappers";
-import { portalPublicOrigin } from "@/lib/portal-public-url";
+import { serverRequest, serverRequestFormData, SerializableRequestOptions } from "./server-request";
 import {
   refundTypeEnum,
   returnConditionEnum,
@@ -37,28 +35,16 @@ class ApiRequestError extends Error {
   }
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
-    ...options,
-    credentials: "include", // Send session cookies with every request
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
-
-  const json = await res.json();
-
-  if (!res.ok) {
+async function request<T>(path: string, options: SerializableRequestOptions = {}): Promise<T> {
+  const result = await serverRequest<T>(path, options);
+  if (result.error) {
     throw new ApiRequestError(
-      json.message ?? "Request failed",
-      res.status,
-      json.data as Record<string, string[]> | undefined,
+      result.message,
+      result.status,
+      result.details
     );
   }
-
-  // Unwrap the backend response envelope: { success, message, data } → data
-  return json.data as T;
+  return result.data;
 }
 
 // ─── Retailer ───────────────────────────────────────────────────────────────
@@ -178,7 +164,30 @@ export interface Store {
 export const storesApi = {
   list: () => request<{ stores: Store[] }>("/stores"),
 
-  create: (payload: Pick<Store, "name" | "phone" | "address">) =>
+  get: (id: string) => request<{ store: Store }>(`/stores/${id}`),
+
+  update: (id: string, payload: Partial<Pick<Store, "name" | "phone" | "address">>) =>
+    request<{ store: Store }>(`/stores/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+
+  updatePolicy: (id: string, payload: {
+    returnWindow?: string;
+    customWindowDays?: number;
+    returnCondition?: string;
+    refundType?: string;
+  }) => request<{ store: Store }>(`/stores/${id}/policy`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+
+  create: (payload: Pick<Store, "name" | "phone" | "address"> & {
+    returnWindow?: string;
+    customWindowDays?: number;
+    returnCondition?: string;
+    refundType?: string;
+  }) =>
     request<{ store: Store }>("/stores", {
       method: "POST",
       body: JSON.stringify(payload),
@@ -191,6 +200,11 @@ export const storesApi = {
     request<{ products: SavedProduct[] }>(`/stores/${storeId}/catalog`, {
       method: "POST",
       body: JSON.stringify([...products]),
+    }),
+
+  removeFromCatalog: (storeId: string, productId: string) =>
+    request<{ message: string }>(`/stores/${storeId}/catalog/${productId}`, {
+      method: "DELETE",
     }),
 };
 
@@ -323,21 +337,18 @@ export interface ReturnListRow {
 
 async function requestWithoutJsonBody<T>(
   path: string,
-  options: RequestInit,
+  formData: FormData,
+  options: Omit<SerializableRequestOptions, "body"> = {}
 ): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
-    ...options,
-    credentials: "include",
-  });
-  const json = await res.json();
-  if (!res.ok) {
+  const result = await serverRequestFormData<T>(path, formData, options);
+  if (result.error) {
     throw new ApiRequestError(
-      json.message ?? "Request failed",
-      res.status,
-      json.data as Record<string, string[]> | undefined,
+      result.message,
+      result.status,
+      result.details
     );
   }
-  return json.data as T;
+  return result.data;
 }
 
 /**
@@ -359,7 +370,8 @@ export async function uploadReturnPhotosFromDataUrls(
   }
   const data = await requestWithoutJsonBody<{ urls: string[] }>(
     "/uploads/return-photos",
-    { method: "POST", body: form },
+    form,
+    { method: "POST" },
   );
   return data.urls;
 }
@@ -459,62 +471,5 @@ export const verifyApi = {
   getByToken: (token: string) =>
     request<{ receipt: VerifiedReceipt }>(`/verify/${token}`),
 };
-
-// ─── Mapping Helpers ─────────────────────────────────────────────────────────
-
-/**
- * Maps the verified receipt from the public API to the ReceiptForReturn shape
- * used by all ReturnFlow components. Fields not returned by the verify endpoint
- * (storePhone, customerName, detailed policy info) are set to safe defaults.
- */
-export function mapToReceiptForReturn(
-  receipt: VerifiedReceipt,
-  token: string,
-): ReceiptForReturn {
-  // Compute a human-readable return window from the deadline
-  let returnWindow = "No returns";
-  let isReturnable = false;
-
-  if (receipt.returnDeadline && receipt.status !== "voided") {
-    const deadlineDate = new Date(receipt.returnDeadline);
-    const purchaseDate = new Date(receipt.date);
-    const windowDays = differenceInCalendarDays(deadlineDate, purchaseDate);
-
-    if (windowDays > 0) {
-      returnWindow = `${windowDays} days`;
-    }
-    isReturnable = deadlineDate > new Date();
-  }
-
-  return {
-    id: receipt.id,
-    receiptNumber: receipt.receiptNumber,
-    storeName: receipt.storeName,
-    storePhone: "",
-    customerName: "",
-    items: receipt.items.map((item) => ({
-      id: item.id,
-      name: item.name,
-      detail: item.detail ?? "",
-      quantity: item.quantity,
-      price: parseFloat(item.unitPrice),
-      selected: false,
-    })),
-    currency: receipt.currency,
-    subtotal: receipt.items.reduce(
-      (sum, i) => sum + parseFloat(i.lineTotal),
-      0,
-    ),
-    total: parseFloat(receipt.total),
-    paymentMethod: receipt.paymentMethod,
-    status: receipt.status,
-    purchasedAt: receipt.date,
-    returnWindow,
-    returnCondition: "See store policy",
-    refundType: "See store policy",
-    isReturnable,
-    qrUrl: `${portalPublicOrigin()}/receipt/${token}`,
-  };
-}
 
 export { ApiRequestError };

@@ -1,7 +1,8 @@
-import { verifyApi, mapToReceiptForReturn, ApiRequestError } from "@/lib/api";
+import { verifyApi, ApiRequestError } from "@/lib/api";
 import ReturnRequestClient from "@/components/returns/return-request-client";
 import { Package } from "lucide-react";
 import Link from "next/link";
+import { mapToReceiptForReturn } from "@/lib/utils";
 
 export default async function ReturnRequestServerPage({
   params,
