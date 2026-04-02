@@ -56,8 +56,8 @@ export function StorePolicyForm({ store }: { store: Store }) {
     defaultValues: {
       returnWindow: policy?.returnWindow?.toString() || "30_days",
       customWindowDays: policy?.customWindowDays || undefined,
-      returnCondition: policy?.returnCondition?.toString() || "any",
-      refundType: policy?.refundType?.toString() || "original_payment",
+      returnCondition: policy?.returnCondition?.toString() || "any_condition",
+      refundType: policy?.refundType?.toString() || "full_refund",
     },
   });
 
@@ -106,14 +106,14 @@ export function StorePolicyForm({ store }: { store: Store }) {
                         <SelectValue placeholder="Select a return window" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="fourteen_days">14 Days</SelectItem>
-                      <SelectItem value="thirty_days">30 Days</SelectItem>
-                      <SelectItem value="sixty_days">60 Days</SelectItem>
-                      <SelectItem value="ninety_days">90 Days</SelectItem>
-                      <SelectItem value="custom">Custom Days</SelectItem>
-                      <SelectItem value="no_returns">No Returns Accepted</SelectItem>
-                    </SelectContent>
+                      <SelectContent>
+                        <SelectItem value="none">No Returns Accepted</SelectItem>
+                        <SelectItem value="3_days">3 Days</SelectItem>
+                        <SelectItem value="7_days">7 Days</SelectItem>
+                        <SelectItem value="14_days">14 Days</SelectItem>
+                        <SelectItem value="30_days">30 Days</SelectItem>
+                        <SelectItem value="custom">Custom Days</SelectItem>
+                      </SelectContent>
                   </Select>
                   <FormDescription>
                     How long does a customer have to return an item?
@@ -140,7 +140,7 @@ export function StorePolicyForm({ store }: { store: Store }) {
             )}
           </div>
 
-          {watchReturnWindow !== "no_returns" && (
+          {watchReturnWindow !== "none" && (
             <div className="grid gap-6 animate-in fade-in duration-300">
               <FormField
                 control={form.control}
@@ -155,9 +155,9 @@ export function StorePolicyForm({ store }: { store: Store }) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="any">Any Condition</SelectItem>
-                        <SelectItem value="unopened_with_receipt">Unopened with Receipt</SelectItem>
-                        <SelectItem value="like_new">Like New</SelectItem>
+                        <SelectItem value="any_condition">Any Condition</SelectItem>
+                        <SelectItem value="original_packaging">Original Packaging</SelectItem>
+                        <SelectItem value="unused">Unused</SelectItem>
                         <SelectItem value="defective_only">Defective Only</SelectItem>
                       </SelectContent>
                     </Select>
@@ -182,7 +182,8 @@ export function StorePolicyForm({ store }: { store: Store }) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="original_payment">Original Payment Method</SelectItem>
+                        <SelectItem value="full_refund">Full Refund</SelectItem>
+                        <SelectItem value="partial_refund">Partial Refund</SelectItem>
                         <SelectItem value="store_credit">Store Credit Only</SelectItem>
                         <SelectItem value="exchange_only">Exchange Only</SelectItem>
                       </SelectContent>
