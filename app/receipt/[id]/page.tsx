@@ -69,7 +69,7 @@ export default async function DigitalReceiptPage({
       />
 
       {/* ── Top Bar ── */}
-      <div className="sticky top-0 z-20 w-full border-b border-slate-200/60 bg-white/80 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#050B16]/80">
+      <div className="sticky top-0 z-20 w-full border-b border-slate-200/60 bg-white/80 backdrop-blur-xl dark:border-white/6 dark:bg-[#050B16]/80">
         <div className="mx-auto flex h-14 max-w-lg items-center px-4">
           <div className="flex flex-1">
             {/* Home Link */}

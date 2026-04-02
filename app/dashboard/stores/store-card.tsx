@@ -20,7 +20,7 @@ export function StoreCard({ store }: { store: Store }) {
         </div>
 
         {/* Center Logo Placeholder */}
-        <div className="p-4 rounded-xl bg-background/80 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.04]">
+        <div className="p-4 rounded-xl bg-background/80 shadow-sm ring-1 ring-black/4 dark:ring-white/4">
           <StoreIcon className="w-8 h-8 text-muted-foreground stroke-[1.5]" />
         </div>
 
