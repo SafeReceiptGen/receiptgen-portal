@@ -182,7 +182,12 @@ export const storesApi = {
       body: JSON.stringify(payload),
     }),
 
-  create: (payload: Pick<Store, "name" | "phone" | "address">) =>
+  create: (payload: Pick<Store, "name" | "phone" | "address"> & {
+    returnWindow?: string;
+    customWindowDays?: number;
+    returnCondition?: string;
+    refundType?: string;
+  }) =>
     request<{ store: Store }>("/stores", {
       method: "POST",
       body: JSON.stringify(payload),
