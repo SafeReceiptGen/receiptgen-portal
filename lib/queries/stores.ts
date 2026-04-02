@@ -8,3 +8,13 @@ export const storesQueryOptions = queryOptions({
     return data;
   },
 });
+
+export const storeQueryOptions = (id: string) =>
+  queryOptions({
+    queryKey: ["stores", id],
+    queryFn: async () => {
+      const data = await storesApi.get(id);
+      return data.store;
+    },
+  });
+

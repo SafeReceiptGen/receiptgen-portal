@@ -164,6 +164,24 @@ export interface Store {
 export const storesApi = {
   list: () => request<{ stores: Store[] }>("/stores"),
 
+  get: (id: string) => request<{ store: Store }>(`/stores/${id}`),
+
+  update: (id: string, payload: Partial<Pick<Store, "name" | "phone" | "address">>) =>
+    request<{ store: Store }>(`/stores/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+
+  updatePolicy: (id: string, payload: {
+    returnWindow?: string;
+    customWindowDays?: number;
+    returnCondition?: string;
+    refundType?: string;
+  }) => request<{ store: Store }>(`/stores/${id}/policy`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+
   create: (payload: Pick<Store, "name" | "phone" | "address">) =>
     request<{ store: Store }>("/stores", {
       method: "POST",
@@ -177,6 +195,11 @@ export const storesApi = {
     request<{ products: SavedProduct[] }>(`/stores/${storeId}/catalog`, {
       method: "POST",
       body: JSON.stringify([...products]),
+    }),
+
+  removeFromCatalog: (storeId: string, productId: string) =>
+    request<{ message: string }>(`/stores/${storeId}/catalog/${productId}`, {
+      method: "DELETE",
     }),
 };
 

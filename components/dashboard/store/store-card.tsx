@@ -1,11 +1,12 @@
 import { Store } from "@/lib/api";
 import { Store as StoreIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 export function StoreCard({ store }: { store: Store }) {
   const isActive = store.isActive ?? true;
   return (
-    <div className="group flex flex-col gap-3">
+    <Link href={`/dashboard/stores/${store.id}`} className="group flex flex-col gap-3">
       {/* Visual Box */}
       <div className="relative aspect-square flex flex-col items-center justify-center rounded-2xl border border-border/50 bg-muted/20 transition-all duration-300 group-hover:bg-muted/40 group-hover:border-border/80 group-hover:shadow-sm">
         {/* Status Badge - Top Right */}
@@ -43,6 +44,6 @@ export function StoreCard({ store }: { store: Store }) {
           <p className="text-xs text-muted-foreground">{store.phone}</p>
         )}
       </div>
-    </div>
+    </Link>
   );
 }
