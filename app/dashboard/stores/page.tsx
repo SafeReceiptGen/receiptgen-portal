@@ -1,7 +1,7 @@
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import { getQueryClient } from "@/lib/query-client";
 import { storesQueryOptions } from "@/lib/queries/stores";
-import { StoresClient } from "./stores-client";
+import { StoresClient } from "@/components/dashboard/store/stores-client";
 
 export const metadata = {
   title: "Stores",

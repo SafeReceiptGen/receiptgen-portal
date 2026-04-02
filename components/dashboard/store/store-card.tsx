@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 
 export function StoreCard({ store }: { store: Store }) {
   const isActive = store.isActive ?? true;
-  console.log("store", store);
   return (
     <div className="group flex flex-col gap-3">
       {/* Visual Box */}
