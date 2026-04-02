@@ -1,6 +1,5 @@
 import {
   verifyApi,
-  mapToReceiptForReturn,
   ApiRequestError,
   returnsApi,
 } from "@/lib/api";
@@ -18,7 +17,7 @@ import {
   ChevronRight,
   ShieldAlert,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, mapToReceiptForReturn } from "@/lib/utils";
 
 export default async function EligibilityDashboardPage({
   params,

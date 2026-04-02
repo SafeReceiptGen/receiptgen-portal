@@ -5,6 +5,7 @@ export const storesQueryOptions = queryOptions({
   queryKey: ["stores"],
   queryFn: async () => {
     const data = await storesApi.list();
+    console.log("Stores in query", data);
     return data;
   },
 });

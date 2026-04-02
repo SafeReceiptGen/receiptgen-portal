@@ -1,10 +1,10 @@
-import { verifyApi, mapToReceiptForReturn, ApiRequestError } from "@/lib/api";
+import { verifyApi, ApiRequestError } from "@/lib/api";
 import { formatCurrency } from "@/lib/currency";
 import { format } from "date-fns";
 import Link from "next/link";
 import { ChevronRight, ArrowLeft, Receipt, RotateCcw } from "lucide-react";
 import Image from "next/image";
-import { cn } from "@/lib/utils";
+import { cn, mapToReceiptForReturn } from "@/lib/utils";
 import {
   formatPaymentMethodLabel,
   formatReceiptStatusLabel,

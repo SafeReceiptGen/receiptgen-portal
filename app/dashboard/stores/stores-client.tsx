@@ -17,6 +17,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function StoresClient() {
   const { data, isPending, isError, refetch } = useQuery(storesQueryOptions);
+  
+  // Normalize data to handle both array and object shapes returned from backend
+  const storesList = Array.isArray(data) ? data : data?.stores || [];
 
   return (
     <div className="flex-1 space-y-8 p-8 pt-6">
@@ -43,11 +46,11 @@ export function StoresClient() {
         <StoresGridSkeleton />
       ) : isError ? (
         <StoresError onRetry={() => refetch()} />
-      ) : data?.stores?.length === 0 ? (
+      ) : storesList.length === 0 ? (
         <StoresEmpty />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 gap-y-8">
-          {data?.stores?.map((store) => (
+          {storesList.map((store: any) => (
             <StoreCard key={store.id} store={store} />
           ))}
         </div>
