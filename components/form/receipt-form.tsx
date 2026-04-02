@@ -40,6 +40,7 @@ import {
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ActionState } from "./actions";
+import Link from "next/link";
 import { Store } from "@/lib/api";
 import { PAYMENT_METHOD_OPTIONS } from "@/lib/payment-methods";
 
@@ -577,7 +578,10 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                 <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700 flex gap-3 items-start dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
                   <StoreIcon size={16} className="shrink-0 mt-0.5" />
                   <p className="leading-snug text-xs">
-                    Store return policy applied automatically. Modify defaults in your Dashboard store settings.
+                    Store return policy applied automatically.{" "}
+                    <Link href={`/dashboard/stores/${data.storeId}`} className="font-semibold underline hover:text-blue-800 dark:hover:text-blue-300">
+                      Modify defaults in your Store settings
+                    </Link>.
                   </p>
                 </div>
               )}
