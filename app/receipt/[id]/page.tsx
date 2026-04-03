@@ -2,7 +2,7 @@ import { verifyApi, ApiRequestError } from "@/lib/api";
 import { formatCurrency } from "@/lib/currency";
 import { format } from "date-fns";
 import Link from "next/link";
-import { ChevronRight, ArrowLeft, Receipt, RotateCcw } from "lucide-react";
+import { ChevronRight, Receipt, RotateCcw } from "lucide-react";
 import Image from "next/image";
 import { cn, mapToReceiptForReturn } from "@/lib/utils";
 import {
@@ -71,16 +71,7 @@ export default async function DigitalReceiptPage({
       {/* ── Top Bar ── */}
       <div className="sticky top-0 z-20 w-full border-b border-slate-200/60 bg-white/80 backdrop-blur-xl dark:border-white/6 dark:bg-[#050B16]/80">
         <div className="mx-auto flex h-14 max-w-lg items-center px-4">
-          <div className="flex flex-1">
-            {/* Home Link */}
-            <Link
-              href="/"
-              className="flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-white/50 dark:hover:text-white"
-            >
-              <ArrowLeft size={16} />
-              <span>Back to builder</span>
-            </Link>
-          </div>
+          <div className="flex flex-1" />
           <div className="flex shrink-0 items-center justify-center gap-2">
             <Image
               src="/logo.jpg"

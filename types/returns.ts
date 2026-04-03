@@ -23,9 +23,12 @@ export interface ReturnItem {
   id: string;
   name: string;
   detail: string;
+  /** Units purchased on the receipt (max returnable per line). */
   quantity: number;
   price: number;
   selected: boolean;
+  /** Units the customer is returning; required when `quantity` > 1 and line is selected. */
+  returnQuantity?: number;
 }
 
 export interface PudoPoint {

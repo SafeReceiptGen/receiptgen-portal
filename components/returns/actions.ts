@@ -75,10 +75,17 @@ export async function submitReturnRequest(
 
   const payload = {
     receiptToken,
-    items: selectedItems.map((item) => ({
-      lineItemId: item.id,
-      quantity: item.quantity,
-    })),
+    items: selectedItems.map((item) => {
+      const qty =
+        item.quantity === 1 ? 1 : item.returnQuantity;
+      if (qty == null || qty < 1) {
+        throw new Error("Return quantity is required for each selected line.");
+      }
+      return {
+        lineItemId: item.id,
+        quantity: qty,
+      };
+    }),
     reason: returnReasonToApi(data.reason),
     description: data.description?.trim() || undefined,
     photoUrls: photoUrls?.length ? photoUrls : undefined,

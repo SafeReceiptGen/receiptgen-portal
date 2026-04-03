@@ -1,14 +1,27 @@
 import { z } from "zod";
 
 // Base schemas
-const ReturnItemSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  detail: z.string(),
-  quantity: z.number().min(1),
-  price: z.number().min(0),
-  selected: z.boolean(),
-});
+const ReturnItemSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    detail: z.string(),
+    quantity: z.number().min(1),
+    price: z.number().min(0),
+    selected: z.boolean(),
+    returnQuantity: z.number().int().min(1).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.selected || data.quantity <= 1) return;
+    const rq = data.returnQuantity;
+    if (rq == null || rq < 1 || rq > data.quantity) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Select how many units you are returning.",
+        path: ["returnQuantity"],
+      });
+    }
+  });
 
 const pickupAddressSchema = z.object({
   line1: z.string().max(255),
