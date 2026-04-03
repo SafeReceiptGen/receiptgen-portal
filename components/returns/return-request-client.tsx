@@ -13,7 +13,8 @@ import {
   LogisticsMethod,
   LOGISTICS_METHOD_LABELS,
   TIME_SLOTS,
-  ReceiptForReturn
+  ReceiptForReturn,
+  type ReturnItem,
 } from "@/types/returns";
 import { ItemSelector } from "@/components/returns/item-selector";
 import { ReasonSelect } from "@/components/returns/reason-select";
@@ -58,6 +59,52 @@ const STEPS = [
   "Logistics",
   "Review & Submit",
 ];
+
+function effectiveReturnQuantity(item: ReturnItem): number {
+  if (item.quantity === 1) return 1;
+  return item.returnQuantity ?? 0;
+}
+
+function initItemsFromReceipt(receipt: ReceiptForReturn): ReturnItem[] {
+  return receipt.items.map((item) => ({
+    ...item,
+    selected: false,
+    returnQuantity: item.quantity === 1 ? 1 : undefined,
+  }));
+}
+
+function normalizeDraftItems(
+  draftItems: ReturnItem[],
+  receipt: ReceiptForReturn,
+): ReturnItem[] {
+  return draftItems.map((draft) => {
+    const line = receipt.items.find((i) => i.id === draft.id);
+    if (!line) return draft;
+    const purchased = line.quantity;
+    let returnQuantity = draft.returnQuantity;
+    if (purchased === 1) {
+      returnQuantity = 1;
+    } else if (draft.selected) {
+      if (
+        returnQuantity == null ||
+        returnQuantity < 1 ||
+        returnQuantity > purchased
+      ) {
+        returnQuantity = undefined;
+      }
+    } else {
+      returnQuantity = undefined;
+    }
+    return {
+      ...draft,
+      quantity: purchased,
+      price: line.price,
+      name: line.name,
+      detail: line.detail,
+      returnQuantity,
+    };
+  });
+}
 
 export default function ReturnRequestClient({
   receipt,
@@ -110,12 +157,21 @@ export default function ReturnRequestClient({
           },
         };
         for (const key of Object.keys(parsedData) as (keyof ReturnFlowFormData)[]) {
-          if (key === "logistics") continue;
+          if (key === "logistics" || key === "items") continue;
           if (parsedData[key] !== undefined) {
             setValue(key, parsedData[key] as never, { shouldValidate: false });
           }
         }
         setValue("logistics", logisticsMerged, { shouldValidate: false });
+        if (parsedData.items && parsedData.items.length > 0) {
+          setValue(
+            "items",
+            normalizeDraftItems(parsedData.items as ReturnItem[], receipt),
+            { shouldValidate: false },
+          );
+        } else {
+          setValue("items", initItemsFromReceipt(receipt), { shouldValidate: false });
+        }
         setIsRestored(true);
         return;
       } catch (error) {
@@ -124,7 +180,7 @@ export default function ReturnRequestClient({
     }
 
     // Default initialization if no save exists
-    setValue("items", receipt.items.map((item) => ({ ...item, selected: false })));
+    setValue("items", initItemsFromReceipt(receipt));
     setIsRestored(true);
   }, [receiptId, receipt, setValue, STORAGE_KEY]);
 
@@ -161,7 +217,10 @@ export default function ReturnRequestClient({
   // Derived state from form
   const items = watch("items") || [];
   const selectedItems = items.filter((i) => i.selected);
-  const selectedTotal = selectedItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const selectedTotal = selectedItems.reduce(
+    (sum, i) => sum + i.price * effectiveReturnQuantity(i),
+    0,
+  );
   const logistics = watch("logistics") || defaultReturnFlowValues.logistics!;
   const fee = logistics.method === "HOME_PICKUP" ? 50 : 30;
   const isEligible = watch("isEligible");
@@ -692,12 +751,28 @@ export default function ReturnRequestClient({
                     Edit
                   </button>
                 </div>
-                {selectedItems.map((item) => (
-                  <div key={item.id} className="flex justify-between py-1.5 text-sm">
-                    <span className="text-slate-700 dark:text-white/80">{item.name}</span>
-                    <span className="font-medium text-slate-900 dark:text-white">{formatCurrency(item.price * item.quantity, receipt.currency)}</span>
-                  </div>
-                ))}
+                {selectedItems.map((item) => {
+                  const rq = effectiveReturnQuantity(item);
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex justify-between gap-2 py-1.5 text-sm"
+                    >
+                      <span className="text-slate-700 dark:text-white/80">
+                        {item.name}
+                        {item.quantity > 1 ? (
+                          <span className="text-slate-500 dark:text-white/45">
+                            {" "}
+                            × {rq}
+                          </span>
+                        ) : null}
+                      </span>
+                      <span className="shrink-0 font-medium text-slate-900 dark:text-white">
+                        {formatCurrency(item.price * rq, receipt.currency)}
+                      </span>
+                    </div>
+                  );
+                })}
                  <div className="mt-2 border-t border-slate-100 pt-2 dark:border-white/5">
                   <div className="flex justify-between text-sm font-bold">
                     <span className="text-slate-900 dark:text-white">Refund Amount</span>
