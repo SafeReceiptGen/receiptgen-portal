@@ -32,9 +32,12 @@ import {
 export default function ReturnStatusClient({
   returnData,
   returnId,
+  returnTrackingUrl,
 }: {
   returnData: ReturnRequest | undefined;
   returnId: string;
+  /** Canonical absolute URL to this return status (includes ?token=). */
+  returnTrackingUrl?: string;
 }) {
   void returnId;
   const router = useRouter();
@@ -202,19 +205,23 @@ export default function ReturnStatusClient({
               )}
 
               {/* QR Code */}
-              <div className="mt-5 flex justify-center">
-                <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-white/10">
-                  <QRCodeSVG
-                    value={`https://safereceipts.com/return/${returnData.id}`}
-                    size={80}
-                    level="M"
-                    fgColor="#18181b"
-                  />
+              {returnTrackingUrl && (
+                <div className="mt-5 flex justify-center">
+                  <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-white/10">
+                    <QRCodeSVG
+                      value={returnTrackingUrl}
+                      size={80}
+                      level="M"
+                      fgColor="#18181b"
+                    />
+                  </div>
                 </div>
-              </div>
-              <p className="mt-1 text-[10px] text-slate-400 dark:text-white/30">
-                Your Return QR
-              </p>
+              )}
+              {returnTrackingUrl && (
+                <p className="mt-1 text-[10px] text-slate-400 dark:text-white/30">
+                  Your Return QR
+                </p>
+              )}
 
               {/* Amount */}
               <p
@@ -308,19 +315,23 @@ export default function ReturnStatusClient({
         {!isTerminal && (
           <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/50 dark:bg-[#111827] dark:ring-white/10">
             <div className="px-6 py-5 text-center">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/50 mb-3">
-                Your Return QR
-              </p>
-              <div className="flex justify-center">
-                <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-white/10">
-                  <QRCodeSVG
-                    value={`https://safereceipts.com/return/${returnData.id}`}
-                    size={100}
-                    level="M"
-                    fgColor="#18181b"
-                  />
-                </div>
-              </div>
+              {returnTrackingUrl && (
+                <>
+                  <p className="mb-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/50">
+                    Your Return QR
+                  </p>
+                  <div className="flex justify-center">
+                    <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-white/10">
+                      <QRCodeSVG
+                        value={returnTrackingUrl}
+                        size={100}
+                        level="M"
+                        fgColor="#18181b"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
               <p className="mt-3 text-sm font-bold text-slate-900 dark:text-white">
                 {formatCurrency(returnData.refundAmount, returnData.currency)}
               </p>

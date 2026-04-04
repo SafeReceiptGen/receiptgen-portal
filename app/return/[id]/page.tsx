@@ -1,5 +1,6 @@
 import { returnsApi, ApiRequestError } from "@/lib/api";
 import { mapPublicReturnBundleToReturnRequest } from "@/lib/return-mappers";
+import { portalPublicOrigin } from "@/lib/portal-public-url";
 import ReturnStatusClient from "@/components/returns/return-status-client";
 
 export default async function ReturnStatusServerPage({
@@ -21,7 +22,14 @@ export default async function ReturnStatusServerPage({
   try {
     const bundle = await returnsApi.getPublic(returnId, token);
     const returnData = mapPublicReturnBundleToReturnRequest(bundle, token);
-    return <ReturnStatusClient returnData={returnData} returnId={returnId} />;
+    const returnTrackingUrl = `${portalPublicOrigin()}/return/${returnId}?token=${encodeURIComponent(token)}`;
+    return (
+      <ReturnStatusClient
+        returnData={returnData}
+        returnId={returnId}
+        returnTrackingUrl={returnTrackingUrl}
+      />
+    );
   } catch (error) {
     if (error instanceof ApiRequestError && error.status === 404) {
       return (
