@@ -62,7 +62,7 @@ const STEPS = [
 
 function effectiveReturnQuantity(item: ReturnItem): number {
   if (item.quantity === 1) return 1;
-  return item.returnQuantity ?? 0;
+  return item.returnQuantity ?? 1;
 }
 
 function initItemsFromReceipt(receipt: ReceiptForReturn): ReturnItem[] {
@@ -90,7 +90,7 @@ function normalizeDraftItems(
         returnQuantity < 1 ||
         returnQuantity > purchased
       ) {
-        returnQuantity = undefined;
+        returnQuantity = 1;
       }
     } else {
       returnQuantity = undefined;
