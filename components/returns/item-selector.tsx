@@ -2,7 +2,7 @@
 
 import { ReturnItem } from "@/types/returns";
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
+import { Check, Minus, Plus } from "lucide-react";
 
 interface ItemSelectorProps {
   items: ReturnItem[];
@@ -14,7 +14,7 @@ interface ItemSelectorProps {
 function unitsReturning(item: ReturnItem): number {
   if (!item.selected) return 0;
   if (item.quantity === 1) return 1;
-  return item.returnQuantity ?? 0;
+  return item.returnQuantity ?? 1;
 }
 
 export function ItemSelector({
@@ -31,14 +31,11 @@ export function ItemSelector({
         return {
           ...item,
           selected: nextSelected,
-          returnQuantity:
-            nextSelected && item.quantity > 1
+          returnQuantity: nextSelected
+            ? 1
+            : item.quantity > 1
               ? undefined
-              : nextSelected
-                ? 1
-                : item.quantity > 1
-                  ? undefined
-                  : undefined,
+              : undefined,
         };
       }),
     );
@@ -125,15 +122,8 @@ export function ItemSelector({
                   </>
                 ) : (
                   <>
-                    <span
-                      className={cn(
-                        "text-sm font-bold tabular-nums dark:text-white",
-                        returning > 0 ? "text-slate-900" : "text-slate-400 dark:text-white/40",
-                      )}
-                    >
-                      {returning > 0
-                        ? `${currency} ${formatPrice(returnSubtotal)}`
-                        : "—"}
+                    <span className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">
+                      {currency} {formatPrice(returnSubtotal)}
                     </span>
                     <p className="text-[10px] text-slate-400 dark:text-white/30">Return value</p>
                   </>
@@ -150,26 +140,58 @@ export function ItemSelector({
                 <p className="text-xs font-medium text-slate-700 dark:text-white/70">
                   How many are you returning?
                 </p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {Array.from({ length: item.quantity }, (_, i) => i + 1).map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setReturnQuantity(item.id, n);
-                      }}
-                      className={cn(
-                        "min-w-[44px] rounded-lg border px-3 py-2 text-sm font-semibold transition-all",
-                        item.returnQuantity === n
-                          ? "border-primary bg-primary text-white ring-1 ring-primary/30 dark:border-blue-400 dark:bg-blue-400"
-                          : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 dark:border-white/15 dark:bg-white/8 dark:text-white/85 dark:hover:border-white/25",
-                      )}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
+                {(() => {
+                  const rq = item.returnQuantity ?? 1;
+                  const canDec = rq > 1;
+                  const canInc = rq < item.quantity;
+                  return (
+                    <div className="mt-3 flex items-center gap-2">
+                      <button
+                        type="button"
+                        aria-label="Decrease return quantity"
+                        disabled={!canDec}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setReturnQuantity(item.id, Math.max(1, rq - 1));
+                        }}
+                        className={cn(
+                          "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-slate-700 transition-colors",
+                          canDec
+                            ? "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] dark:border-white/15 dark:bg-white/8 dark:text-white dark:hover:border-white/25 dark:hover:bg-white/12"
+                            : "cursor-not-allowed border-slate-100 bg-slate-50 opacity-50 dark:border-white/8 dark:bg-white/4",
+                        )}
+                      >
+                        <Minus className="h-4 w-4" strokeWidth={2.5} />
+                      </button>
+                      <span className="min-w-[2.5rem] text-center text-base font-semibold tabular-nums text-slate-900 dark:text-white">
+                        {rq}
+                      </span>
+                      <button
+                        type="button"
+                        aria-label="Increase return quantity"
+                        disabled={!canInc}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setReturnQuantity(
+                            item.id,
+                            Math.min(item.quantity, rq + 1),
+                          );
+                        }}
+                        className={cn(
+                          "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-slate-700 transition-colors",
+                          canInc
+                            ? "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] dark:border-white/15 dark:bg-white/8 dark:text-white dark:hover:border-white/25 dark:hover:bg-white/12"
+                            : "cursor-not-allowed border-slate-100 bg-slate-50 opacity-50 dark:border-white/8 dark:bg-white/4",
+                        )}
+                      >
+                        <Plus className="h-4 w-4" strokeWidth={2.5} />
+                      </button>
+                      <span className="ml-1 text-xs text-slate-500 dark:text-white/45">
+                        max {item.quantity}
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>
