@@ -47,6 +47,21 @@ async function request<T>(path: string, options: SerializableRequestOptions = {}
   return result.data;
 }
 
+async function requestWithTotalCount<T>(
+  path: string,
+  options: SerializableRequestOptions = {},
+): Promise<{ data: T; totalCount?: number }> {
+  const result = await serverRequest<T>(path, options);
+  if (result.error) {
+    throw new ApiRequestError(
+      result.message,
+      result.status,
+      result.details
+    );
+  }
+  return { data: result.data, totalCount: result.totalCount };
+}
+
 // ─── Retailer ───────────────────────────────────────────────────────────────
 
 export interface StoreInput {
@@ -335,6 +350,21 @@ export interface ReturnListRow {
   photoCount: number;
 }
 
+/** Authenticated GET /returns/:id — same shape as backend `getReturnById` bundle */
+export interface RetailerReturnBundle {
+  returnRequest: Record<string, unknown>;
+  receipt: Record<string, unknown>;
+  store: Record<string, unknown>;
+  customer: Record<string, unknown> | null;
+  retailer: Record<string, unknown>;
+  items: Array<{
+    returnItem: Record<string, unknown>;
+    lineItem: Record<string, unknown>;
+  }>;
+  photos: Array<{ id: string; url: string; sortOrder: number }>;
+  payments: Record<string, unknown>[];
+}
+
 async function requestWithoutJsonBody<T>(
   path: string,
   formData: FormData,
@@ -418,27 +448,59 @@ export const returnsApi = {
     reason?: string;
     from?: string;
     to?: string;
+    search?: string;
+    /** Maps to backend `pending_review` — statuses pending or pickup_scheduled */
+    pending_review?: boolean;
   }) => {
     const qs = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([k, v]) => {
-        if (v !== undefined && v !== "") qs.set(k, String(v));
+        if (v === undefined || v === "") return;
+        if (k === "pending_review") {
+          if (v === true || v === "true") qs.set("pending_review", "true");
+          return;
+        }
+        qs.set(k, String(v));
       });
     }
     const q = qs.toString();
-    return request<{ returns: ReturnListRow[] }>(`/returns${q ? `?${q}` : ""}`);
+    return requestWithTotalCount<{ returns: ReturnListRow[] }>(
+      `/returns${q ? `?${q}` : ""}`,
+    ).then(({ data, totalCount }) => ({
+      returns: data.returns,
+      totalCount,
+    }));
   },
 
+  get: (id: string) =>
+    request<{ returnRequest: RetailerReturnBundle }>(
+      `/returns/${encodeURIComponent(id)}`,
+    ).then((d) => d.returnRequest),
+
   approve: (id: string) =>
-    request<{ refundAmount: number }>(`/returns/${id}/approve`, {
-      method: "PATCH",
-    }),
+    request<{ refundAmount: number }>(
+      `/returns/${encodeURIComponent(id)}/approve`,
+      {
+        method: "PATCH",
+      },
+    ),
 
   reject: (id: string, reason: string) =>
-    request<{ message: string }>(`/returns/${id}/reject`, {
-      method: "PATCH",
-      body: JSON.stringify({ reason }),
-    }),
+    request<{ message: string }>(
+      `/returns/${encodeURIComponent(id)}/reject`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ reason }),
+      },
+    ),
+
+  markReceived: (id: string) =>
+    request<void>(
+      `/returns/${encodeURIComponent(id)}/mark-received`,
+      {
+        method: "PATCH",
+      },
+    ),
 };
 
 // ─── Verify (Public) ─────────────────────────────────────────────────────────

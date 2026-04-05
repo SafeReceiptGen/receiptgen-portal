@@ -4,8 +4,8 @@ import { headers } from "next/headers";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
-export type ServerRequestResult<T> = 
-  | { error: false; data: T }
+export type ServerRequestResult<T> =
+  | { error: false; data: T; totalCount?: number }
   | { error: true; message: string; status: number; details?: Record<string, string[]> };
 
 export interface SerializableRequestOptions {
@@ -49,7 +49,12 @@ export async function serverRequest<T>(
       };
     }
 
-    return { error: false, data: json.data as T };
+    return {
+      error: false,
+      data: json.data as T,
+      totalCount:
+        typeof json.total_count === "number" ? json.total_count : undefined,
+    };
   } catch (error: any) {
     return {
       error: true,
