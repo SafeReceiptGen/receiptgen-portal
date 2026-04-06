@@ -11,7 +11,6 @@ import {
 import { QRCodeSVG } from "qrcode.react";
 import { RotateCcw } from "lucide-react";
 import { formatPaymentMethodLabel } from "@/lib/receipt-display-labels";
-import { SingleReceipt } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface ReceiptDetailsSheetProps {
@@ -27,7 +26,7 @@ export function ReceiptDetailsSheet({
     ...receiptDetailQueryOptions(receiptId),
   });
 
-  console.log("receipt", receipt);
+  // console.log("receipt", receipt);
 
   const formatPrice = (price: string) => {
     return parseFloat(price)

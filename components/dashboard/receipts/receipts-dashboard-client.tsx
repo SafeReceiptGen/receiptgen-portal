@@ -21,7 +21,7 @@ export function ReceiptsDashboardClient() {
     receiptsListQueryOptions({ page, limit: 10 }),
   );
 
-  console.log(data);
+  if (isError) throw new Error("Failed to fetch receipts");
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
