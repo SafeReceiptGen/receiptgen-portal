@@ -47,6 +47,7 @@ async function request<T>(
   if (result.error) {
     throw new ApiRequestError(result.message, result.status, result.details);
   }
+  console.log(result);
   return result.data;
 }
 
@@ -141,7 +142,13 @@ export interface ListReceipt {
   total: string;
   currency: "GHS" | "USD" | "EUR" | "GBP" | "NGN" | "KES" | "ZAR";
   status: "issued" | "voided" | "returned";
-  paymentMethod: "check" | "cash" | "mobile_money" | "card" | "bank_transfer" | "wallet";
+  paymentMethod:
+    | "check"
+    | "cash"
+    | "mobile_money"
+    | "card"
+    | "bank_transfer"
+    | "wallet";
   store: {
     id: string;
     name: string;
@@ -173,7 +180,13 @@ export interface SingleReceipt {
   receiptNumber: string;
   date: string;
   currency: "GHS" | "USD" | "EUR" | "GBP" | "NGN" | "KES" | "ZAR";
-  paymentMethod: "check" | "cash" | "mobile_money" | "card" | "bank_transfer" | "wallet";
+  paymentMethod:
+    | "check"
+    | "cash"
+    | "mobile_money"
+    | "card"
+    | "bank_transfer"
+    | "wallet";
   subtotal: string;
   vatRate: string;
   vatAmount: string;
@@ -210,9 +223,7 @@ export const receiptsApi = {
     limit?: number;
   }) => {
     const qs = new URLSearchParams(params as Record<string, string>).toString();
-    return request<ListReceiptsResponse>(
-      `/receipts${qs ? `?${qs}` : ""}`,
-    );
+    return request<ListReceiptsResponse>(`/receipts${qs ? `?${qs}` : ""}`);
   },
 
   get: (id: string) => request<SingleReceipt>(`/receipts/${id}`),

@@ -27,8 +27,12 @@ export function ReceiptDetailsSheet({
     ...receiptDetailQueryOptions(receiptId),
   });
 
+  console.log("receipt", receipt);
+
   const formatPrice = (price: string) => {
-    return parseFloat(price).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return parseFloat(price)
+      .toFixed(2)
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
   const formatDate = (isoString: string) => {
@@ -71,7 +75,6 @@ export function ReceiptDetailsSheet({
           <div className="flex items-start justify-center w-full h-full sm:p-4 overflow-auto overscroll-contain">
             {/* The Thermal Paper Wrapper */}
             <div className="w-full max-w-[380px] min-w-[320px] flex flex-col filter drop-shadow-[0_20px_25px_rgba(0,0,0,0.15)] my-auto transition-all duration-300">
-              
               {/* TOP SECTION: HEADER */}
               <div
                 className="bg-white text-zinc-900 w-full rounded-t-[20px] p-8 pb-6 relative transition-all"
@@ -87,7 +90,9 @@ export function ReceiptDetailsSheet({
                         {receipt.store.name}
                       </h1>
                       {receipt.store.phone && (
-                        <p className="text-zinc-500 text-sm">{receipt.store.phone}</p>
+                        <p className="text-zinc-500 text-sm">
+                          {receipt.store.phone}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -100,7 +105,8 @@ export function ReceiptDetailsSheet({
                 <div>
                   <h2 className="text-xl text-center font-bold mb-2">
                     Thank you for your purchase
-                    {receipt.customer?.name ? `, ${receipt.customer.name}` : ""}!
+                    {receipt.customer?.name ? `, ${receipt.customer.name}` : ""}
+                    !
                   </h2>
                 </div>
 
@@ -119,7 +125,10 @@ export function ReceiptDetailsSheet({
                 {/* Line Items */}
                 <div className="flex flex-col gap-6 mb-8 text-left">
                   {receipt.items.map((item, index) => (
-                    <div key={item.id} className="flex gap-4 items-start text-xs">
+                    <div
+                      key={item.id}
+                      className="flex gap-4 items-start text-xs"
+                    >
                       <div className="w-4 pt-0.5 font-medium text-zinc-400">
                         {index + 1}.
                       </div>
@@ -177,7 +186,9 @@ export function ReceiptDetailsSheet({
                         </div>
                         <div className="text-sm font-semibold leading-snug text-zinc-800">
                           <span className="text-zinc-500">Deadline:</span>{" "}
-                          {receipt.returnDeadline ? formatDate(receipt.returnDeadline) : "N/A"}
+                          {receipt.returnDeadline
+                            ? formatDate(receipt.returnDeadline)
+                            : "N/A"}
                         </div>
                         {receipt.marketingText && (
                           <p className="text-[10px] text-zinc-500 italic mt-2 border-t border-zinc-200 pt-2">
@@ -193,7 +204,7 @@ export function ReceiptDetailsSheet({
                       </div>
                     )}
                   </div>
-                  
+
                   {/* QR Code */}
                   <div className="p-2 border border-zinc-200 rounded-lg bg-white shrink-0">
                     <QRCodeSVG
@@ -207,16 +218,21 @@ export function ReceiptDetailsSheet({
 
                 {/* Status indicator */}
                 <div className="mt-auto pt-4 flex justify-between items-center border-t border-zinc-100">
-                   <div className="text-xs text-zinc-500 font-medium">Status</div>
-                   <div className={`text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wider ${
-                     receipt.status === 'issued' ? 'bg-zinc-100 text-zinc-900' :
-                     receipt.status === 'returned' ? 'bg-red-100 text-red-700' :
-                     'bg-zinc-100 text-zinc-500'
-                   }`}>
-                     {receipt.status}
-                   </div>
+                  <div className="text-xs text-zinc-500 font-medium">
+                    Status
+                  </div>
+                  <div
+                    className={`text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wider ${
+                      receipt.status === "issued"
+                        ? "bg-zinc-100 text-zinc-900"
+                        : receipt.status === "returned"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-zinc-100 text-zinc-500"
+                    }`}
+                  >
+                    {receipt.status}
+                  </div>
                 </div>
-
               </div>
             </div>
           </div>
