@@ -28,19 +28,31 @@ export function ReceiptsDashboardClient() {
     try {
       const arr = JSON.parse(filtersStr);
       const apiParams: Record<string, string> = {};
+      
       arr.forEach((f: any) => {
-        if (f.id === "storeId") apiParams.storeId = f.value;
-        if (f.id === "status") apiParams.status = f.value;
-        // The API might expect paymentMethod but we'll map it directly just in case
-        if (f.id === "paymentMethod") apiParams.paymentMethod = f.value;
+        // Handle Date Ranges
+        if (f.id === "date" && Array.isArray(f.value) && f.value.length === 2) {
+           apiParams.from = new Date(Number(f.value[0])).toISOString();
+           apiParams.to = new Date(Number(f.value[1])).toISOString();
+        } 
+        // Handle Text Search (Receipt Number)
+        else if (f.id === "receiptNumber") {
+          apiParams.search = f.value; 
+        } 
+        // Handle Selects / Direct Matches (Store, Status, Payment Method)
+        else {
+          apiParams[f.id] = f.value;
+        }
       });
+      
       return apiParams;
     } catch {
       return {};
     }
   }, [filtersStr]);
 
-  const { data: stores } = useQuery(storesQueryOptions);
+  const { data: storesResponse } = useQuery(storesQueryOptions);
+  const stores = storesResponse?.stores ?? [];
 
   const { data, isLoading, isError } = useQuery(
     receiptsListQueryOptions({ page, limit: perPage, ...parsedFilters }),
