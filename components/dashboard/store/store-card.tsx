@@ -6,9 +6,12 @@ import Link from "next/link";
 export function StoreCard({ store }: { store: Store }) {
   const isActive = store.isActive ?? true;
   return (
-    <Link href={`/dashboard/stores/${store.id}`} className="group flex flex-col gap-3">
+    <Link
+      href={`/dashboard/stores/${store.id}`}
+      className="group flex flex-col gap-3"
+    >
       {/* Visual Box */}
-      <div className="relative aspect-square flex flex-col items-center justify-center rounded-2xl border border-border/50 bg-muted/20 transition-all duration-300 group-hover:bg-muted/40 group-hover:border-border/80 group-hover:shadow-sm">
+      <div className="relative aspect-square flex flex-col items-center justify-center rounded-2xl border border-primary/50 bg-muted/20 transition-all duration-300 group-hover:bg-muted/40 group-hover:border-border/80 group-hover:shadow-sm">
         {/* Status Badge - Top Right */}
         <div className="absolute top-3 right-3">
           <Badge
@@ -30,7 +33,10 @@ export function StoreCard({ store }: { store: Store }) {
             {store.address || "No address provided"}
           </p>
           <p className="text-[10px] text-muted-foreground/40 mt-0.5 uppercase tracking-widest">
-            {String(store.returnPolicy?.returnWindow || "").replace(/_/g, " ") || "Default policy"}
+            {String(store.returnPolicy?.returnWindow || "").replace(
+              /_/g,
+              " ",
+            ) || "Default policy"}
           </p>
         </div>
       </div>
