@@ -4,7 +4,11 @@
  */
 
 import type { PublicReturnBundle } from "@/lib/return-mappers";
-import { serverRequest, serverRequestFormData, SerializableRequestOptions } from "./server-request";
+import {
+  serverRequest,
+  serverRequestFormData,
+  SerializableRequestOptions,
+} from "./server-request";
 import {
   refundTypeEnum,
   returnConditionEnum,
@@ -35,14 +39,13 @@ class ApiRequestError extends Error {
   }
 }
 
-async function request<T>(path: string, options: SerializableRequestOptions = {}): Promise<T> {
+async function request<T>(
+  path: string,
+  options: SerializableRequestOptions = {},
+): Promise<T> {
   const result = await serverRequest<T>(path, options);
   if (result.error) {
-    throw new ApiRequestError(
-      result.message,
-      result.status,
-      result.details
-    );
+    throw new ApiRequestError(result.message, result.status, result.details);
   }
   return result.data;
 }
@@ -53,11 +56,7 @@ async function requestWithTotalCount<T>(
 ): Promise<{ data: T; totalCount?: number }> {
   const result = await serverRequest<T>(path, options);
   if (result.error) {
-    throw new ApiRequestError(
-      result.message,
-      result.status,
-      result.details
-    );
+    throw new ApiRequestError(result.message, result.status, result.details);
   }
   return { data: result.data, totalCount: result.totalCount };
 }
@@ -142,7 +141,12 @@ export const receiptsApi = {
       body: JSON.stringify(payload),
     }),
 
-  list: (params?: { storeId?: string; page?: number; status?: string }) => {
+  list: (params?: {
+    storeId?: string;
+    page?: number;
+    status?: string;
+    limit?: number;
+  }) => {
     const qs = new URLSearchParams(params as Record<string, string>).toString();
     return request<{ receipts: CreatedReceipt[]; page: number; limit: number }>(
       `/receipts${qs ? `?${qs}` : ""}`,
@@ -181,28 +185,37 @@ export const storesApi = {
 
   get: (id: string) => request<{ store: Store }>(`/stores/${id}`),
 
-  update: (id: string, payload: Partial<Pick<Store, "name" | "phone" | "address">>) =>
+  update: (
+    id: string,
+    payload: Partial<Pick<Store, "name" | "phone" | "address">>,
+  ) =>
     request<{ store: Store }>(`/stores/${id}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
 
-  updatePolicy: (id: string, payload: {
-    returnWindow?: string;
-    customWindowDays?: number;
-    returnCondition?: string;
-    refundType?: string;
-  }) => request<{ store: Store }>(`/stores/${id}/policy`, {
+  updatePolicy: (
+    id: string,
+    payload: {
+      returnWindow?: string;
+      customWindowDays?: number;
+      returnCondition?: string;
+      refundType?: string;
+    },
+  ) =>
+    request<{ store: Store }>(`/stores/${id}/policy`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
 
-  create: (payload: Pick<Store, "name" | "phone" | "address"> & {
-    returnWindow?: string;
-    customWindowDays?: number;
-    returnCondition?: string;
-    refundType?: string;
-  }) =>
+  create: (
+    payload: Pick<Store, "name" | "phone" | "address"> & {
+      returnWindow?: string;
+      customWindowDays?: number;
+      returnCondition?: string;
+      refundType?: string;
+    },
+  ) =>
     request<{ store: Store }>("/stores", {
       method: "POST",
       body: JSON.stringify(payload),
@@ -368,15 +381,11 @@ export interface RetailerReturnBundle {
 async function requestWithoutJsonBody<T>(
   path: string,
   formData: FormData,
-  options: Omit<SerializableRequestOptions, "body"> = {}
+  options: Omit<SerializableRequestOptions, "body"> = {},
 ): Promise<T> {
   const result = await serverRequestFormData<T>(path, formData, options);
   if (result.error) {
-    throw new ApiRequestError(
-      result.message,
-      result.status,
-      result.details
-    );
+    throw new ApiRequestError(result.message, result.status, result.details);
   }
   return result.data;
 }
@@ -486,21 +495,15 @@ export const returnsApi = {
     ),
 
   reject: (id: string, reason: string) =>
-    request<{ message: string }>(
-      `/returns/${encodeURIComponent(id)}/reject`,
-      {
-        method: "PATCH",
-        body: JSON.stringify({ reason }),
-      },
-    ),
+    request<{ message: string }>(`/returns/${encodeURIComponent(id)}/reject`, {
+      method: "PATCH",
+      body: JSON.stringify({ reason }),
+    }),
 
   markReceived: (id: string) =>
-    request<void>(
-      `/returns/${encodeURIComponent(id)}/mark-received`,
-      {
-        method: "PATCH",
-      },
-    ),
+    request<void>(`/returns/${encodeURIComponent(id)}/mark-received`, {
+      method: "PATCH",
+    }),
 };
 
 // ─── Verify (Public) ─────────────────────────────────────────────────────────
