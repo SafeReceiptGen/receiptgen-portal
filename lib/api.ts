@@ -47,7 +47,6 @@ async function request<T>(
   if (result.error) {
     throw new ApiRequestError(result.message, result.status, result.details);
   }
-  console.log(result);
   return result.data;
 }
 

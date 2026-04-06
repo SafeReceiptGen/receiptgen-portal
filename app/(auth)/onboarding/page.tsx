@@ -179,7 +179,7 @@ export default function Onboarding() {
     () => {
       // Don't run entrance animation until we're actually showing the content
       if (isPending) return;
-      
+
       const tl = gsap.timeline();
       tl.fromTo(
         leftPanelRef.current,
@@ -324,7 +324,6 @@ export default function Onboarding() {
         ease: "power2.in",
         onComplete: () => navigate.push("/dashboard"),
       });
-      console.log("onboard res", res);
     } catch (err) {
       console.log("onboard err", err);
       setIsLoading(false);

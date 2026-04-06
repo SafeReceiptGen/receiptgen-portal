@@ -24,11 +24,9 @@ export function ReceiptsDashboardClient() {
 
   // Parse filters from the URL to pass to the API
   const parsedFilters = useMemo(() => {
-    console.log("filtersStr", filtersStr);
     if (!filtersStr) return {};
     try {
       const arr = filtersStr as unknown as any[] | null;
-      console.log("arr", arr);
       const apiParams: Record<string, string> = {};
 
       arr?.forEach((f: any) => {
@@ -46,7 +44,6 @@ export function ReceiptsDashboardClient() {
           apiParams[f.id] = f.value;
         }
       });
-      console.log("apiParams", apiParams);
       return apiParams;
     } catch {
       return {};
