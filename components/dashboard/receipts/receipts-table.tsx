@@ -8,6 +8,7 @@ import { DataTable } from "@/components/data-table/data-table";
 import { DataTableAdvancedToolbar } from "@/components/data-table/data-table-advanced-toolbar";
 import { DataTableFilterMenu } from "@/components/data-table/data-table-filter-menu";
 import { DataTableSortList } from "@/components/data-table/data-table-sort-list";
+import { Loader2 } from "lucide-react";
 
 interface ReceiptsTableProps {
   data: ListReceipt[];
@@ -16,11 +17,11 @@ interface ReceiptsTableProps {
   onRowClick: (id: string) => void;
 }
 
-export function ReceiptsTable({ 
-  data, 
-  pageCount, 
+export function ReceiptsTable({
+  data,
+  pageCount,
   isLoading,
-  onRowClick 
+  onRowClick,
 }: ReceiptsTableProps) {
   const columns = useMemo(() => getReceiptsColumns(onRowClick), [onRowClick]);
 
@@ -31,6 +32,14 @@ export function ReceiptsTable({
     getRowId: (row) => row.id,
     enableAdvancedFilter: true, // Use advanced toolbar
   });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <DataTable table={table}>

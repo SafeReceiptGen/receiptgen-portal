@@ -29,7 +29,7 @@ export function ReceiptsDashboardClient() {
         <h1 className="text-lg font-semibold md:text-2xl">Receipts</h1>
       </div>
 
-      <Card>
+      <Card className="border-none shadow-none">
         <CardHeader>
           <CardTitle>All Receipts</CardTitle>
           <CardDescription>
