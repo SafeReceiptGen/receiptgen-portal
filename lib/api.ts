@@ -134,6 +134,68 @@ export interface CreatedReceipt {
   total: string;
 }
 
+export interface ListReceipt {
+  id: string;
+  receiptNumber: string;
+  date: string;
+  total: string;
+  currency: "GHS" | "USD" | "EUR" | "GBP" | "NGN" | "KES" | "ZAR";
+  status: "issued" | "voided" | "returned";
+  paymentMethod: "check" | "cash" | "mobile_money" | "card" | "bank_transfer" | "wallet";
+  store: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface ListReceiptsResponse {
+  data: ListReceipt[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export interface SingleReceiptItem {
+  id: string;
+  name: string;
+  detail: string | null;
+  quantity: number;
+  unitPrice: string;
+  lineTotal: string;
+}
+
+export interface SingleReceipt {
+  items: SingleReceiptItem[];
+  id: string;
+  receiptNumber: string;
+  date: string;
+  currency: "GHS" | "USD" | "EUR" | "GBP" | "NGN" | "KES" | "ZAR";
+  paymentMethod: "check" | "cash" | "mobile_money" | "card" | "bank_transfer" | "wallet";
+  subtotal: string;
+  vatRate: string;
+  vatAmount: string;
+  total: string;
+  marketingText: string | null;
+  qrCodeToken: string;
+  status: "issued" | "voided" | "returned";
+  returnDeadline: string | null;
+  createdAt: string;
+  store: {
+    id: string;
+    name: string;
+    phone: string | null;
+    address: string | null;
+  };
+  customer: {
+    id: string;
+    name: string;
+  } | null;
+  returnPolicy: Record<string, unknown> | null;
+}
+
 export const receiptsApi = {
   create: (payload: CreateReceiptPayload) =>
     request<{ receipt: CreatedReceipt; qrUrl: string }>("/receipts", {
@@ -148,12 +210,12 @@ export const receiptsApi = {
     limit?: number;
   }) => {
     const qs = new URLSearchParams(params as Record<string, string>).toString();
-    return request<{ receipts: CreatedReceipt[]; page: number; limit: number }>(
+    return request<ListReceiptsResponse>(
       `/receipts${qs ? `?${qs}` : ""}`,
     );
   },
 
-  get: (id: string) => request<{ receipt: CreatedReceipt }>(`/receipts/${id}`),
+  get: (id: string) => request<SingleReceipt>(`/receipts/${id}`),
 };
 
 // ─── Stores ──────────────────────────────────────────────────────────────────
