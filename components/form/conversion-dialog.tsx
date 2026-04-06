@@ -78,7 +78,6 @@ export default function ConversionDialog({
       >[],
     ) => {
       if (!receiptData?.storeId) throw new Error("Missing storeId");
-      console.log("productsToSave", productsToSave);
       return storesApi.addToCatalog(receiptData.storeId, productsToSave);
     },
     onMutate: async (productsToSave) => {
@@ -202,7 +201,7 @@ export default function ConversionDialog({
           data={receiptData}
           showQr={!!qrCodeToken}
           qrDataUrl={qrDataUrl}
-        />
+        />,
       ).toBlob();
 
       const link = document.createElement("a");
@@ -294,12 +293,20 @@ export default function ConversionDialog({
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center" className="w-40 rounded-xl">
-              <DropdownMenuLabel className="text-xs text-slate-500 font-normal">Download as:</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-xs text-slate-500 font-normal">
+                Download as:
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleDownloadImage} className="cursor-pointer font-medium py-2">
+              <DropdownMenuItem
+                onClick={handleDownloadImage}
+                className="cursor-pointer font-medium py-2"
+              >
                 Image
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDownloadPDF} className="cursor-pointer font-medium py-2">
+              <DropdownMenuItem
+                onClick={handleDownloadPDF}
+                className="cursor-pointer font-medium py-2"
+              >
                 PDF
               </DropdownMenuItem>
             </DropdownMenuContent>

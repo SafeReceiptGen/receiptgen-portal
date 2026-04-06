@@ -28,7 +28,6 @@ export async function getServerSession(): Promise<Session | null> {
     }
 
     const sessionData = await response.json();
-    // console.log(sessionData);
     return sessionData; // Returns { user, session }
   } catch (error) {
     console.error("Session fetch failed:", error);
