@@ -15,10 +15,12 @@ import {
 
 export function ReceiptsDashboardClient() {
   const [page] = useQueryState("page", parseAsInteger.withDefault(1));
+  const [perPage] = useQueryState("perPage", parseAsInteger.withDefault(10));
+
   const [receiptId, setReceiptId] = useQueryState("receiptId", parseAsString);
 
   const { data, isLoading, isError } = useQuery(
-    receiptsListQueryOptions({ page, limit: 10 }),
+    receiptsListQueryOptions({ page, limit: perPage }),
   );
 
   if (isError) throw new Error("Failed to fetch receipts");
