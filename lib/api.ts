@@ -221,6 +221,10 @@ export const receiptsApi = {
     page?: number;
     status?: string;
     limit?: number;
+    paymentMethod?: string;
+    search?: string;
+    from?: string;
+    to?: string;
   }) => {
     const qs = new URLSearchParams(params as Record<string, string>).toString();
     return request<ListReceiptsResponse>(`/receipts${qs ? `?${qs}` : ""}`);

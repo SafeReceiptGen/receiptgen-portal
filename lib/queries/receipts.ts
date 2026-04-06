@@ -6,6 +6,10 @@ export const receiptsListQueryOptions = (params?: {
   page?: number;
   status?: string;
   limit?: number;
+  paymentMethod?: string;
+  search?: string;
+  from?: string;
+  to?: string;
 }) =>
   queryOptions({
     queryKey: ["receipts", "list", params ?? {}] as const,
