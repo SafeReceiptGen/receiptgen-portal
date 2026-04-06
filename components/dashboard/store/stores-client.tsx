@@ -17,9 +17,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function StoresClient() {
   const { data, isPending, isError, refetch } = useQuery(storesQueryOptions);
-  
+
   // Normalize data to handle both array and object shapes returned from backend
-  const storesList = Array.isArray(data) ? data : data?.stores || [];
+  const storesList = Array.isArray(data) ? data : [];
 
   return (
     <div className="flex-1 space-y-8 p-8 pt-6">
@@ -83,7 +83,8 @@ function StoresError({ onRetry }: { onRetry: () => void }) {
       </div>
       <h3 className="text-lg font-semibold mb-2">Failed to load stores</h3>
       <p className="text-muted-foreground text-center mb-6 max-w-md">
-        There was an error communicating with the server. Please check your connection and try again.
+        There was an error communicating with the server. Please check your
+        connection and try again.
       </p>
       <Button variant="outline" onClick={onRetry} className="gap-2">
         <RotateCcw className="w-4 h-4" />
@@ -102,7 +103,8 @@ function StoresEmpty() {
       <EmptyContent>
         <EmptyTitle>No stores found</EmptyTitle>
         <EmptyDescription>
-          You haven't created any stores yet. Add your first retail location to start generating receipts.
+          You haven't created any stores yet. Add your first retail location to
+          start generating receipts.
         </EmptyDescription>
         <div className="mt-4">
           <Button asChild className="gap-2 shadow-sm rounded-full">
