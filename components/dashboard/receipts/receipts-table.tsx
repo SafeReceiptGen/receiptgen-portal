@@ -16,7 +16,7 @@ interface ReceiptsTableProps {
   data: ListReceipt[];
   pageCount: number;
   isLoading?: boolean;
-  stores: Store[];
+  stores?: Store[];
   onRowClick: (id: string) => void;
 }
 
@@ -24,10 +24,13 @@ export function ReceiptsTable({
   data,
   pageCount,
   isLoading,
-  stores,
+  stores = [],
   onRowClick,
 }: ReceiptsTableProps) {
-  const columns = useMemo(() => getReceiptsColumns(onRowClick, stores), [onRowClick, stores]);
+  const columns = useMemo(
+    () => getReceiptsColumns(onRowClick, stores),
+    [onRowClick, stores],
+  );
 
   const { table } = useDataTable({
     data,

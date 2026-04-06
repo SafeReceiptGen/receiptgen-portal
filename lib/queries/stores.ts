@@ -5,7 +5,7 @@ export const storesQueryOptions = queryOptions({
   queryKey: ["stores"],
   queryFn: async () => {
     const data = await storesApi.list();
-    return data;
+    return data.stores;
   },
 });
 
@@ -17,4 +17,3 @@ export const storeQueryOptions = (id: string) =>
       return data.store;
     },
   });
-

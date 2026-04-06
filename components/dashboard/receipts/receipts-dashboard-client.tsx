@@ -29,10 +29,10 @@ export function ReceiptsDashboardClient() {
       const arr = JSON.parse(filtersStr);
       const apiParams: Record<string, string> = {};
       arr.forEach((f: any) => {
-        if (f.id === 'storeId') apiParams.storeId = f.value;
-        if (f.id === 'status') apiParams.status = f.value;
+        if (f.id === "storeId") apiParams.storeId = f.value;
+        if (f.id === "status") apiParams.status = f.value;
         // The API might expect paymentMethod but we'll map it directly just in case
-        if (f.id === 'paymentMethod') apiParams.paymentMethod = f.value;
+        if (f.id === "paymentMethod") apiParams.paymentMethod = f.value;
       });
       return apiParams;
     } catch {
@@ -40,8 +40,7 @@ export function ReceiptsDashboardClient() {
     }
   }, [filtersStr]);
 
-  const { data: storesResponse } = useQuery(storesQueryOptions);
-  const stores = storesResponse?.stores ?? [];
+  const { data: stores } = useQuery(storesQueryOptions);
 
   const { data, isLoading, isError } = useQuery(
     receiptsListQueryOptions({ page, limit: perPage, ...parsedFilters }),
