@@ -2,7 +2,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { receiptsListQueryOptions } from "@/lib/queries/receipts";
+import { storesQueryOptions } from "@/lib/queries/stores";
 import { useQueryState, parseAsString, parseAsInteger } from "nuqs";
+import { useMemo } from "react";
 import { ReceiptsTable } from "./receipts-table";
 import { ReceiptDetailsSheet } from "./receipt-details-sheet";
 import {
@@ -18,9 +20,31 @@ export function ReceiptsDashboardClient() {
   const [perPage] = useQueryState("perPage", parseAsInteger.withDefault(10));
 
   const [receiptId, setReceiptId] = useQueryState("receiptId", parseAsString);
+  const [filtersStr] = useQueryState("filters");
+
+  // Parse filters from the URL to pass to the API
+  const parsedFilters = useMemo(() => {
+    if (!filtersStr) return {};
+    try {
+      const arr = JSON.parse(filtersStr);
+      const apiParams: Record<string, string> = {};
+      arr.forEach((f: any) => {
+        if (f.id === 'storeId') apiParams.storeId = f.value;
+        if (f.id === 'status') apiParams.status = f.value;
+        // The API might expect paymentMethod but we'll map it directly just in case
+        if (f.id === 'paymentMethod') apiParams.paymentMethod = f.value;
+      });
+      return apiParams;
+    } catch {
+      return {};
+    }
+  }, [filtersStr]);
+
+  const { data: storesResponse } = useQuery(storesQueryOptions);
+  const stores = storesResponse?.stores ?? [];
 
   const { data, isLoading, isError } = useQuery(
-    receiptsListQueryOptions({ page, limit: perPage }),
+    receiptsListQueryOptions({ page, limit: perPage, ...parsedFilters }),
   );
 
   if (isError) throw new Error("Failed to fetch receipts");
@@ -43,6 +67,7 @@ export function ReceiptsDashboardClient() {
             data={data?.data ?? []}
             pageCount={data?.meta?.totalPages ?? 1}
             isLoading={isLoading}
+            stores={stores}
             onRowClick={(id: string) => setReceiptId(id)}
           />
         </CardContent>

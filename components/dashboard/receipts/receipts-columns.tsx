@@ -1,17 +1,18 @@
 "use client";
 
 import { useMemo } from "react";
-import { ListReceipt } from "@/lib/api";
+import { ListReceipt, Store as StoreType } from "@/lib/api";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { formatPaymentMethodLabel } from "@/lib/receipt-display-labels";
-import { Store, Calendar, CreditCard, Tag } from "lucide-react";
+import { Store as StoreIcon, Calendar, CreditCard, Tag } from "lucide-react";
 
 export const getReceiptsColumns = (
-  onRowClick: (id: string) => void
+  onRowClick: (id: string) => void,
+  stores: StoreType[]
 ): ColumnDef<ListReceipt>[] => [
   {
     id: "receiptNumber",
@@ -59,16 +60,20 @@ export const getReceiptsColumns = (
     enableColumnFilter: true,
   },
   {
-    id: "store",
-    accessorFn: (row) => row.store.name,
+    id: "storeId",
+    accessorFn: (row) => row.store.id,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Store" label="Store" />
     ),
-    cell: ({ row }) => <div>{row.getValue("store")}</div>,
+    cell: ({ row }) => <div>{row.original.store.name}</div>,
     meta: {
       label: "Store",
-      variant: "text",
-      icon: Store,
+      variant: "select",
+      icon: StoreIcon,
+      options: stores.map(store => ({
+        label: store.name,
+        value: store.id
+      }))
     },
     enableColumnFilter: true,
   },

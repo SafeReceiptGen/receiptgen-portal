@@ -10,10 +10,13 @@ import { DataTableFilterMenu } from "@/components/data-table/data-table-filter-m
 import { DataTableSortList } from "@/components/data-table/data-table-sort-list";
 import { Loader2 } from "lucide-react";
 
+import { Store } from "@/lib/api";
+
 interface ReceiptsTableProps {
   data: ListReceipt[];
   pageCount: number;
   isLoading?: boolean;
+  stores: Store[];
   onRowClick: (id: string) => void;
 }
 
@@ -21,9 +24,10 @@ export function ReceiptsTable({
   data,
   pageCount,
   isLoading,
+  stores,
   onRowClick,
 }: ReceiptsTableProps) {
-  const columns = useMemo(() => getReceiptsColumns(onRowClick), [onRowClick]);
+  const columns = useMemo(() => getReceiptsColumns(onRowClick, stores), [onRowClick, stores]);
 
   const { table } = useDataTable({
     data,
