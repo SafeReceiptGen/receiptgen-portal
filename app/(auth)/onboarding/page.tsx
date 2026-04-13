@@ -381,8 +381,8 @@ export default function Onboarding() {
           }}
         />
         {/* Glow orbs */}
-        <div className="pointer-events-none absolute -bottom-40 -right-40 h-[600px] w-[600px] rounded-full bg-white/10 blur-[100px]" />
-        <div className="pointer-events-none absolute -top-20 -left-20 h-[300px] w-[300px] rounded-full bg-white/5 blur-[80px]" />
+        <div className="pointer-events-none absolute -bottom-40 -right-40 h-150 w-150 rounded-full bg-white/10 blur-[100px]" />
+        <div className="pointer-events-none absolute -top-20 -left-20 h-75 w-75 rounded-full bg-white/5 blur-[80px]" />
 
         {/* Logo */}
         <div className="stagger-item relative z-10 text-3xl font-bold tracking-tighter font-display">
@@ -401,9 +401,7 @@ export default function Onboarding() {
             your rules.
           </h2>
           <p className="text-white/70 leading-relaxed">
-            Tell us where you operate and what your return policy looks like.
-            Every store can have its own policy — customers will see it on every
-            receipt.
+          Tell us where you operate and what your store policy looks like. Every store can have its own policy — customers will see it on every receipt.
           </p>
         </div>
 
