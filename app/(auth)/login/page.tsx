@@ -150,10 +150,10 @@ export default function Login() {
 
         <div className="stagger-item relative z-10 max-w-md">
           <h2 className="mb-6 text-5xl font-bold leading-tight tracking-tighter font-display">
-            Welcome back to simpler returns.
+            Welcome back to simpler receipts.
           </h2>
           <p className="text-lg text-white/80">
-            Issue digital receipts and manage customer returns in one place.
+           Issue digital receipts and manage post-purchase requests in one place.
           </p>
         </div>
 
