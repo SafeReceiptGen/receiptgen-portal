@@ -58,8 +58,8 @@ const customerValues = [
     icon: <Wallet size={24} />,
   },
   {
-    title: "Easy Returns",
-    desc: "Start a return from your phone and stay updated without searching for paper receipts.",
+    title: "Easy Returns/Exchange",
+    desc: "Start a return/exchange from your phone and stay updated without searching for paper receipts.",
     icon: <CheckCircle size={24} />,
   },
   {
