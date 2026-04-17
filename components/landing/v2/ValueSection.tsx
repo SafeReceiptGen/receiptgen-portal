@@ -54,7 +54,7 @@ const retailerValues = [
 const customerValues = [
   {
     title: "Digital Receipts Ready",
-    desc: "Purchases are stored digitally, so receipts are always available when a return is needed.",
+    desc: "Purchases are stored digitally, so receipts are always available when proof of purchase is needed.",
     icon: <Wallet size={24} />,
   },
   {
