@@ -294,12 +294,15 @@ export interface SubmitReturnPayload {
     pickupAddress?: {
       line1: string;
       line2?: string;
-      city: string;
-      region: string;
+      city?: string;
+      region?: string;
       postalCode?: string;
+      landmark?: string;
+      latitude?: number;
+      longitude?: number;
     };
     parcel?: {
-      packageCount: number;
+      packageCount?: number;
       description: string;
       weightKg?: number;
     };

@@ -85,6 +85,9 @@ export type PublicReturnBundle = {
     pickupCity: string | null;
     pickupRegion: string | null;
     pickupPostalCode: string | null;
+    pickupLatitude: string | number | null;
+    pickupLongitude: string | number | null;
+    pickupLandmark: string | null;
     parcelPackageCount: number | null;
     parcelDescription: string | null;
     parcelWeightKg: string | null;
@@ -135,26 +138,51 @@ export function mapPublicReturnBundleToReturnRequest(
   };
 
   if (!isDropOff && rr.pickupAddressLine1) {
+    const landmark =
+      rr.pickupLandmark?.trim() ||
+      rr.pickupAddressLine2?.trim() ||
+      undefined;
+    const lat =
+      rr.pickupLatitude != null && rr.pickupLatitude !== ""
+        ? typeof rr.pickupLatitude === "number"
+          ? rr.pickupLatitude
+          : parseFloat(String(rr.pickupLatitude))
+        : undefined;
+    const lng =
+      rr.pickupLongitude != null && rr.pickupLongitude !== ""
+        ? typeof rr.pickupLongitude === "number"
+          ? rr.pickupLongitude
+          : parseFloat(String(rr.pickupLongitude))
+        : undefined;
+    const hasLegacyStructured =
+      (rr.pickupCity?.trim() ?? "") !== "" ||
+      (rr.pickupRegion?.trim() ?? "") !== "";
+    const address = hasLegacyStructured
+      ? [
+          rr.pickupAddressLine1,
+          rr.pickupCity,
+          rr.pickupRegion,
+          rr.pickupPostalCode,
+        ]
+          .filter((p) => p && String(p).trim() !== "")
+          .join(", ")
+      : rr.pickupAddressLine1;
     logistics.pickupAddress = {
-      line1: rr.pickupAddressLine1,
-      line2: rr.pickupAddressLine2 ?? undefined,
-      city: rr.pickupCity ?? "",
-      region: rr.pickupRegion ?? "",
-      postalCode: rr.pickupPostalCode ?? undefined,
+      address,
+      landmark,
+      latitude: lat != null && !Number.isNaN(lat) ? lat : undefined,
+      longitude: lng != null && !Number.isNaN(lng) ? lng : undefined,
     };
   }
-  if (
-    !isDropOff &&
-    rr.parcelPackageCount != null &&
-    rr.parcelDescription != null
-  ) {
+  if (!isDropOff && rr.parcelDescription != null) {
     logistics.parcel = {
-      packageCount: rr.parcelPackageCount,
       description: rr.parcelDescription,
-      weightKg:
-        rr.parcelWeightKg != null && rr.parcelWeightKg !== ""
-          ? parseFloat(rr.parcelWeightKg)
-          : undefined,
+      ...(rr.parcelPackageCount != null
+        ? { packageCount: rr.parcelPackageCount }
+        : {}),
+      ...(rr.parcelWeightKg != null && rr.parcelWeightKg !== ""
+        ? { weightKg: parseFloat(rr.parcelWeightKg) }
+        : {}),
     };
   }
 
