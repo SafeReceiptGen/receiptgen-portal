@@ -23,18 +23,16 @@ const ReturnItemSchema = z
     }
   });
 
+/** Bolt/Yango-style: single address line, optional landmark, optional map pin */
 const pickupAddressSchema = z.object({
-  line1: z.string().max(255),
-  line2: z.string().max(255).optional(),
-  city: z.string().max(120),
-  region: z.string().max(120),
-  postalCode: z.string().max(32).optional(),
+  address: z.string().max(500),
+  landmark: z.string().max(255).optional(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
 });
 
 const parcelSchema = z.object({
-  packageCount: z.number().int().min(1).max(99),
   description: z.string().max(1000),
-  weightKg: z.number().positive().max(999).optional(),
 });
 
 export const ReturnFlowSchema = z.object({
@@ -75,25 +73,11 @@ export const ReturnFlowSchema = z.object({
         });
       }
       if (data.method === "HOME_PICKUP") {
-        if (!data.pickupAddress.line1.trim()) {
+        if (!data.pickupAddress.address.trim()) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Street address is required.",
-            path: ["pickupAddress", "line1"],
-          });
-        }
-        if (!data.pickupAddress.city.trim()) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "City is required.",
-            path: ["pickupAddress", "city"],
-          });
-        }
-        if (!data.pickupAddress.region.trim()) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Region is required.",
-            path: ["pickupAddress", "region"],
+            message: "Enter a pickup address or use the map.",
+            path: ["pickupAddress", "address"],
           });
         }
         if (!data.parcel.description.trim()) {
@@ -122,16 +106,13 @@ export const defaultReturnFlowValues: Partial<ReturnFlowFormData> = {
     phoneCountry: "GH",
     phoneNumber: "",
     pickupAddress: {
-      line1: "",
-      line2: "",
-      city: "",
-      region: "",
-      postalCode: "",
+      address: "",
+      landmark: "",
+      latitude: undefined,
+      longitude: undefined,
     },
     parcel: {
-      packageCount: 1,
       description: "",
-      weightKg: undefined,
     },
   },
 };

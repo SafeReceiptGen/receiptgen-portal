@@ -14,6 +14,7 @@ import { StatusBadge } from "@/components/returns/status-badge";
 import { QRCodeSVG } from "qrcode.react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currency";
+import { formatPickupAddressDisplay } from "@/lib/format-pickup-address";
 import Link from "next/link";
 import Image from "next/image";
 import { format, formatDistanceToNow } from "date-fns";
@@ -400,35 +401,33 @@ export default function ReturnStatusClient({
               {returnData.logistics.method === "HOME_PICKUP" &&
                 returnData.logistics.pickupAddress && (
                   <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-white/60">
-                    {returnData.logistics.pickupAddress.line1}
-                    {returnData.logistics.pickupAddress.line2
-                      ? `, ${returnData.logistics.pickupAddress.line2}`
-                      : ""}
-                    <br />
-                    {returnData.logistics.pickupAddress.city}
-                    {returnData.logistics.pickupAddress.region
-                      ? `, ${returnData.logistics.pickupAddress.region}`
-                      : ""}
-                    {returnData.logistics.pickupAddress.postalCode
-                      ? ` ${returnData.logistics.pickupAddress.postalCode}`
-                      : ""}
+                    {formatPickupAddressDisplay(
+                      returnData.logistics.pickupAddress,
+                    )}
                   </p>
                 )}
               {returnData.logistics.method === "HOME_PICKUP" &&
                 returnData.logistics.parcel && (
                   <div className="mt-2 rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2 text-xs text-slate-600 dark:border-white/10 dark:bg-white/4 dark:text-white/55">
-                    <p className="font-medium text-slate-700 dark:text-white/75">
-                      {returnData.logistics.parcel.packageCount}{" "}
-                      {returnData.logistics.parcel.packageCount === 1
-                        ? "package"
-                        : "packages"}
-                      {returnData.logistics.parcel.weightKg != null
-                        ? ` · ~${returnData.logistics.parcel.weightKg} kg`
-                        : ""}
-                    </p>
-                    <p className="mt-1 text-slate-600 dark:text-white/55">
+                    <p className="text-slate-600 dark:text-white/55">
                       {returnData.logistics.parcel.description}
                     </p>
+                    {(returnData.logistics.parcel.packageCount != null ||
+                      returnData.logistics.parcel.weightKg != null) && (
+                      <p className="mt-1 text-[10px] text-slate-500 dark:text-white/50">
+                        {returnData.logistics.parcel.packageCount != null && (
+                          <>
+                            {returnData.logistics.parcel.packageCount}{" "}
+                            {returnData.logistics.parcel.packageCount === 1
+                              ? "package"
+                              : "packages"}
+                          </>
+                        )}
+                        {returnData.logistics.parcel.weightKg != null
+                          ? `${returnData.logistics.parcel.packageCount != null ? " · " : ""}~${returnData.logistics.parcel.weightKg} kg`
+                          : ""}
+                      </p>
+                    )}
                   </div>
                 )}
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-xs text-slate-500 dark:text-white/50">

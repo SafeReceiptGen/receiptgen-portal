@@ -20,6 +20,8 @@ import { ItemSelector } from "@/components/returns/item-selector";
 import { ReasonSelect } from "@/components/returns/reason-select";
 import { PhotoUpload } from "@/components/returns/photo-upload";
 import { ReceiptSheet } from "@/components/returns/receipt-sheet";
+import { LocationPicker } from "@/components/returns/location-picker";
+import { formatPickupAddressDisplay } from "@/lib/format-pickup-address";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currency";
 import {
@@ -49,7 +51,6 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 
 const STEPS = [
   "Select Items",
@@ -144,17 +145,41 @@ export default function ReturnRequestClient({
       try {
         const parsedData = JSON.parse(savedData) as Partial<ReturnFlowFormData>;
         const baseL = defaultReturnFlowValues.logistics!;
+        const rawPa = parsedData.logistics?.pickupAddress as
+          | Record<string, unknown>
+          | undefined;
+        const migratedPickup = {
+          ...baseL.pickupAddress,
+          ...parsedData.logistics?.pickupAddress,
+          address:
+            (typeof rawPa?.address === "string" && rawPa.address) ||
+            (typeof rawPa?.line1 === "string" && rawPa.line1) ||
+            "",
+          landmark:
+            (typeof rawPa?.landmark === "string" && rawPa.landmark) ||
+            (typeof rawPa?.line2 === "string" && rawPa.line2) ||
+            "",
+          latitude:
+            typeof rawPa?.latitude === "number" ? rawPa.latitude : undefined,
+          longitude:
+            typeof rawPa?.longitude === "number" ? rawPa.longitude : undefined,
+        };
+        const rawParcel = parsedData.logistics?.parcel as
+          | Record<string, unknown>
+          | undefined;
+        const migratedParcel = {
+          ...baseL.parcel,
+          ...parsedData.logistics?.parcel,
+          description:
+            typeof rawParcel?.description === "string"
+              ? rawParcel.description
+              : "",
+        };
         const logisticsMerged = {
           ...baseL,
           ...parsedData.logistics,
-          pickupAddress: {
-            ...baseL.pickupAddress,
-            ...parsedData.logistics?.pickupAddress,
-          },
-          parcel: {
-            ...baseL.parcel,
-            ...parsedData.logistics?.parcel,
-          },
+          pickupAddress: migratedPickup,
+          parcel: migratedParcel,
         };
         for (const key of Object.keys(parsedData) as (keyof ReturnFlowFormData)[]) {
           if (key === "logistics" || key === "items") continue;
@@ -507,160 +532,70 @@ export default function ReturnRequestClient({
 
               {logistics.method === "HOME_PICKUP" && (
                 <div className="space-y-4 animate-in slide-in-from-top-2 fade-in duration-200">
+                  <LocationPicker
+                    address={logistics.pickupAddress?.address ?? ""}
+                    landmark={logistics.pickupAddress?.landmark ?? ""}
+                    latitude={logistics.pickupAddress?.latitude}
+                    longitude={logistics.pickupAddress?.longitude}
+                    onAddressChange={(v) =>
+                      setValue("logistics.pickupAddress.address", v, {
+                        shouldValidate: true,
+                      })
+                    }
+                    onLandmarkChange={(v) =>
+                      setValue("logistics.pickupAddress.landmark", v, {
+                        shouldValidate: true,
+                      })
+                    }
+                    onLocationChange={(lat, lng) => {
+                      setValue("logistics.pickupAddress.latitude", lat, {
+                        shouldValidate: true,
+                      });
+                      setValue("logistics.pickupAddress.longitude", lng, {
+                        shouldValidate: true,
+                      });
+                    }}
+                    onLocationClear={() => {
+                      setValue("logistics.pickupAddress.latitude", undefined, {
+                        shouldValidate: true,
+                      });
+                      setValue("logistics.pickupAddress.longitude", undefined, {
+                        shouldValidate: true,
+                      });
+                    }}
+                    addressError={
+                      form.formState.errors.logistics?.pickupAddress?.address
+                        ?.message
+                    }
+                  />
                   <div>
                     <Label className="text-xs font-medium text-slate-600 dark:text-white/60">
-                      <MapPin size={12} className="inline mr-1 text-primary dark:text-blue-400" />
-                      Pickup address
+                      <Package
+                        size={12}
+                        className="mr-1 inline text-primary dark:text-blue-400"
+                      />
+                      What are you returning?
                     </Label>
-                    <div className="mt-2 space-y-2">
-                      <Input
-                        placeholder="Street address, building"
-                        value={logistics.pickupAddress?.line1 ?? ""}
-                        onChange={(e) =>
-                          setValue("logistics.pickupAddress.line1", e.target.value, {
-                            shouldValidate: true,
-                          })
+                    <Input
+                      placeholder="Short description for the courier"
+                      value={logistics.parcel?.description ?? ""}
+                      onChange={(e) =>
+                        setValue(
+                          "logistics.parcel.description",
+                          e.target.value,
+                          { shouldValidate: true },
+                        )
+                      }
+                      className="mt-2 bg-slate-50 border-slate-200 text-slate-900 dark:bg-white/5 dark:border-white/10 dark:text-white"
+                    />
+                    {form.formState.errors.logistics?.parcel?.description && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {
+                          form.formState.errors.logistics.parcel.description
+                            .message
                         }
-                        className="bg-slate-50 border-slate-200 text-slate-900 dark:bg-white/5 dark:border-white/10 dark:text-white"
-                      />
-                      {form.formState.errors.logistics?.pickupAddress?.line1 && (
-                        <p className="text-red-500 text-xs">
-                          {form.formState.errors.logistics.pickupAddress.line1.message}
-                        </p>
-                      )}
-                      <Input
-                        placeholder="Apartment, suite (optional)"
-                        value={logistics.pickupAddress?.line2 ?? ""}
-                        onChange={(e) =>
-                          setValue("logistics.pickupAddress.line2", e.target.value, {
-                            shouldValidate: true,
-                          })
-                        }
-                        className="bg-slate-50 border-slate-200 text-slate-900 dark:bg-white/5 dark:border-white/10 dark:text-white"
-                      />
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <Input
-                            placeholder="City"
-                            value={logistics.pickupAddress?.city ?? ""}
-                            onChange={(e) =>
-                              setValue("logistics.pickupAddress.city", e.target.value, {
-                                shouldValidate: true,
-                              })
-                            }
-                            className="bg-slate-50 border-slate-200 text-slate-900 dark:bg-white/5 dark:border-white/10 dark:text-white"
-                          />
-                          {form.formState.errors.logistics?.pickupAddress?.city && (
-                            <p className="text-red-500 text-xs mt-1">
-                              {form.formState.errors.logistics.pickupAddress.city.message}
-                            </p>
-                          )}
-                        </div>
-                        <div>
-                          <Input
-                            placeholder="Region / state"
-                            value={logistics.pickupAddress?.region ?? ""}
-                            onChange={(e) =>
-                              setValue("logistics.pickupAddress.region", e.target.value, {
-                                shouldValidate: true,
-                              })
-                            }
-                            className="bg-slate-50 border-slate-200 text-slate-900 dark:bg-white/5 dark:border-white/10 dark:text-white"
-                          />
-                          {form.formState.errors.logistics?.pickupAddress?.region && (
-                            <p className="text-red-500 text-xs mt-1">
-                              {form.formState.errors.logistics.pickupAddress.region.message}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <Input
-                        placeholder="Postal code (optional)"
-                        value={logistics.pickupAddress?.postalCode ?? ""}
-                        onChange={(e) =>
-                          setValue("logistics.pickupAddress.postalCode", e.target.value, {
-                            shouldValidate: true,
-                          })
-                        }
-                        className="bg-slate-50 border-slate-200 text-slate-900 dark:bg-white/5 dark:border-white/10 dark:text-white"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-slate-600 dark:text-white/60">
-                      <Package size={12} className="inline mr-1 text-primary dark:text-blue-400" />
-                      Parcel details
-                    </Label>
-                    <div className="mt-2 space-y-2">
-                      <div className="flex items-center gap-3">
-                        <Label className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-white/40 shrink-0">
-                          Packages
-                        </Label>
-                        <Input
-                          type="number"
-                          min={1}
-                          max={99}
-                          value={logistics.parcel?.packageCount ?? 1}
-                          onChange={(e) => {
-                            const n = parseInt(e.target.value, 10);
-                            setValue(
-                              "logistics.parcel.packageCount",
-                              Number.isNaN(n) ? 1 : n,
-                              { shouldValidate: true },
-                            );
-                          }}
-                          className="max-w-[88px] bg-slate-50 border-slate-200 text-slate-900 dark:bg-white/5 dark:border-white/10 dark:text-white"
-                        />
-                      </div>
-                      <Textarea
-                        placeholder="What are you returning? (helps the courier)"
-                        rows={3}
-                        value={logistics.parcel?.description ?? ""}
-                        onChange={(e) =>
-                          setValue("logistics.parcel.description", e.target.value, {
-                            shouldValidate: true,
-                          })
-                        }
-                        className="resize-none bg-slate-50 border-slate-200 text-slate-900 dark:bg-white/5 dark:border-white/10 dark:text-white"
-                      />
-                      {form.formState.errors.logistics?.parcel?.description && (
-                        <p className="text-red-500 text-xs">
-                          {form.formState.errors.logistics.parcel.description.message}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <Label className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-white/40 whitespace-nowrap">
-                          Approx. weight (kg, optional)
-                        </Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min={0}
-                          placeholder="—"
-                          value={
-                            logistics.parcel?.weightKg === undefined
-                              ? ""
-                              : String(logistics.parcel.weightKg)
-                          }
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            if (v === "") {
-                              setValue("logistics.parcel.weightKg", undefined, {
-                                shouldValidate: true,
-                              });
-                              return;
-                            }
-                            const n = parseFloat(v);
-                            if (!Number.isNaN(n)) {
-                              setValue("logistics.parcel.weightKg", n, {
-                                shouldValidate: true,
-                              });
-                            }
-                          }}
-                          className="max-w-[120px] bg-slate-50 border-slate-200 text-slate-900 dark:bg-white/5 dark:border-white/10 dark:text-white"
-                        />
-                      </div>
-                    </div>
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
@@ -824,23 +759,11 @@ export default function ReturnRequestClient({
                 </p>
                 {logistics.method === "HOME_PICKUP" && logistics.pickupAddress && (
                   <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-white/55">
-                    {logistics.pickupAddress.line1}
-                    {logistics.pickupAddress.line2 ? `, ${logistics.pickupAddress.line2}` : ""}
-                    <br />
-                    {logistics.pickupAddress.city}, {logistics.pickupAddress.region}
-                    {logistics.pickupAddress.postalCode
-                      ? ` ${logistics.pickupAddress.postalCode}`
-                      : ""}
+                    {formatPickupAddressDisplay(logistics.pickupAddress)}
                   </p>
                 )}
                 {logistics.method === "HOME_PICKUP" && logistics.parcel && (
                   <p className="mt-2 text-xs text-slate-500 dark:text-white/50">
-                    {logistics.parcel.packageCount}{" "}
-                    {logistics.parcel.packageCount === 1 ? "package" : "packages"}
-                    {logistics.parcel.weightKg != null
-                      ? ` · ~${logistics.parcel.weightKg} kg`
-                      : ""}
-                    {" — "}
                     {logistics.parcel.description}
                   </p>
                 )}

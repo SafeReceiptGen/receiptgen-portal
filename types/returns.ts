@@ -38,16 +38,17 @@ export interface PudoPoint {
 }
 
 export interface PickupAddress {
-  line1: string;
-  line2?: string;
-  city: string;
-  region: string;
-  postalCode?: string;
+  /** Primary free-text address (Bolt-style) */
+  address: string;
+  landmark?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface ParcelDetails {
-  packageCount: number;
   description: string;
+  /** Older returns only */
+  packageCount?: number;
   weightKg?: number;
 }
 
