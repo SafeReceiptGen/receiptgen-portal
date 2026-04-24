@@ -61,9 +61,9 @@ export function SectionCards() {
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="font-medium">Purchase date is today (UTC)</div>
+          <div className="font-medium">Issued across all your stores today</div>
           <div className="text-muted-foreground">
-            Digital receipts across your stores
+          Resets daily
           </div>
         </CardFooter>
       </Card>
@@ -76,8 +76,8 @@ export function SectionCards() {
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="font-medium">All time</div>
-          <div className="text-muted-foreground">All statuses, all stores</div>
+          <div className="font-medium">All receipts issued so far</div>
+          <div className="text-muted-foreground">Across all stores</div>
         </CardFooter>
       </Card>
 
@@ -93,8 +93,8 @@ export function SectionCards() {
             </CardTitle>
           </CardHeader>
           <CardFooter className="flex-col items-start gap-1.5 text-sm">
-            <div className="font-medium">Awaiting review or pickup</div>
-            <div className="text-muted-foreground">Open returns dashboard →</div>
+            <div className="font-medium">Needs your attention</div>
+            <div className="text-muted-foreground">Review pending & scheduled pickups →</div>
           </CardFooter>
         </Card>
       </Link>
@@ -107,8 +107,8 @@ export function SectionCards() {
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="font-medium">Return requests ÷ receipts</div>
-          <div className="text-muted-foreground">All-time, rounded to 0.1%</div>
+          <div className="font-medium">Percentage of receipts that were returned</div>
+          <div className="text-muted-foreground">Across all stores</div>
         </CardFooter>
       </Card>
     </div>
