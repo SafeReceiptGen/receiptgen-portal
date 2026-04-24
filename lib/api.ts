@@ -105,6 +105,23 @@ export const retailerApi = {
     }),
 };
 
+// ─── Dashboard (retailer overview) ───────────────────────────────────────────
+
+export interface DashboardStats {
+  receiptsToday: number;
+  totalReceipts: number;
+  pendingReturns: number;
+  returnRate: number;
+  timeseries: { date: string; receipts: number; returns: number }[];
+}
+
+export const dashboardApi = {
+  getStats: (range: "7d" | "30d" = "30d") =>
+    request<DashboardStats>(
+      `/dashboard/stats?range=${encodeURIComponent(range)}`,
+    ),
+};
+
 // ─── Receipts ────────────────────────────────────────────────────────────────
 
 export interface ReceiptLineItem {

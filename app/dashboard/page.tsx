@@ -1,25 +1,29 @@
+import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
-// import { DataTable } from "@/components/data-table";
 import { SectionCards } from "@/components/section-cards";
+import { getQueryClient } from "@/lib/query-client";
+import { dashboardStatsQueryOptions } from "@/lib/queries/dashboard";
 import { DashboardViewTracker } from "./dashboard-view-tracker";
 
-// import data from "./data.json";
+export default async function Page() {
+  const queryClient = getQueryClient();
+  await queryClient.prefetchQuery(dashboardStatsQueryOptions("30d"));
 
-export default function Page() {
   return (
     <>
       <DashboardViewTracker />
-      <div className="flex flex-1 flex-col">
-        <div className="@container/main flex flex-1 flex-col gap-2">
-          <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-            <SectionCards />
-            <div className="px-4 lg:px-6">
-              <ChartAreaInteractive />
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <div className="flex flex-1 flex-col">
+          <div className="@container/main flex flex-1 flex-col gap-2">
+            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+              <SectionCards />
+              <div className="px-4 lg:px-6">
+                <ChartAreaInteractive />
+              </div>
             </div>
-            {/* <DataTable data={data} /> */}
           </div>
         </div>
-      </div>
+      </HydrationBoundary>
     </>
   );
 }
