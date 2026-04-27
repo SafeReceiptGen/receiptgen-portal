@@ -18,6 +18,7 @@ interface ReceiptsTableProps {
   isLoading?: boolean;
   stores?: Store[];
   onRowClick: (id: string) => void;
+  emptyMessage?: string;
 }
 
 export function ReceiptsTable({
@@ -26,6 +27,7 @@ export function ReceiptsTable({
   isLoading,
   stores = [],
   onRowClick,
+  emptyMessage,
 }: ReceiptsTableProps) {
   const columns = useMemo(
     () => getReceiptsColumns(onRowClick, stores),
@@ -49,7 +51,7 @@ export function ReceiptsTable({
   }
 
   return (
-    <DataTable table={table}>
+    <DataTable table={table} emptyMessage={emptyMessage}>
       <DataTableAdvancedToolbar table={table}>
         <DataTableFilterMenu table={table} />
         <DataTableSortList table={table} />
