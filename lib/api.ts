@@ -296,7 +296,7 @@ export const storesApi = {
       refundType?: string;
     },
   ) =>
-    request<{ store: Store }>(`/stores/${id}/policy`, {
+    request<{ policy: Store["returnPolicy"] }>(`/stores/${id}/policy`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),

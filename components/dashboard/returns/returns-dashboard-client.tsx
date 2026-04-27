@@ -702,9 +702,19 @@ export function ReturnsDashboardClient() {
         onValueChange={(v) => setMainTab(v as "pending" | "all")}
         className="space-y-4"
       >
-        <TabsList>
-          <TabsTrigger value="pending">Pending review</TabsTrigger>
-          <TabsTrigger value="all">All returns</TabsTrigger>
+        <TabsList className="h-10 w-full sm:w-auto bg-muted p-1 rounded-lg">
+          <TabsTrigger
+            value="pending"
+            className="flex-1 sm:flex-none text-foreground font-medium data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-sm"
+          >
+            Pending review
+          </TabsTrigger>
+          <TabsTrigger
+            value="all"
+            className="flex-1 sm:flex-none text-foreground font-medium data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-sm"
+          >
+            All returns
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="pending" className="space-y-4">
