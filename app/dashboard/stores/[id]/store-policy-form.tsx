@@ -25,7 +25,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { refundTypeEnum, returnConditionEnum, returnWindowEnum } from "@/types/enums";
 
 const formSchema = z.object({
   returnWindow: z.string().optional(),
@@ -100,7 +99,10 @@ export function StorePolicyForm({ store }: { store: Store }) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Return Window</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value ?? ""}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a return window" />
@@ -148,7 +150,10 @@ export function StorePolicyForm({ store }: { store: Store }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Required Condition</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value ?? ""}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select condition" />
@@ -175,7 +180,10 @@ export function StorePolicyForm({ store }: { store: Store }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Refund Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value ?? ""}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select refund type" />
