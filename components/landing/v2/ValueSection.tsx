@@ -6,9 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import {
   Shield,
   Zap,
-  TrendingDown,
   Eye,
-  Heart,
   Wallet,
   Clock,
   CheckCircle,
@@ -18,37 +16,25 @@ gsap.registerPlugin(ScrollTrigger);
 
 const retailerValues = [
   {
-    title: "Reduced Fraud",
-    desc: "Verified digital receipts make it harder to reuse fake or duplicate proof of purchase during returns.",
+    title: "Fewer Disputes",
+    desc: "Reduce disputes over lost receipts .",
     icon: <Shield size={24} />,
   },
   {
-    title: "Faster Returns",
-    desc: "Instant purchase verification speeds up approvals and reduces delays at the returns desk.",
-    icon: <Zap size={24} />,
+    title: "Clear Return Terms",
+    desc: "Provide customers with clear return and exchange terms .",
+    icon: <CheckCircle size={24} />,
   },
   {
-    title: "Lower Costs",
-    desc: "Less staff time is spent resolving disputes, checking receipts, and handling manual return workflows.",
-    icon: <TrendingDown size={24} />,
-  },
-  {
-    title: "Better Insights",
-    desc: "Track return reasons, spot product issues, and identify patterns that impact operations.",
+    title: "Digital Records",
+    desc: "Keep digital record of purchases.",
     icon: <Eye size={24} />,
   },
   {
-    title: "Customer Trust",
-    desc: "A smoother, more transparent return experience builds confidence and improves loyalty.",
-    icon: <Heart size={24} />,
+    title: "No Hardware Needed",
+    desc: "No printers or POS integration required.",
+    icon: <Zap size={24} />,
   },
-
-
-
-
-
-
-
 ];
 
 const customerValues = [
@@ -73,8 +59,6 @@ const customerValues = [
     icon: <Shield size={24} />,
   },
 ];
-
-
 
 export const ValueSection = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -113,15 +97,20 @@ export const ValueSection = () => {
             Why It <span className="text-primary">Matters</span>
           </h2>
           <p className="mx-auto max-w-2xl text-lg text-foreground/70 md:text-xl">
-            SafeReceipts and ReturnFlow help retailers streamline returns while giving customers a faster, more reliable post-purchase experience.
+            SafeReceipts and ReturnFlow help retailers streamline returns while
+            giving customers a faster, more reliable post-purchase experience.
           </p>
         </div>
 
         <div className="mb-20">
-          <h3 className="mb-12 text-3xl font-bold tracking-tight md:text-5xl font-display text-foreground">
+          <h3 className="mb-4 text-3xl font-bold tracking-tight md:text-5xl font-display text-foreground">
             For Retailers
           </h3>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <p className="mb-12 max-w-xl text-lg text-foreground/60">
+            Built for everyday retail in Ghana.
+          </p>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {retailerValues.map((val, i) => (
               <div
                 key={i}
