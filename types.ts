@@ -21,6 +21,8 @@ export interface ReceiptData {
   companyName: string;
   tin: string; // Tax Identification Number
   website: string;
+  /** Retailer-wide brand logo (absolute URL); shown on PDF/preview when set. */
+  logoUrl: string;
   qrCodeToken: string;
   qrUrl: string;
   customerName: string;
@@ -54,6 +56,7 @@ export const INITIAL_RECEIPT_DATA: ReceiptData = {
   companyName: "",
   tin: "",
   website: "",
+  logoUrl: "",
   qrCodeToken: "",
   qrUrl: "",
   customerName: "",

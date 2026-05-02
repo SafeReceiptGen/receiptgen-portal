@@ -279,11 +279,24 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.headerContainer}>
-          <View>
-            <Text style={styles.storeName}>{data.storeName}</Text>
-            {data.storePhone ? (
-              <Text style={styles.storePhone}>{data.storePhone}</Text>
+          <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+            {data.logoUrl?.trim() ? (
+              <Image
+                src={data.logoUrl.trim()}
+                style={{
+                  width: 36,
+                  height: 36,
+                  marginRight: 8,
+                  objectFit: "contain",
+                }}
+              />
             ) : null}
+            <View style={{ flexShrink: 1 }}>
+              <Text style={styles.storeName}>{data.storeName}</Text>
+              {data.storePhone ? (
+                <Text style={styles.storePhone}>{data.storePhone}</Text>
+              ) : null}
+            </View>
           </View>
           <View style={styles.receiptInfo}>
             <Text>Receipt {data.receiptNumber}</Text>

@@ -110,6 +110,8 @@ export interface ReceiptForReturn {
   id: string;
   receiptNumber: string;
   storeName: string;
+  /** Retailer-wide logo; null/undefined when not set. */
+  retailerLogoUrl?: string | null;
   storePhone: string;
   storeLogo?: string;
   customerName: string;
