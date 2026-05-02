@@ -83,6 +83,8 @@ export interface Retailer {
   companyName?: string;
   tin?: string;
   website?: string;
+  /** Public URL of retailer-wide brand logo (receipts, PDFs). */
+  logoUrl?: string | null;
 }
 
 export const retailerApi = {
@@ -96,10 +98,13 @@ export const retailerApi = {
 
   update: (
     payload: Partial<
-      Pick<Retailer, "name" | "companyName" | "tin" | "website">
+      Pick<
+        Retailer,
+        "name" | "companyName" | "tin" | "website" | "logoUrl"
+      >
     >,
   ) =>
-    request<{ message: string }>("/retailer", {
+    request<{ retailer: Retailer }>("/retailer", {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
@@ -198,6 +203,9 @@ export interface SingleReceiptItem {
 
 export interface SingleReceipt {
   items: SingleReceiptItem[];
+  /** Retailer-wide logo URL for receipts; null if unset. */
+  retailerLogoUrl?: string | null;
+  retailerName?: string | null;
   id: string;
   receiptNumber: string;
   date: string;
@@ -519,6 +527,17 @@ export async function uploadReturnPhotosFromDataUrls(
   return data.urls;
 }
 
+/** Multipart upload for retailer-wide brand logo (auth required). */
+export async function uploadRetailerLogo(
+  file: File,
+): Promise<{ url: string }> {
+  const form = new FormData();
+  form.append("logo", file);
+  return requestWithoutJsonBody<{ url: string }>("/uploads/retailer-logo", form, {
+    method: "POST",
+  });
+}
+
 export const returnsApi = {
   submit: (payload: SubmitReturnPayload) =>
     request<{
@@ -633,6 +652,7 @@ export interface VerifiedReceipt {
   receiptNumber: string;
   paymentMethod: string;
   storeName: string;
+  retailerLogoUrl?: string | null;
   items: VerifiedReceiptItem[];
 }
 

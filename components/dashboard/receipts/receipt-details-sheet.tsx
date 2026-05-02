@@ -12,6 +12,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { RotateCcw } from "lucide-react";
 import { formatPaymentMethodLabel } from "@/lib/receipt-display-labels";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BrandLogoImage } from "@/components/receipt/brand-logo-image";
 
 interface ReceiptDetailsSheetProps {
   receiptId: string | null;
@@ -81,8 +82,13 @@ export function ReceiptDetailsSheet({
                 }}
               >
                 <div className="flex justify-between items-start mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="flex flex-col">
+                  <div className="flex items-start gap-3">
+                    <BrandLogoImage
+                      url={receipt.retailerLogoUrl}
+                      alt={`${receipt.store.name} logo`}
+                      className="h-12 w-12 shrink-0 rounded-md object-contain ring-1 ring-zinc-200"
+                    />
+                    <div className="flex flex-col min-w-0">
                       <h1 className="text-xl font-bold tracking-tight text-zinc-900">
                         {receipt.store.name}
                       </h1>
