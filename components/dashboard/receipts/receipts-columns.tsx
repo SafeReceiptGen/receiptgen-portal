@@ -63,24 +63,6 @@ export const getReceiptsColumns = (
     enableColumnFilter: true,
   },
   {
-    id: "storeId",
-    accessorFn: (row) => row.store.id,
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Store" label="Store" />
-    ),
-    cell: ({ row }) => <div>{row.original.store.name}</div>,
-    meta: {
-      label: "Store",
-      variant: "select",
-      icon: StoreIcon,
-      options: stores.map((store) => ({
-        label: store.name,
-        value: store.id,
-      })),
-    },
-    enableColumnFilter: true,
-  },
-  {
     id: "customer",
     accessorFn: (row) => row.customer?.name ?? "",
     header: ({ column }) => (
@@ -109,6 +91,24 @@ export const getReceiptsColumns = (
       variant: "text",
     },
     enableColumnFilter: false,
+  },
+  {
+    id: "storeId",
+    accessorFn: (row) => row.store.id,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Store" label="Store" />
+    ),
+    cell: ({ row }) => <div>{row.original.store.name}</div>,
+    meta: {
+      label: "Store",
+      variant: "select",
+      icon: StoreIcon,
+      options: stores.map((store) => ({
+        label: store.name,
+        value: store.id,
+      })),
+    },
+    enableColumnFilter: true,
   },
   {
     id: "total",
