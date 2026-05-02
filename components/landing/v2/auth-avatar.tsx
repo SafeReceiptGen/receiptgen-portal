@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { authClient } from "@/lib/auth-client";
+import { signOutAndRedirect } from "@/lib/sign-out-client";
 
 export function AvatarDropdown({
   image,
@@ -18,9 +18,6 @@ export function AvatarDropdown({
   image: string | null | undefined;
   name: string;
 }) {
-  async function logout() {
-    await authClient.signOut();
-  }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -41,7 +38,13 @@ export function AvatarDropdown({
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem variant="destructive" onClick={() => logout()}>
+          <DropdownMenuItem
+            variant="destructive"
+            onSelect={(e) => {
+              e.preventDefault();
+              void signOutAndRedirect("/");
+            }}
+          >
             Log out
           </DropdownMenuItem>
         </DropdownMenuGroup>
