@@ -140,7 +140,8 @@ export interface CreateReceiptPayload {
   vatRate: number;
   paymentMethod: string;
   items: ReceiptLineItem[];
-  customerName?: string;
+  customerName: string;
+  customerPhone: string;
   marketingText?: string;
 }
 
@@ -169,6 +170,11 @@ export interface ListReceipt {
     id: string;
     name: string;
   };
+  customer: {
+    id: string;
+    name: string | null;
+    phone: string | null;
+  } | null;
 }
 
 export interface ListReceiptsResponse {
@@ -221,6 +227,8 @@ export interface SingleReceipt {
   customer: {
     id: string;
     name: string;
+    phone: string | null;
+    email: string | null;
   } | null;
   returnPolicy: Record<string, unknown> | null;
 }

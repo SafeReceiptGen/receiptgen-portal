@@ -311,16 +311,27 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
             </div>
             <div className="space-y-2">
               <Label className="text-sm text-slate-600 dark:text-white/70">
-                Customer Name{" "}
-                <span className="text-slate-400 dark:text-white/30">
-                  (Optional)
-                </span>
+                Customer Name <span className="text-destructive">*</span>
               </Label>
               <Input
                 type="text"
                 value={data.customerName || ""}
                 onChange={(e) => handleChange("customerName", e.target.value)}
                 placeholder="e.g. Emma Doe"
+                className="w-full rounded-xl bg-slate-50 border-slate-200 p-4 text-lg text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/35"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm text-slate-600 dark:text-white/70">
+                Customer Phone <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                type="tel"
+                value={data.customerPhone || ""}
+                onChange={(e) =>
+                  handleChange("customerPhone", e.target.value)
+                }
+                placeholder="e.g. +233 24 444 4444"
                 className="w-full rounded-xl bg-slate-50 border-slate-200 p-4 text-lg text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/35"
               />
             </div>

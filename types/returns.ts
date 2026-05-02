@@ -113,6 +113,8 @@ export interface ReceiptForReturn {
   storePhone: string;
   storeLogo?: string;
   customerName: string;
+  /** Present when receipt was created with customer phone (dashboard flow). */
+  customerPhone?: string;
   items: ReturnItem[];
   currency: string;
   subtotal: number;

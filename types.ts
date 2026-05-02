@@ -23,7 +23,8 @@ export interface ReceiptData {
   website: string;
   qrCodeToken: string;
   qrUrl: string;
-  customerName?: string;
+  customerName: string;
+  customerPhone: string;
   // Return Policy Fields
   returnWindow: string;
   customReturnWindow: string;
@@ -56,6 +57,7 @@ export const INITIAL_RECEIPT_DATA: ReceiptData = {
   qrCodeToken: "",
   qrUrl: "",
   customerName: "",
+  customerPhone: "",
   returnWindow: "7 days",
   customReturnWindow: "",
   returnCondition: "Original Packaging",
