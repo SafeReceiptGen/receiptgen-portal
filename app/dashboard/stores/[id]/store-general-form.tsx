@@ -36,7 +36,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const LOGO_MAX_BYTES = 2 * 1024 * 1024;
+const LOGO_MAX_BYTES = 12 * 1024 * 1024;
 const LOGO_MIMES = new Set([
   "image/png",
   "image/jpeg",
@@ -111,7 +111,7 @@ export function StoreGeneralForm({ store }: { store: Store }) {
       return;
     }
     if (file.size > LOGO_MAX_BYTES) {
-      toast.error("Logo must be 2 MB or smaller.");
+      toast.error("Logo must be 12 MB or smaller.");
       return;
     }
     uploadLogo(file);
