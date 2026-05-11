@@ -5,6 +5,7 @@ import { ReceiptData } from "@/types";
 import { formatPaymentMethodLabel } from "@/lib/receipt-display-labels";
 import Link from "next/link";
 import { BrandLogoImage } from "@/components/receipt/brand-logo-image";
+import { RECEIPT_LOGO_SLOT_PX } from "@/lib/receipt-logo-display";
 
 interface ReceiptPreviewProps {
   data: ReceiptData;
@@ -78,7 +79,11 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                 <BrandLogoImage
                   url={data.logoUrl}
                   alt={`${data.storeName} logo`}
-                  className="h-12 w-12 shrink-0 rounded-md object-contain ring-1 ring-zinc-200"
+                  className="shrink-0 rounded-md object-contain ring-1 ring-zinc-200"
+                  style={{
+                    width: RECEIPT_LOGO_SLOT_PX,
+                    height: RECEIPT_LOGO_SLOT_PX,
+                  }}
                 />
                 <div className="flex flex-col min-w-0">
                   <h1 className="text-xl font-bold tracking-tight text-zinc-900">
