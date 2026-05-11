@@ -9,6 +9,7 @@ import {
   Image,
 } from "@react-pdf/renderer";
 import { ReceiptData } from "@/types";
+import { RECEIPT_LOGO_PDF_PT } from "@/lib/receipt-logo-display";
 import { formatPaymentMethodLabel } from "@/lib/receipt-display-labels";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -284,8 +285,8 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
               <Image
                 src={data.logoUrl.trim()}
                 style={{
-                  width: 36,
-                  height: 36,
+                  width: RECEIPT_LOGO_PDF_PT,
+                  height: RECEIPT_LOGO_PDF_PT,
                   marginRight: 8,
                   objectFit: "contain",
                 }}

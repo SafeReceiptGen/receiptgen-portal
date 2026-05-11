@@ -10,6 +10,7 @@ import {
   formatReceiptStatusLabel,
 } from "@/lib/receipt-display-labels";
 import { BrandLogoImage } from "@/components/receipt/brand-logo-image";
+import { RECEIPT_LOGO_SLOT_PX } from "@/lib/receipt-logo-display";
 
 export default async function DigitalReceiptPage({
   params,
@@ -105,7 +106,11 @@ export default async function DigitalReceiptPage({
                 <BrandLogoImage
                   url={receipt.retailerLogoUrl}
                   alt={`${receipt.storeName} logo`}
-                  className="mb-3 h-12 w-12 rounded-md object-contain ring-1 ring-slate-200 dark:ring-white/15"
+                  className="mb-3 rounded-md object-contain ring-1 ring-slate-200 dark:ring-white/15"
+                  style={{
+                    width: RECEIPT_LOGO_SLOT_PX,
+                    height: RECEIPT_LOGO_SLOT_PX,
+                  }}
                 />
                 <h1 className="text-2xl font-bold tracking-tight text-slate-900">
                   {receipt.storeName}

@@ -13,6 +13,7 @@ import { RotateCcw } from "lucide-react";
 import { formatPaymentMethodLabel } from "@/lib/receipt-display-labels";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BrandLogoImage } from "@/components/receipt/brand-logo-image";
+import { RECEIPT_LOGO_SLOT_PX } from "@/lib/receipt-logo-display";
 
 interface ReceiptDetailsSheetProps {
   receiptId: string | null;
@@ -86,7 +87,11 @@ export function ReceiptDetailsSheet({
                     <BrandLogoImage
                       url={receipt.retailerLogoUrl}
                       alt={`${receipt.store.name} logo`}
-                      className="h-12 w-12 shrink-0 rounded-md object-contain ring-1 ring-zinc-200"
+                      className="shrink-0 rounded-md object-contain ring-1 ring-zinc-200"
+                      style={{
+                        width: RECEIPT_LOGO_SLOT_PX,
+                        height: RECEIPT_LOGO_SLOT_PX,
+                      }}
                     />
                     <div className="flex flex-col min-w-0">
                       <h1 className="text-xl font-bold tracking-tight text-zinc-900">
