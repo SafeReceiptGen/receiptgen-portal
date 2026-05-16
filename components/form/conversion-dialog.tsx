@@ -121,6 +121,7 @@ export default function ConversionDialog({
     },
   });
 
+  function copyLink() {
     if (!receiptData?.qrUrl) return;
     navigator.clipboard.writeText(receiptData.qrUrl);
     setCopied(true);
