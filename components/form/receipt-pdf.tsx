@@ -5,22 +5,13 @@ import {
   Text,
   View,
   StyleSheet,
-  Font,
   Image,
 } from "@react-pdf/renderer";
 import { ReceiptData } from "@/types";
 import { RECEIPT_LOGO_PDF_PT } from "@/lib/receipt-logo-display";
 import { formatPaymentMethodLabel } from "@/lib/receipt-display-labels";
-import { QRCodeSVG } from "qrcode.react";
 
-// You cannot render SVG directly from a React component imported like QRCodeSVG in @react-pdf/renderer,
-// so we'll need to generate a Data URL or just render an alternative if needed.
-// Fortunately, there is a trick to render qrcode in PDF using an image or canvas,
-// but for `@react-pdf/renderer` an image is best. We will need the caller to pass
-// the QR code as a data url image, or we generate it here using qrcode module.
-
-// We use the built-in Helvetica font instead of custom binary .ttf files
-// to avoid embedding binaries in the git repository which can cause patching issues.
+// QR and retailer logo are embedded as raster data URLs from the receipt builder (`conversion-dialog`).
 
 const styles = StyleSheet.create({
   page: {
@@ -235,13 +226,16 @@ const styles = StyleSheet.create({
 interface ReceiptPDFProps {
   data: ReceiptData;
   showQr?: boolean;
-  qrDataUrl?: string; // We'll pass the generated QR code as an image data URL
+  qrDataUrl?: string; // Raster QR for PDF embedding
+  /** Raster logo (browser-fetched); remote URLs alone are unreliable in react-pdf. */
+  logoDataUrl?: string;
 }
 
 export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
   data,
   showQr = false,
   qrDataUrl,
+  logoDataUrl,
 }) => {
   const subtotal = data.items.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -264,7 +258,7 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
         hour: "2-digit",
         minute: "2-digit",
       })}`;
-    } catch (e) {
+    } catch {
       return isoString;
     }
   };
@@ -281,9 +275,9 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
         {/* Header */}
         <View style={styles.headerContainer}>
           <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-            {data.logoUrl?.trim() ? (
+            {logoDataUrl ? (
               <Image
-                src={data.logoUrl.trim()}
+                src={logoDataUrl}
                 style={{
                   width: RECEIPT_LOGO_PDF_PT,
                   height: RECEIPT_LOGO_PDF_PT,
@@ -368,7 +362,9 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
                   {data.refundType}
                 </Text>
                 {data.marketingText ? (
-                  <Text style={styles.marketingText}>"{data.marketingText}"</Text>
+                  <Text style={styles.marketingText}>
+                    {`\u201c${data.marketingText}\u201d`}
+                  </Text>
                 ) : null}
               </View>
             ) : (
