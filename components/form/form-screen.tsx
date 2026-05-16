@@ -8,6 +8,8 @@ import { ReceiptCent, Loader2, LogIn, Save } from "lucide-react";
 import { ReceiptPreview } from "./receipt-preview";
 import { INITIAL_RECEIPT_DATA, ReceiptData } from "@/types";
 import { useActionState, useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { retailerQueryOptions } from "@/lib/queries/retailer";
 import { ReceiptForm } from "./receipt-form";
 import html2canvas from "html2canvas-pro";
 import ConversionDialog from "./conversion-dialog";
@@ -62,6 +64,22 @@ export default function ReceiptFormScreen({
   const receiptRef = useRef<HTMLDivElement>(null);
   
   const { stores, isLoading: storesLoading } = useStores(isAuthenticated);
+
+  const { data: retailer } = useQuery({
+    ...retailerQueryOptions,
+    enabled: isAuthenticated,
+  });
+  const hydratedRetailerProfile = useRef(false);
+  useEffect(() => {
+    if (!isAuthenticated || !retailer || hydratedRetailerProfile.current) return;
+    hydratedRetailerProfile.current = true;
+    setData((prev) => ({
+      ...prev,
+      logoUrl: retailer.logoUrl?.trim() ?? "",
+      companyName: retailer.companyName ?? prev.companyName,
+      website: retailer.website ?? prev.website,
+    }));
+  }, [isAuthenticated, retailer]);
 
   // ── Server action (authenticated only) ──────────────────────────────────
   const boundAction = generateReceipt.bind(null, data);

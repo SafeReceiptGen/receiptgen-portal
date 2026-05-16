@@ -55,19 +55,17 @@ export async function submitReturnRequest(
     ...(logistics.method === "HOME_PICKUP"
       ? {
           pickupAddress: {
-            line1: logistics.pickupAddress.line1.trim(),
-            line2: logistics.pickupAddress.line2?.trim() || undefined,
-            city: logistics.pickupAddress.city.trim(),
-            region: logistics.pickupAddress.region.trim(),
-            postalCode: logistics.pickupAddress.postalCode?.trim() || undefined,
+            line1: logistics.pickupAddress.address.trim(),
+            city: "",
+            region: "",
+            postalCode: undefined,
+            landmark: logistics.pickupAddress.landmark?.trim() || undefined,
+            latitude: logistics.pickupAddress.latitude,
+            longitude: logistics.pickupAddress.longitude,
           },
           parcel: {
-            packageCount: logistics.parcel.packageCount,
+            packageCount: 1,
             description: logistics.parcel.description.trim(),
-            ...(logistics.parcel.weightKg != null &&
-            !Number.isNaN(logistics.parcel.weightKg)
-              ? { weightKg: logistics.parcel.weightKg }
-              : {}),
           },
         }
       : {}),

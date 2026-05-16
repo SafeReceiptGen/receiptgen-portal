@@ -44,6 +44,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/currency";
+import { formatPickupAddressDisplay } from "@/lib/format-pickup-address";
+import { MOCK_PUDO_POINTS } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -55,6 +57,7 @@ import {
   ImageIcon,
 } from "lucide-react";
 import type { ReturnListRow, RetailerReturnBundle } from "@/lib/api";
+import type { PickupAddress } from "@/types/returns";
 
 const LIST_LIMIT = 50;
 
@@ -71,6 +74,49 @@ function formatStatusLabel(status: string): string {
     .split("_")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
+}
+
+const REFUND_TYPE_LABELS: Record<string, string> = {
+  full_refund: "Full refund",
+  partial_refund: "Partial refund",
+  store_credit: "Store credit",
+  exchange_only: "Exchange only",
+};
+
+function mapsLinkFor(lat: number, lng: number): string {
+  return `https://www.google.com/maps?q=${lat},${lng}`;
+}
+
+function parseDate(value: unknown): Date | null {
+  if (value == null) return null;
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
+  const d = new Date(String(value));
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function retailerPickupFromReturnRequest(
+  rr: Record<string, unknown>,
+): PickupAddress {
+  const line1 = String(rr.pickupAddressLine1 ?? "").trim();
+  const city = String(rr.pickupCity ?? "").trim();
+  const region = String(rr.pickupRegion ?? "").trim();
+  const postal = String(rr.pickupPostalCode ?? "").trim();
+  const landmark =
+    String(rr.pickupLandmark ?? "").trim() ||
+    String(rr.pickupAddressLine2 ?? "").trim() ||
+    undefined;
+  const hasLegacyStructured = city !== "" || region !== "";
+  const address = hasLegacyStructured
+    ? [line1, city, region, postal].filter(Boolean).join(", ")
+    : line1;
+  const lat = rr.pickupLatitude as number | null | undefined;
+  const lng = rr.pickupLongitude as number | null | undefined;
+  return {
+    address,
+    landmark,
+    latitude: lat ?? undefined,
+    longitude: lng ?? undefined,
+  };
 }
 
 function isVideoEvidenceUrl(url: string): boolean {
@@ -182,24 +228,120 @@ function ReturnDetailBody({
   const rr = bundle.returnRequest as Record<string, unknown>;
   const receipt = bundle.receipt as Record<string, unknown>;
   const currency = (receipt.currency as string) || "GHS";
+  const customer = bundle.customer as {
+    name?: string | null;
+    email?: string | null;
+  } | null;
+
+  const method = rr.logisticsMethod as "home_pickup" | "drop_off" | null;
+  const created = parseDate(rr.createdAt);
+  const reasonCode = String(rr.reasonCode ?? "");
+  const pickupPa = retailerPickupFromReturnRequest(rr);
+  const lat =
+    typeof rr.pickupLatitude === "number" ? rr.pickupLatitude : null;
+  const lng =
+    typeof rr.pickupLongitude === "number" ? rr.pickupLongitude : null;
+  const pudoId = (rr.logisticsPudoPointId as string) || "";
+  const pudoPoint = MOCK_PUDO_POINTS.find((p) => p.id === pudoId);
+  const refundTypeKey = String(rr.refundType ?? "");
+  const refundAmtRaw = rr.refundAmount;
+  const refundAmount =
+    refundAmtRaw != null && String(refundAmtRaw).trim() !== ""
+      ? parseFloat(String(refundAmtRaw))
+      : null;
+  const serviceFeeRaw = rr.serviceFee;
+  const serviceFee =
+    serviceFeeRaw != null && String(serviceFeeRaw).trim() !== ""
+      ? parseFloat(String(serviceFeeRaw))
+      : null;
+
+  const parcelDesc = (rr.parcelDescription as string) || "";
+  const pkgCount = rr.parcelPackageCount as number | null | undefined;
+  const weightKg = rr.parcelWeightKg as string | null | undefined;
+
+  const eligibilityResult = rr.eligibilityResult as boolean | null | undefined;
+  const eligibilityChecked = parseDate(rr.eligibilityCheckedAt);
+  const eligibilitySnap = rr.eligibilitySnapshot as
+    | { reasons?: unknown[] }
+    | null
+    | undefined;
+  const eligibilityReasons = Array.isArray(eligibilitySnap?.reasons)
+    ? eligibilitySnap.reasons.filter((r): r is string => typeof r === "string")
+    : [];
+
+  const timelineEntries: { label: string; at: Date }[] = [];
+  const pushTimeline = (label: string, v: unknown) => {
+    const d = parseDate(v);
+    if (d) timelineEntries.push({ label, at: d });
+  };
+  pushTimeline("Collected", rr.collectedAt);
+  pushTimeline("In transit", rr.inTransitAt);
+  pushTimeline("With retailer", rr.withRetailerAt);
+  pushTimeline("Reviewed", rr.reviewedAt);
+  pushTimeline("Resolved", rr.resolvedAt);
+
+  const phoneCountry = String(rr.logisticsPhoneCountry ?? "").trim();
+  const phone = String(rr.logisticsPhone ?? "").trim();
+  const phoneDisplay =
+    phoneCountry && phone
+      ? `${phoneCountry} ${phone}`
+      : phone || phoneCountry || "";
 
   return (
     <div className="space-y-6 px-4 pb-8">
-      <div className="grid gap-2 text-sm">
-        <div className="flex justify-between">
+      <div className="grid gap-3 text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="text-muted-foreground">Status</span>
           <Badge variant="secondary">
             {formatStatusLabel(String(rr.status ?? ""))}
           </Badge>
         </div>
-        {(rr.description as string) && (
-          <div>
-            <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
+          <span className="text-muted-foreground">Submitted</span>
+          <div className="text-right text-sm">
+            {created ? (
+              <>
+                <span className="block">
+                  {formatDistanceToNow(created, { addSuffix: true })}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {format(created, "PPpp")}
+                </span>
+              </>
+            ) : (
+              "—"
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-lg border p-3 text-sm">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Customer
+        </p>
+        <p className="mt-1 font-medium">
+          {customer?.name?.trim() || "—"}
+        </p>
+        <p className="text-muted-foreground">
+          {customer?.email?.trim() || "—"}
+        </p>
+      </div>
+
+      <div className="rounded-lg border p-3 text-sm">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Reason
+        </p>
+        <p className="mt-1">
+          {(REASON_LABELS[reasonCode] ?? reasonCode) || "—"}
+        </p>
+        {(rr.description as string | undefined)?.trim() ? (
+          <div className="mt-3 border-t pt-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Customer note
             </p>
             <p className="mt-1">{String(rr.description)}</p>
           </div>
-        )}
+        ) : null}
       </div>
 
       <div>
@@ -230,6 +372,175 @@ function ReturnDetailBody({
           })}
         </ul>
       </div>
+
+      <div className="space-y-3 rounded-lg border p-3 text-sm">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Return method & logistics
+          </p>
+          {method === "home_pickup" ? (
+            <Badge variant="outline">Home pickup</Badge>
+          ) : method === "drop_off" ? (
+            <Badge variant="outline">Drop-off</Badge>
+          ) : null}
+        </div>
+
+        {method === "home_pickup" ? (
+          <div className="space-y-2">
+            <div>
+              <p className="text-xs text-muted-foreground">Pickup address</p>
+              <p className="mt-0.5">
+                {formatPickupAddressDisplay(pickupPa)}
+              </p>
+              {lat != null && lng != null ? (
+                <div className="mt-2 space-y-1">
+                  <a
+                    href={mapsLinkFor(lat, lng)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary text-sm font-medium underline underline-offset-2"
+                  >
+                    Open in Google Maps
+                  </a>
+                  <p className="text-xs text-muted-foreground">
+                    {lat.toFixed(5)}, {lng.toFixed(5)}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+            {parcelDesc.trim() ||
+            (pkgCount != null && pkgCount > 0) ||
+            (weightKg != null && String(weightKg).trim() !== "") ? (
+              <div>
+                <p className="text-xs text-muted-foreground">Parcel</p>
+                {parcelDesc.trim() ? (
+                  <p className="mt-0.5">{parcelDesc}</p>
+                ) : null}
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {pkgCount != null && pkgCount > 0
+                    ? `${pkgCount} package(s)`
+                    : null}
+                  {pkgCount != null &&
+                  pkgCount > 0 &&
+                  weightKg != null &&
+                  String(weightKg).trim() !== ""
+                    ? " · "
+                    : ""}
+                  {weightKg != null && String(weightKg).trim() !== ""
+                    ? `${weightKg} kg`
+                    : null}
+                </p>
+              </div>
+            ) : null}
+          </div>
+        ) : method === "drop_off" ? (
+          <div>
+            <p className="text-xs text-muted-foreground">PUDO point</p>
+            <p className="mt-0.5">
+              {pudoPoint?.name ?? (pudoId || "—")}
+            </p>
+            {pudoPoint?.address ? (
+              <p className="text-muted-foreground mt-1 text-xs">
+                {pudoPoint.address}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
+        {(rr.logisticsTimeSlot as string | null | undefined)?.trim() ? (
+          <div>
+            <p className="text-xs text-muted-foreground">Time slot</p>
+            <p className="mt-0.5">{String(rr.logisticsTimeSlot)}</p>
+          </div>
+        ) : null}
+
+        {phoneDisplay ? (
+          <div>
+            <p className="text-xs text-muted-foreground">Phone</p>
+            <p className="mt-0.5">{phoneDisplay}</p>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="space-y-2 rounded-lg border p-3 text-sm">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Fees & refund
+        </p>
+        <div className="flex justify-between gap-4">
+          <span className="text-muted-foreground">Service fee</span>
+          <span>
+            {serviceFee != null && Number.isFinite(serviceFee)
+              ? formatCurrency(serviceFee, currency)
+              : "—"}
+          </span>
+        </div>
+        <div className="flex justify-between gap-4">
+          <span className="text-muted-foreground">Refund type</span>
+          <span>
+            {(REFUND_TYPE_LABELS[refundTypeKey] ?? refundTypeKey) || "—"}
+          </span>
+        </div>
+        <div className="flex justify-between gap-4">
+          <span className="text-muted-foreground">Refund amount</span>
+          <span>
+            {refundAmount != null && Number.isFinite(refundAmount)
+              ? formatCurrency(refundAmount, currency)
+              : "—"}
+          </span>
+        </div>
+      </div>
+
+      <div className="space-y-2 rounded-lg border p-3 text-sm">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Eligibility
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          {eligibilityResult === true ? (
+            <Badge className="bg-emerald-600 hover:bg-emerald-600">
+              Eligible
+            </Badge>
+          ) : eligibilityResult === false ? (
+            <Badge variant="destructive">Not eligible</Badge>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )}
+          {eligibilityChecked ? (
+            <span className="text-muted-foreground text-xs">
+              Checked {format(eligibilityChecked, "PPpp")} ·{" "}
+              {formatDistanceToNow(eligibilityChecked, { addSuffix: true })}
+            </span>
+          ) : null}
+        </div>
+        {eligibilityReasons.length > 0 ? (
+          <ul className="text-muted-foreground list-inside list-disc text-xs">
+            {eligibilityReasons.map((r) => (
+              <li key={r}>{r}</li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+
+      {timelineEntries.length > 0 ? (
+        <div className="space-y-2 rounded-lg border p-3 text-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Timeline
+          </p>
+          <ul className="space-y-1 text-xs">
+            {timelineEntries.map(({ label, at }) => (
+              <li key={`${label}-${at.getTime()}`}>
+                <span className="font-medium text-foreground">{label}</span>
+                <span className="text-muted-foreground">
+                  {" "}
+                  · {formatDistanceToNow(at, { addSuffix: true })}{" "}
+                  <span className="text-muted-foreground/80">
+                    ({format(at, "PPp")})
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <div>
         <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -392,8 +703,8 @@ export function ReturnsDashboardClient() {
         className="space-y-4"
       >
         <TabsList>
-          <TabsTrigger value="pending">Pending review</TabsTrigger>
-          <TabsTrigger value="all">All returns</TabsTrigger>
+          <TabsTrigger value="pending" className="flex-1 sm:flex-none text-foreground font-medium data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-sm">Pending review</TabsTrigger>
+          <TabsTrigger value="all" className="flex-1 sm:flex-none text-foreground font-medium data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-sm">All returns</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pending" className="space-y-4">

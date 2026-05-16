@@ -1,9 +1,11 @@
 import React, { useMemo } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Grip, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { ReceiptData } from "@/types";
 import { formatPaymentMethodLabel } from "@/lib/receipt-display-labels";
 import Link from "next/link";
+import { BrandLogoImage } from "@/components/receipt/brand-logo-image";
+import { RECEIPT_LOGO_SLOT_PX } from "@/lib/receipt-logo-display";
 
 interface ReceiptPreviewProps {
   data: ReceiptData;
@@ -73,11 +75,17 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
             }}
           >
             <div className="flex justify-between items-start mb-6">
-              <div className="flex items-center gap-3">
-                {/* <div className="p-1.5 bg-zinc-100 rounded-lg text-zinc-900">
-                  <Grip size={24} strokeWidth={2.5} />
-                </div> */}
-                <div className="flex flex-col">
+              <div className="flex items-start gap-3">
+                <BrandLogoImage
+                  url={data.logoUrl}
+                  alt={`${data.storeName} logo`}
+                  className="shrink-0 rounded-md object-contain ring-1 ring-zinc-200"
+                  style={{
+                    width: RECEIPT_LOGO_SLOT_PX,
+                    height: RECEIPT_LOGO_SLOT_PX,
+                  }}
+                />
+                <div className="flex flex-col min-w-0">
                   <h1 className="text-xl font-bold tracking-tight text-zinc-900">
                     {data.storeName}
                   </h1>

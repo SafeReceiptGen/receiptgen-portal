@@ -1,102 +1,116 @@
-import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react"
+"use client";
 
-import { Badge } from "@/components/ui/badge"
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import {
   Card,
-  CardAction,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { dashboardStatsQueryOptions } from "@/lib/queries/dashboard";
+
+function formatInt(n: number): string {
+  return n.toLocaleString();
+}
+
+function MetricCardSkeleton() {
+  return (
+    <Card className="@container/card">
+      <CardHeader>
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="mt-2 h-9 w-24" />
+      </CardHeader>
+      <CardFooter className="flex-col items-start gap-1.5">
+        <Skeleton className="h-4 w-full max-w-[200px]" />
+        <Skeleton className="h-3 w-full max-w-[160px]" />
+      </CardFooter>
+    </Card>
+  );
+}
 
 export function SectionCards() {
+  const { data, isPending, isError } = useQuery(
+    dashboardStatsQueryOptions("30d"),
+  );
+
+  if (isPending) {
+    return (
+      <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <MetricCardSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
+
+  const receiptsToday = isError ? null : data!.receiptsToday;
+  const totalReceipts = isError ? null : data!.totalReceipts;
+  const pendingReturns = isError ? null : data!.pendingReturns;
+  const returnRate = isError ? null : data!.returnRate;
+
   return (
     <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Total Receipts Issued</CardDescription>
+          <CardDescription>Receipts today</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            12,458
+            {receiptsToday === null ? "—" : formatInt(receiptsToday)}
           </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <IconTrendingUp />
-              +8.2%
-            </Badge>
-          </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Growing adoption <IconTrendingUp className="size-4" />
-          </div>
+          <div className="font-medium">Issued across all your stores today</div>
           <div className="text-muted-foreground">
-            Digital receipts this month
+          Resets daily
           </div>
         </CardFooter>
       </Card>
+
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Returns Processed</CardDescription>
+          <CardDescription>Total receipts</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            847
+            {totalReceipts === null ? "—" : formatInt(totalReceipts)}
           </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <IconTrendingUp />
-              +12.5%
-            </Badge>
-          </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Smooth return flow <IconTrendingUp className="size-4" />
-          </div>
-          <div className="text-muted-foreground">
-            Approved returns this month
-          </div>
+          <div className="font-medium">All receipts issued so far</div>
+          <div className="text-muted-foreground">Across all stores</div>
         </CardFooter>
       </Card>
+
+      <Link
+        href="/dashboard/returns?pending_review=true"
+        className="block rounded-xl outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      >
+        <Card className="@container/card h-full transition-colors hover:bg-muted/30">
+          <CardHeader>
+            <CardDescription>Pending return requests</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+              {pendingReturns === null ? "—" : formatInt(pendingReturns)}
+            </CardTitle>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="font-medium">Needs your attention</div>
+            <div className="text-muted-foreground">Review pending & scheduled pickups →</div>
+          </CardFooter>
+        </Card>
+      </Link>
+
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Active Stores</CardDescription>
+          <CardDescription>Return rate</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            156
+            {returnRate === null ? "—" : `${returnRate}%`}
           </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <IconTrendingUp />
-              +5.4%
-            </Badge>
-          </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Growing retailer base <IconTrendingUp className="size-4" />
-          </div>
-          <div className="text-muted-foreground">Active retail partners</div>
-        </CardFooter>
-      </Card>
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Pending Returns</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            23
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <IconTrendingDown />
-              -15%
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Faster processing time <IconTrendingDown className="size-4" />
-          </div>
-          <div className="text-muted-foreground">Awaiting approval</div>
+          <div className="font-medium">Percentage of receipts that were returned</div>
+          <div className="text-muted-foreground">Across all stores</div>
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }

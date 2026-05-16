@@ -170,7 +170,7 @@ export function AppSidebar({
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={session?.user!} />
+        {session?.user ? <NavUser user={session.user} /> : null}
       </SidebarFooter>
     </Sidebar>
   );

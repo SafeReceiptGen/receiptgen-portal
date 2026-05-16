@@ -9,6 +9,7 @@ import {
   Image,
 } from "@react-pdf/renderer";
 import { ReceiptData } from "@/types";
+import { RECEIPT_LOGO_PDF_PT } from "@/lib/receipt-logo-display";
 import { formatPaymentMethodLabel } from "@/lib/receipt-display-labels";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -279,11 +280,24 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.headerContainer}>
-          <View>
-            <Text style={styles.storeName}>{data.storeName}</Text>
-            {data.storePhone ? (
-              <Text style={styles.storePhone}>{data.storePhone}</Text>
+          <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+            {data.logoUrl?.trim() ? (
+              <Image
+                src={data.logoUrl.trim()}
+                style={{
+                  width: RECEIPT_LOGO_PDF_PT,
+                  height: RECEIPT_LOGO_PDF_PT,
+                  marginRight: 8,
+                  objectFit: "contain",
+                }}
+              />
             ) : null}
+            <View style={{ flexShrink: 1 }}>
+              <Text style={styles.storeName}>{data.storeName}</Text>
+              {data.storePhone ? (
+                <Text style={styles.storePhone}>{data.storePhone}</Text>
+              ) : null}
+            </View>
           </View>
           <View style={styles.receiptInfo}>
             <Text>Receipt {data.receiptNumber}</Text>

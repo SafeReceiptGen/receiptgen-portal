@@ -7,25 +7,28 @@ import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
-import { formatPaymentMethodLabel } from "@/lib/receipt-display-labels";
-import { Store as StoreIcon, Calendar, CreditCard, Tag } from "lucide-react";
+import { Store as StoreIcon, Calendar, Tag } from "lucide-react";
 
 export const getReceiptsColumns = (
   onRowClick: (id: string) => void,
-  stores: StoreType[]
+  stores: StoreType[],
 ): ColumnDef<ListReceipt>[] => [
   {
     id: "receiptNumber",
     accessorKey: "receiptNumber",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Receipt Number" label="Receipt Number" />
+      <DataTableColumnHeader
+        column={column}
+        title="Receipt Number"
+        label="Receipt Number"
+      />
     ),
     cell: ({ row }) => {
       const id = row.original.id;
       return (
-        <Button 
-          variant="link" 
-          className="p-0 h-auto font-medium" 
+        <Button
+          variant="link"
+          className="h-auto p-0 font-medium"
           onClick={() => onRowClick(id)}
         >
           {row.getValue("receiptNumber")}
@@ -60,6 +63,36 @@ export const getReceiptsColumns = (
     enableColumnFilter: true,
   },
   {
+    id: "customer",
+    accessorFn: (row) => row.customer?.name ?? "",
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title="Customer"
+        label="Customer"
+      />
+    ),
+    cell: ({ row }) => {
+      const c = row.original.customer;
+      if (!c?.name && !c?.phone) {
+        return <span className="text-muted-foreground">—</span>;
+      }
+      return (
+        <div className="leading-tight">
+          <div className="font-medium">{c?.name ?? "—"}</div>
+          {c?.phone ? (
+            <div className="text-xs text-muted-foreground">{c.phone}</div>
+          ) : null}
+        </div>
+      );
+    },
+    meta: {
+      label: "Customer",
+      variant: "text",
+    },
+    enableColumnFilter: false,
+  },
+  {
     id: "storeId",
     accessorFn: (row) => row.store.id,
     header: ({ column }) => (
@@ -70,10 +103,10 @@ export const getReceiptsColumns = (
       label: "Store",
       variant: "select",
       icon: StoreIcon,
-      options: stores.map(store => ({
+      options: stores.map((store) => ({
         label: store.name,
-        value: store.id
-      }))
+        value: store.id,
+      })),
     },
     enableColumnFilter: true,
   },
@@ -81,17 +114,21 @@ export const getReceiptsColumns = (
     id: "total",
     accessorKey: "total",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Total Amount" label="Total Amount" />
+      <DataTableColumnHeader
+        column={column}
+        title="Total Amount"
+        label="Total Amount"
+      />
     ),
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue("total"));
       const currency = row.original.currency;
-      
+
       const formatted = new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: currency,
       }).format(amount);
-      
+
       return <div className="font-medium">{formatted}</div>;
     },
     meta: {
@@ -99,31 +136,6 @@ export const getReceiptsColumns = (
       variant: "number",
     },
     enableColumnFilter: false,
-  },
-  {
-    id: "paymentMethod",
-    accessorKey: "paymentMethod",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Payment" label="Payment" />
-    ),
-    cell: ({ row }) => (
-      <span className="text-muted-foreground capitalize">
-        {formatPaymentMethodLabel(row.getValue("paymentMethod"))}
-      </span>
-    ),
-    meta: {
-      label: "Payment",
-      variant: "select",
-      icon: CreditCard,
-      options: [
-        { label: "Cash", value: "cash" },
-        { label: "Card", value: "card" },
-        { label: "Mobile Money", value: "mobile_money" },
-        { label: "Bank Transfer", value: "bank_transfer" },
-        { label: "Check", value: "check" },
-      ],
-    },
-    enableColumnFilter: true,
   },
   {
     id: "status",
@@ -134,10 +146,13 @@ export const getReceiptsColumns = (
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
       return (
-        <Badge 
+        <Badge
           variant={
-            status === "issued" ? "default" : 
-            status === "returned" ? "destructive" : "secondary"
+            status === "issued"
+              ? "default"
+              : status === "returned"
+                ? "destructive"
+                : "secondary"
           }
           className="capitalize"
         >

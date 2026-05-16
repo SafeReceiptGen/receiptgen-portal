@@ -83,6 +83,8 @@ export interface Retailer {
   companyName?: string;
   tin?: string;
   website?: string;
+  /** Public URL of retailer-wide brand logo (receipts, PDFs). */
+  logoUrl?: string | null;
 }
 
 export const retailerApi = {
@@ -96,13 +98,33 @@ export const retailerApi = {
 
   update: (
     payload: Partial<
-      Pick<Retailer, "name" | "companyName" | "tin" | "website">
+      Pick<
+        Retailer,
+        "name" | "companyName" | "tin" | "website" | "logoUrl"
+      >
     >,
   ) =>
-    request<{ message: string }>("/retailer", {
+    request<{ retailer: Retailer }>("/retailer", {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
+};
+
+// ─── Dashboard (retailer overview) ───────────────────────────────────────────
+
+export interface DashboardStats {
+  receiptsToday: number;
+  totalReceipts: number;
+  pendingReturns: number;
+  returnRate: number;
+  timeseries: { date: string; receipts: number; returns: number }[];
+}
+
+export const dashboardApi = {
+  getStats: (range: "7d" | "30d" = "30d") =>
+    request<DashboardStats>(
+      `/dashboard/stats?range=${encodeURIComponent(range)}`,
+    ),
 };
 
 // ─── Receipts ────────────────────────────────────────────────────────────────
@@ -123,7 +145,8 @@ export interface CreateReceiptPayload {
   vatRate: number;
   paymentMethod: string;
   items: ReceiptLineItem[];
-  customerName?: string;
+  customerName: string;
+  customerPhone: string;
   marketingText?: string;
 }
 
@@ -152,6 +175,11 @@ export interface ListReceipt {
     id: string;
     name: string;
   };
+  customer: {
+    id: string;
+    name: string | null;
+    phone: string | null;
+  } | null;
 }
 
 export interface ListReceiptsResponse {
@@ -175,6 +203,9 @@ export interface SingleReceiptItem {
 
 export interface SingleReceipt {
   items: SingleReceiptItem[];
+  /** Retailer-wide logo URL for receipts; null if unset. */
+  retailerLogoUrl?: string | null;
+  retailerName?: string | null;
   id: string;
   receiptNumber: string;
   date: string;
@@ -204,6 +235,8 @@ export interface SingleReceipt {
   customer: {
     id: string;
     name: string;
+    phone: string | null;
+    email: string | null;
   } | null;
   returnPolicy: Record<string, unknown> | null;
 }
@@ -279,7 +312,7 @@ export const storesApi = {
       refundType?: string;
     },
   ) =>
-    request<{ store: Store }>(`/stores/${id}/policy`, {
+    request<{ policy: Store["returnPolicy"] }>(`/stores/${id}/policy`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
@@ -383,12 +416,15 @@ export interface SubmitReturnPayload {
     pickupAddress?: {
       line1: string;
       line2?: string;
-      city: string;
-      region: string;
+      city?: string;
+      region?: string;
       postalCode?: string;
+      landmark?: string;
+      latitude?: number;
+      longitude?: number;
     };
     parcel?: {
-      packageCount: number;
+      packageCount?: number;
       description: string;
       weightKg?: number;
     };
@@ -489,6 +525,17 @@ export async function uploadReturnPhotosFromDataUrls(
     { method: "POST" },
   );
   return data.urls;
+}
+
+/** Multipart upload for retailer-wide brand logo (auth required). */
+export async function uploadRetailerLogo(
+  file: File,
+): Promise<{ url: string }> {
+  const form = new FormData();
+  form.append("logo", file);
+  return requestWithoutJsonBody<{ url: string }>("/uploads/retailer-logo", form, {
+    method: "POST",
+  });
 }
 
 export const returnsApi = {
@@ -605,6 +652,7 @@ export interface VerifiedReceipt {
   receiptNumber: string;
   paymentMethod: string;
   storeName: string;
+  retailerLogoUrl?: string | null;
   items: VerifiedReceiptItem[];
 }
 

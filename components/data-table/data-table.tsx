@@ -16,11 +16,14 @@ import { getColumnPinningStyle } from "@/lib/data-table";
 interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   table: TanstackTable<TData>;
   actionBar?: React.ReactNode;
+  /** When the table has no rows, replaces the default “No results.” cell text. */
+  emptyMessage?: string;
 }
 
 export function DataTable<TData>({
   table,
   actionBar,
+  emptyMessage,
   children,
   className,
   ...props
@@ -83,7 +86,7 @@ export function DataTable<TData>({
                   colSpan={table.getAllColumns().length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  {emptyMessage ?? "No results."}
                 </TableCell>
               </TableRow>
             )}

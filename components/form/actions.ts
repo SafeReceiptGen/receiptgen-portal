@@ -33,7 +33,8 @@ const receiptSchema = z.object({
   tin: z.string().optional().default(""),
   website: z.string().optional().default(""),
   qrUrl: z.string().optional().default(""),
-  customerName: z.string().optional().default(""),
+  customerName: z.string().trim().min(1, "Customer name is required"),
+  customerPhone: z.string().trim().min(7, "Customer phone is required"),
   returnWindow: z.string().optional().default(""),
   customReturnWindow: z.string().optional().default(""),
   returnCondition: z.string().optional().default(""),
@@ -121,6 +122,7 @@ export async function generateReceipt(
         vatRate: result.data.vatRate,
         paymentMethod: result.data.paymentMethod,
         customerName: result.data.customerName,
+        customerPhone: result.data.customerPhone,
         marketingText: result.data.marketingText,
         items: result.data.items.map((item) => ({
           name: item.name,
@@ -174,6 +176,7 @@ export async function generateReceipt(
       storeName: formData.storeName,
       storePhone: formData.storePhone,
       customerName: formData.customerName,
+      customerPhone: formData.customerPhone,
       items: formData.items.map((item, index) => ({
         id: item.id || `item-${index}`,
         name: item.name,

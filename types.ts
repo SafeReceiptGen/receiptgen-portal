@@ -21,9 +21,12 @@ export interface ReceiptData {
   companyName: string;
   tin: string; // Tax Identification Number
   website: string;
+  /** Retailer-wide brand logo (absolute URL); shown on PDF/preview when set. */
+  logoUrl: string;
   qrCodeToken: string;
   qrUrl: string;
-  customerName?: string;
+  customerName: string;
+  customerPhone: string;
   // Return Policy Fields
   returnWindow: string;
   customReturnWindow: string;
@@ -53,9 +56,11 @@ export const INITIAL_RECEIPT_DATA: ReceiptData = {
   companyName: "",
   tin: "",
   website: "",
+  logoUrl: "",
   qrCodeToken: "",
   qrUrl: "",
   customerName: "",
+  customerPhone: "",
   returnWindow: "7 days",
   customReturnWindow: "",
   returnCondition: "Original Packaging",
