@@ -23,7 +23,7 @@ const pillars = [
     number: "04",
     title: "Approve",
     description:
-      "Your team reviews every return inside one clean dashboard. Full purchase history. One click to approve.",
+      "Your team reviews every return/exchange in one clean dashboard. Full purchase history. One click to approve.",
   },
 ];
 
@@ -83,13 +83,15 @@ export const VisionSection = ({
 
           {/* Body */}
           <p
-            className="reveal-up mb-20 max-w-2xl text-lg leading-relaxed text-background/50 md:text-xl"
+            className="reveal-up mb-16 max-w-2xl text-lg leading-relaxed text-background/50 md:text-xl"
             style={{ animationDelay: "0.35s" }}
           >
-            Fraud shrinks. Disputes disappear. Your staff spends less time at
-            the returns desk and more time on the floor. SafeReceipts and
-            ReturnFlow make this the default in Ghanaian retail.
-          </p>
+            
+Returns/exchanges without friction. No fraud. No disputes. No wasted time at the returns desk. 
+Just seamless returns and staff focused on creating value for customers. 
+This is the future of retail in Ghana.
+
+ </p>
 
           {/* How it works — 4-step pillars */}
           <div
@@ -114,43 +116,6 @@ export const VisionSection = ({
             ))}
           </div>
 
-          {/* Value props — side by side */}
-          <div
-            className="reveal-up mb-20 grid gap-8 border-t border-background/10 pt-16 sm:grid-cols-2 lg:grid-cols-3"
-            style={{ animationDelay: "0.65s" }}
-          >
-            {[
-              {
-                stat: "Zero",
-                label: "consumer fees — ever",
-                detail: "Customers pay nothing. Adoption is frictionless.",
-              },
-              {
-                stat: "One",
-                label: "dashboard for your team",
-                detail:
-                  "Every return, every receipt, every decision in one place.",
-              },
-              {
-                stat: "Full",
-                label: "fraud prevention",
-                detail:
-                  "Every receipt is uniquely cryptographically verified. No fakes.",
-              },
-            ].map(({ stat, label, detail }) => (
-              <div key={stat} className="flex flex-col gap-2">
-                <div className="flex items-baseline gap-2">
-                  <span className="font-display text-4xl font-bold text-primary">
-                    {stat}
-                  </span>
-                  <span className="text-sm text-background/50">{label}</span>
-                </div>
-                <p className="text-sm leading-relaxed text-background/40">
-                  {detail}
-                </p>
-              </div>
-            ))}
-          </div>
 
           {/* CTA */}
           <ReceiptFormScreen isAuthenticated={isAuthenticated} />

@@ -97,9 +97,8 @@ export const ValueSection = () => {
             Why It <span className="text-primary">Matters</span>
           </h2>
           <p className="mx-auto max-w-2xl text-lg text-foreground/70 md:text-xl">
-            SafeReceipts and ReturnFlow help retailers streamline returns while
-            giving customers a faster, more reliable post-purchase experience.
-          </p>
+            SafeReceipts transforms returns into a simple, controlled process for retailers and a seamless experience for customers.
+ </p>
         </div>
 
         <div className="mb-20">
