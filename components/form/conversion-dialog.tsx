@@ -16,7 +16,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { ReceiptData, LineItem } from "@/types";
+import { ReceiptData } from "@/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Store, storesApi, SavedProduct } from "@/lib/api";
 import {
@@ -121,23 +121,6 @@ export default function ConversionDialog({
     },
   });
 
-  const handleCopyImage = () => {
-    try {
-      fetch(imgUrl)
-        .then((res) => res.blob())
-        .then((blob) => {
-          navigator.clipboard
-            .write([new ClipboardItem({ [blob.type]: blob })])
-            .then(() => {
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
-            });
-        });
-    } catch (e) {
-      console.error("Failed to copy", e);
-    }
-  };
-
   function copyLink() {
     if (!receiptData?.qrUrl) return;
     navigator.clipboard.writeText(receiptData.qrUrl);
@@ -195,12 +178,36 @@ export default function ConversionDialog({
       qrDataUrl = qrCanvasRef.current.toDataURL("image/png");
     }
 
+    let logoDataUrl: string | undefined;
+    const logoTrim = receiptData.logoUrl?.trim();
+    if (logoTrim) {
+      try {
+        const r = await fetch(logoTrim, { mode: "cors", cache: "no-store" });
+        if (r.ok) {
+          const blob = await r.blob();
+          logoDataUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () =>
+              typeof reader.result === "string"
+                ? resolve(reader.result)
+                : reject(new Error("Invalid logo read result"));
+            reader.onerror = () =>
+              reject(reader.error ?? new Error("Logo read failed"));
+            reader.readAsDataURL(blob);
+          });
+        }
+      } catch (e) {
+        console.warn("Receipt PDF logo fetch failed (CORS or network):", e);
+      }
+    }
+
     try {
       const blob = await pdf(
         <ReceiptPDF
           data={receiptData}
           showQr={!!qrCodeToken}
           qrDataUrl={qrDataUrl}
+          logoDataUrl={logoDataUrl}
         />,
       ).toBlob();
 

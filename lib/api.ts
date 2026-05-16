@@ -652,6 +652,8 @@ export interface VerifiedReceipt {
   receiptNumber: string;
   paymentMethod: string;
   storeName: string;
+  storePhone?: string | null;
+  customerName?: string | null;
   retailerLogoUrl?: string | null;
   items: VerifiedReceiptItem[];
 }

@@ -13,8 +13,8 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Maps the verified receipt from the public API to the ReceiptForReturn shape
- * used by all ReturnFlow components. Fields not returned by the verify endpoint
- * (storePhone, customerName, detailed policy info) are set to safe defaults.
+ * used by all ReturnFlow components. Store policy blurbs stay generic unless
+ * the API adds store-specific policy text later.
  */
 export function mapToReceiptForReturn(
   receipt: VerifiedReceipt,
@@ -40,8 +40,8 @@ export function mapToReceiptForReturn(
     receiptNumber: receipt.receiptNumber,
     storeName: receipt.storeName,
     retailerLogoUrl: receipt.retailerLogoUrl ?? null,
-    storePhone: "",
-    customerName: "",
+    storePhone: receipt.storePhone?.trim() ?? "",
+    customerName: receipt.customerName?.trim() ?? "",
     items: receipt.items.map((item) => ({
       id: item.id,
       name: item.name,
