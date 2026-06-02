@@ -8,7 +8,7 @@ import {
   Image,
 } from "@react-pdf/renderer";
 import { ReceiptData } from "@/types";
-import { RECEIPT_LOGO_PDF_PT } from "@/lib/receipt-logo-display";
+import { fitReceiptLogoPdfDimensions } from "@/lib/receipt-logo-display";
 import { formatPaymentMethodLabel } from "@/lib/receipt-display-labels";
 
 // QR and retailer logo are embedded as raster data URLs from the receipt builder (`conversion-dialog`).
@@ -227,8 +227,10 @@ interface ReceiptPDFProps {
   data: ReceiptData;
   showQr?: boolean;
   qrDataUrl?: string; // Raster QR for PDF embedding
-  /** Raster logo (browser-fetched); remote URLs alone are unreliable in react-pdf. */
+  /** Raster logo (PNG data URL from backend embed endpoint). */
   logoDataUrl?: string;
+  logoNaturalWidth?: number;
+  logoNaturalHeight?: number;
 }
 
 export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
@@ -236,6 +238,8 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
   showQr = false,
   qrDataUrl,
   logoDataUrl,
+  logoNaturalWidth,
+  logoNaturalHeight,
 }) => {
   const subtotal = data.items.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -269,20 +273,28 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
       : data.returnWindow;
   const hasPolicy = data.returnWindow !== "No returns";
 
+  const logoDimensions =
+    logoDataUrl &&
+    logoNaturalWidth &&
+    logoNaturalHeight &&
+    logoNaturalWidth > 0 &&
+    logoNaturalHeight > 0
+      ? fitReceiptLogoPdfDimensions(logoNaturalWidth, logoNaturalHeight)
+      : null;
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.headerContainer}>
           <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-            {logoDataUrl ? (
+            {logoDataUrl && logoDimensions ? (
               <Image
                 src={logoDataUrl}
                 style={{
-                  width: RECEIPT_LOGO_PDF_PT,
-                  height: RECEIPT_LOGO_PDF_PT,
+                  width: logoDimensions.width,
+                  height: logoDimensions.height,
                   marginRight: 8,
-                  objectFit: "contain",
                 }}
               />
             ) : null}
