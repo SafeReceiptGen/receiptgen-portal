@@ -60,6 +60,7 @@ export function mapToReceiptForReturn(
     status: receipt.status,
     purchasedAt: receipt.date,
     returnWindow,
+    returnDeadline: receipt.returnDeadline,
     returnCondition: "See store policy",
     refundType: "See store policy",
     isReturnable,

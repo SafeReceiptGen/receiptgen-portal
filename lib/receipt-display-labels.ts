@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import type { PaymentMethodValue } from "@/lib/payment-methods";
 import { PAYMENT_METHOD_OPTIONS } from "@/lib/payment-methods";
 
@@ -20,4 +21,10 @@ const RECEIPT_STATUS_LABELS: Record<string, string> = {
 export function formatReceiptStatusLabel(value: string | undefined | null): string {
   if (!value) return "—";
   return RECEIPT_STATUS_LABELS[value] ?? value.replace(/_/g, " ");
+}
+
+/** Formats return deadline for display on public receipt pages (e.g. "Jun 12, 2026"). */
+export function formatReturnDeadline(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  return format(new Date(iso), "MMM d, yyyy");
 }
