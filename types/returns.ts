@@ -126,6 +126,8 @@ export interface ReceiptForReturn {
   status?: string;
   purchasedAt: string; // ISO string
   returnWindow: string;
+  /** ISO deadline from API; purchase date + policy window days */
+  returnDeadline?: string | null;
   returnCondition: string;
   refundType: string;
   isReturnable: boolean;

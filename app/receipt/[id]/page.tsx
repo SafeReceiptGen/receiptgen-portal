@@ -8,6 +8,7 @@ import { cn, mapToReceiptForReturn } from "@/lib/utils";
 import {
   formatPaymentMethodLabel,
   formatReceiptStatusLabel,
+  formatReturnDeadline,
 } from "@/lib/receipt-display-labels";
 import { BrandLogoImage } from "@/components/receipt/brand-logo-image";
 import { RECEIPT_LOGO_SLOT_PX } from "@/lib/receipt-logo-display";
@@ -56,6 +57,7 @@ export default async function DigitalReceiptPage({
   );
 
   const hasPolicy = receipt.returnWindow !== "No returns";
+  const returnDeadlineLabel = formatReturnDeadline(receipt.returnDeadline);
 
   return (
     <div className="min-h-screen bg-slate-50 selection:bg-blue-200 selection:text-blue-900 dark:bg-[#050B16] dark:selection:bg-blue-900 dark:selection:text-blue-200">
@@ -218,6 +220,14 @@ export default async function DigitalReceiptPage({
                       {receipt.returnWindow}
                     </span>
                   </p>
+                  {returnDeadlineLabel && (
+                    <p>
+                      <span className="font-medium text-slate-500">Ends:</span>{" "}
+                      <span className="font-semibold text-slate-900">
+                        {returnDeadlineLabel}
+                      </span>
+                    </p>
+                  )}
                   {receipt.returnCondition !== "See store policy" && (
                     <p>
                       <span className="font-medium text-slate-500">Condition:</span>{" "}
