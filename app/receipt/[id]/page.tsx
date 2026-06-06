@@ -222,7 +222,7 @@ export default async function DigitalReceiptPage({
                   </p>
                   {returnDeadlineLabel && (
                     <p>
-                      <span className="font-medium text-slate-500">Ends:</span>{" "}
+                      <span className="font-medium text-slate-500">Return window closes on:</span>{" "}
                       <span className="font-semibold text-slate-900">
                         {returnDeadlineLabel}
                       </span>
