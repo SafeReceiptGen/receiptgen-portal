@@ -203,6 +203,7 @@ export function ReceiptSheet({
               <span className="text-primary dark:text-blue-400">Receipts</span>
             </span>
           </p>
+          
         </div>
       </DialogContent>
     </Dialog>

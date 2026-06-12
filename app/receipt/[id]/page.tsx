@@ -2,7 +2,7 @@ import { verifyApi, ApiRequestError } from "@/lib/api";
 import { formatCurrency } from "@/lib/currency";
 import { format } from "date-fns";
 import Link from "next/link";
-import { ChevronRight, Receipt, RotateCcw } from "lucide-react";
+import { ChevronRight, Receipt, RotateCcw, ShieldCheck, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 import { cn, mapToReceiptForReturn } from "@/lib/utils";
 import {
@@ -117,20 +117,47 @@ export default async function DigitalReceiptPage({
                 <h1 className="text-2xl font-bold tracking-tight text-slate-900">
                   {receipt.storeName}
                 </h1>
+<div className="mt-2 flex flex-wrap gap-2">
+<div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1">
+  <ShieldCheck size={13} className="text-emerald-600" />
+  <span className="text-xs font-semibold text-emerald-700">
+    Verified Merchant
+  </span>
+</div>
+<div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 ring-1 ring-emerald-100">
+    <ShieldCheck size={14} className="text-emerald-600" />
+    <span className="text-xs font-semibold text-emerald-700">
+      Verified by SafeReceipts
+    </span>
+  </div>
+
+
+
+<div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1">
+  <CheckCircle2 size={13} className="text-emerald-600" />
+  <span className="text-xs font-semibold text-emerald-700">
+    Payment Confirmed
+  </span>
+</div>
+
+</div>
+
+
                 {receipt.storePhone && (
                   <p className="mt-1 text-sm text-slate-500">
                     {receipt.storePhone}
                   </p>
                 )}
               </div>
-              <div className="text-right text-xs leading-relaxed text-slate-500">
-                <p className="font-medium text-slate-700">
-                  No. {receipt.receiptNumber}
-                </p>
-                <p>{format(new Date(receipt.purchasedAt), "MMM d, yyyy")}</p>
-                <p>{format(new Date(receipt.purchasedAt), "h:mm a")}</p>
-              </div>
-            </div>
+              
+
+<div className="text-right text-[11px] leading-relaxed text-slate-400">
+  <p className="font-medium">
+    Receipt No. {receipt.receiptNumber}
+  </p>
+  <p>{format(new Date(receipt.purchasedAt), "MMM d, yyyy")}</p>
+</div>
+ </div>
 
             <div className="mb-4 text-center">
               {receipt.status && receipt.status !== "issued" && (
@@ -139,7 +166,7 @@ export default async function DigitalReceiptPage({
                 </p>
               )}
               <h2 className="text-lg font-bold text-slate-900">
-                Thank you for your purchase
+                Thank you for your purchase!
                 {receipt.customerName ? `, ${receipt.customerName}` : ""}!
               </h2>
             </div>
@@ -157,30 +184,37 @@ export default async function DigitalReceiptPage({
             }}
           >
             {/* Items List */}
-            <div className="mb-8 space-y-5">
+            <div className="mb-10 space-y-6">
               {receipt.items.map((item, idx) => (
-                <div key={item.id} className="flex items-start text-sm">
-                  <span className="w-5 shrink-0 pt-0.5 font-medium text-slate-400">
+                <div key={item.id} className="flex items-start text-sm py-1">
+                  <span className="w-6 shrink-0 pt-0.5 font-medium text-slate-400">
                     {idx + 1}.
                   </span>
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between">
-                      <span className="font-bold text-slate-900 pr-4">
+
+                  <div className="flex-1 space-y-1">
+                    {/* Name + Price row */}
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="font-bold text-slate-900  leading-snug pr-4">
                         {item.name}
                       </span>
-                      <span className="font-bold whitespace-nowrap">
+
+                      <span className="font-bold whitespace-nowrap text-slate-900">
                         {formatCurrency(
                           item.price * item.quantity,
                           receipt.currency
                         )}
                       </span>
                     </div>
+
+                    { /* Variant / Detail */ }
                     {item.detail && (
-                      <p className="mt-0.5 text-xs text-slate-500 leading-relaxed">
+                      <p className="text-xs text-slate-500 leading-relaxed">
                         {item.detail}
                       </p>
                     )}
-                    <p className="mt-1 text-xs font-medium text-slate-400">
+
+                    {/* Qty + unit price */}
+                    <p className="text-xs font-medium text-slate-400">
                       {item.quantity} × {formatCurrency(item.price, receipt.currency)}
                     </p>
                   </div>
@@ -189,14 +223,14 @@ export default async function DigitalReceiptPage({
             </div>
 
             {/* Totals Box */}
-            <div className="mb-8 rounded-2xl bg-slate-50 px-5 py-4 ring-1 ring-slate-100/80">
-              <div className="mb-3 flex items-baseline justify-between">
+            <div className="mb-8 rounded-2xl bg-slate-50 px-5 py-5 ring-1 ring-slate-100/80 space-y-3">
+              <div className=" flex items-baseline justify-between">
                 <span className="text-base font-bold text-slate-600">Total</span>
                 <span className="text-2xl font-bold tracking-tight text-slate-900">
                   {formatCurrency(subtotal, receipt.currency)}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between text-sm pt-2 border-t border-slate-100">
                 <span className="text-slate-500">Payment method</span>
                 <span className="font-semibold text-slate-700">
                   {formatPaymentMethodLabel(receipt.paymentMethod)}
@@ -214,36 +248,23 @@ export default async function DigitalReceiptPage({
                   </span>
                 </div>
                 <div className="space-y-1 text-sm leading-snug">
-                  <p>
-                    <span className="font-medium text-slate-500">Window:</span>{" "}
-                    <span className="font-semibold text-slate-900">
-                      {receipt.returnWindow}
-                    </span>
-                  </p>
-                  {returnDeadlineLabel && (
-                    <p>
-                      <span className="font-medium text-slate-500">Ends:</span>{" "}
-                      <span className="font-semibold text-slate-900">
-                        {returnDeadlineLabel}
-                      </span>
-                    </p>
-                  )}
-                  {receipt.returnCondition !== "See store policy" && (
-                    <p>
-                      <span className="font-medium text-slate-500">Condition:</span>{" "}
-                      <span className="font-semibold text-slate-900">
-                        {receipt.returnCondition}
-                      </span>
-                    </p>
-                  )}
-                  {receipt.refundType !== "See store policy" && (
-                    <p>
-                      <span className="font-medium text-slate-500">Refund:</span>{" "}
-                      <span className="font-semibold text-slate-900">
-                        {receipt.refundType}
-                      </span>
-                    </p>
-                  )}
+<p className="text-slate-700">
+        You can request a return/exchange within{" "}
+        <span className="font-semibold text-slate-900">
+          {receipt.returnWindow || "7 days"}
+        </span>{" "}
+        of purchase.
+      </p>
+
+{returnDeadlineLabel && (
+        <p className="text-slate-700">
+          Return window closes on{" "}
+          <span className="font-semibold text-slate-900">
+            {returnDeadlineLabel}
+          </span>
+        </p>
+      )}
+     
                 </div>
               </div>
             )}
@@ -251,12 +272,18 @@ export default async function DigitalReceiptPage({
             {/* Branding Footer */}
             <div className="mt-8 border-t border-slate-100 pt-6 flex items-center justify-between text-[10px] uppercase tracking-wider text-slate-400">
               <div>
-                <p className="font-semibold text-slate-500">Safereceipt.com</p>
-                <p className="mt-0.5 text-slate-400">Digital verification</p>
+                <p className=" text-xs font-semibold text-slate-500">
+                 Powered by Safereceipts (getsafereceipts.com)
+                   
+                </p>
+
+ <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+    This transaction has been securely recorded and verified by SafeReceipts.
+  </p>
+
+    
               </div>
-              <div className="text-right">
-                <p>Authentic Record</p>
-              </div>
+              
             </div>
           </div>
         </div>
