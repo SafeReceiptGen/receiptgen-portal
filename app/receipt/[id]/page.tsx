@@ -248,23 +248,36 @@ export default async function DigitalReceiptPage({
                   </span>
                 </div>
                 <div className="space-y-1 text-sm leading-snug">
-<p className="text-slate-700">
-        You can request a return/exchange within{" "}
-        <span className="font-semibold text-slate-900">
-          {receipt.returnWindow || "7 days"}
-        </span>{" "}
-        of purchase.
-      </p>
-
-{returnDeadlineLabel && (
-        <p className="text-slate-700">
-          Return window closes on{" "}
-          <span className="font-semibold text-slate-900">
-            {returnDeadlineLabel}
-          </span>
-        </p>
-      )}
-     
+                  <p>
+                    <span className="font-medium text-slate-500">Window:</span>{" "}
+                    <span className="font-semibold text-slate-900">
+                      {receipt.returnWindow}
+                    </span>
+                  </p>
+                  {returnDeadlineLabel && (
+                    <p>
+                      <span className="font-medium text-slate-500">Return window closes on:</span>{" "}
+                      <span className="font-semibold text-slate-900">
+                        {returnDeadlineLabel}
+                      </span>
+                    </p>
+                  )}
+                  {receipt.returnCondition !== "See store policy" && (
+                    <p>
+                      <span className="font-medium text-slate-500">Condition:</span>{" "}
+                      <span className="font-semibold text-slate-900">
+                        {receipt.returnCondition}
+                      </span>
+                    </p>
+                  )}
+                  {receipt.refundType !== "See store policy" && (
+                    <p>
+                      <span className="font-medium text-slate-500">Refund:</span>{" "}
+                      <span className="font-semibold text-slate-900">
+                        {receipt.refundType}
+                      </span>
+                    </p>
+                  )}
                 </div>
               </div>
             )}
