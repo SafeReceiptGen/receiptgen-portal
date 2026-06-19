@@ -23,6 +23,7 @@ export default function Signup() {
   const { contextSafe } = useGSAP(
     () => {
       const tl = gsap.timeline();
+
       tl.fromTo(
         rightPanelRef.current,
         { x: "100%", opacity: 0 },
@@ -37,7 +38,13 @@ export default function Signup() {
         .fromTo(
           ".stagger-item",
           { y: 30, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: "power3.out" },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.8,
+            stagger: 0.1,
+            ease: "power3.out",
+          },
           "-=0.6",
         );
     },
@@ -85,30 +92,37 @@ export default function Signup() {
 
         if (signUpErr) {
           shakeForm();
+
           const message =
             signUpErr.code === "USER_ALREADY_EXISTS"
               ? "An account with this email already exists."
               : signUpErr.code === "PASSWORD_TOO_SHORT"
                 ? "Password must be at least 8 characters."
                 : (signUpErr.message ?? "Sign up failed. Please try again.");
+
           setAuthError(message);
+
           trackEvent("sign_up_error", {
             method: "email",
             error_code: String(signUpErr.code ?? "unknown"),
           });
+
           return { ...result, success: false };
         }
       } catch (e: unknown) {
         console.error("Sign up error:", e);
         shakeForm();
+
         trackEvent("sign_up_error", {
           method: "email",
           error_code: "network_or_exception",
         });
+
         setAuthError(
           (e as Error).message ||
             "Failed to connect to the server. Please check your connection and try again.",
         );
+
         return { ...result, success: false };
       }
 
@@ -123,6 +137,7 @@ export default function Signup() {
     trackEvent("sign_up_attempt", { method: "google" });
     setIsGoogleLoading(true);
     setAuthError(null);
+
     try {
       await authClient.signIn.social({
         provider: "google",
@@ -135,10 +150,12 @@ export default function Signup() {
         method: "google",
         error_code: "oauth_failed",
       });
+
       setAuthError(
         (err as Error).message ||
           "Failed to connect to the server. Please check your connection and try again.",
       );
+
       console.log(err);
     } finally {
       setIsGoogleLoading(false);
@@ -171,28 +188,24 @@ export default function Signup() {
           <h2 className="mb-6 text-5xl font-bold leading-tight tracking-tighter font-display">
             Start issuing digital receipts today.
           </h2>
+
           <ul className="space-y-4 text-lg text-background/80">
+            <li className="flex items-center gap-3">
+              <CheckCircle2 className="text-primary" size={24} />
+              Keep every purchase organized
+            </li>
             <li className="flex items-center gap-3">
               <CheckCircle2 className="text-primary" size={24} />
               Reduce fraud and disputes
             </li>
             <li className="flex items-center gap-3">
               <CheckCircle2 className="text-primary" size={24} />
-              Speed up the returns process
+              Gain valuable customer insights
             </li>
             <li className="flex items-center gap-3">
               <CheckCircle2 className="text-primary" size={24} />
-              Gain valuable customer insights
+              Automatically enforce your store policy
             </li>
-
-<li className="flex items-center gap-3">
-  <CheckCircle2 className="text-primary" size={24} />
-  Automatically enforce your return policy
-</li>
-
-
-
-
           </ul>
         </div>
 
@@ -203,13 +216,13 @@ export default function Signup() {
               process refunds 3x faster and fraud is practically zero.&rdquo;
             </p>
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 font-bold text-primary">
                 KO
               </div>
               <div>
                 <p className="font-bold">Kwame Osei</p>
                 <p className="text-sm text-background/60">
-                  Store Manager - Fashion Retailer,Accra
+                  Store Manager - Fashion Retailer, Accra
                 </p>
               </div>
             </div>
@@ -234,11 +247,10 @@ export default function Signup() {
             Create an account
           </h1>
           <p className="stagger-item mb-8 text-foreground/60">
-            Issue digital receipts and manage returns from one dashboard.
+            Issue digital receipts and manage customer requests from one dashboard.
           </p>
 
-
- <button
+          <button
             type="button"
             onClick={handleGoogleSignup}
             disabled={isLoading}
@@ -295,6 +307,7 @@ export default function Signup() {
                   </p>
                 )}
               </div>
+
               <div className="flex-1">
                 <Input
                   id="lastName"
@@ -347,7 +360,6 @@ export default function Signup() {
               )}
             </div>
 
-            {/* Error message */}
             {generalError && (
               <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/8 px-4 py-3 text-sm text-destructive">
                 <AlertCircle size={15} className="shrink-0" />
@@ -373,12 +385,10 @@ export default function Signup() {
                   </>
                 )}
               </MagneticButton>
- <p className="stagger-item mt-3 text-center text-sm text-foreground/60">
-    No credit card required • Takes less than 2 minutes to set up
-  </p>
 
-
-
+              <p className="mt-3 text-center text-sm text-foreground/60">
+                No credit card required • Takes less than 2 minutes to set up
+              </p>
             </div>
           </form>
 
