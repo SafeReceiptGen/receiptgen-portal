@@ -58,11 +58,11 @@ const data = {
       url: "#",
       icon: IconUsers,
     },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
-    },
+    // {
+    //   title: "Analytics",
+    //   url: "#",
+    //   icon: IconChartBar,
+    // },
   ],
   navClouds: [
     {
@@ -113,21 +113,21 @@ const data = {
     },
   ],
   navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
+    // {
+    //   title: "Settings",
+    //   url: "#",
+    //   icon: IconSettings,
+    // },
     {
       title: "Get Help",
       url: "#",
       icon: IconHelp,
     },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
+    // {
+    //   title: "Search",
+    //   url: "#",
+    //   icon: IconSearch,
+    // },
   ],
   // documents: [
   //   {

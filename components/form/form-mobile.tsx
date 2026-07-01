@@ -147,13 +147,19 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
     handleChange("items", newItems);
   };
 
-  const addItem = (name = "New Item", detail = "") => {
+  const addItem = (
+    name = "New Item",
+    detail = "",
+    price = 0,
+    priceFixed = false,
+  ) => {
     const newItem: LineItem = {
       id: Math.random().toString(36).substr(2, 9),
       name,
       detail,
       quantity: 1,
-      price: 0,
+      price,
+      priceFixed,
     };
     handleChange("items", [...data.items, newItem]);
   };
@@ -439,7 +445,14 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                       <button
                         key={p.id}
                         type="button"
-                        onClick={() => addItem(p.name, p.description ?? "")}
+                        onClick={() =>
+                          addItem(
+                            p.name,
+                            p.description ?? "",
+                            p.defaultPrice ? parseFloat(p.defaultPrice) : 0,
+                            !!p.defaultPrice,
+                          )
+                        }
                         className="group/card flex shrink-0 flex-col items-start gap-0.5 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-left shadow-sm transition-all active:scale-95 hover:border-blue-400 hover:shadow-blue-100/60 dark:border-white/10 dark:bg-white/5 dark:hover:border-blue-400/50 dark:hover:bg-blue-500/8"
                       >
                         <div className="flex items-center gap-1.5">
@@ -521,6 +534,7 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                       <Input
                         type="number"
                         value={item.price}
+                        disabled={item.priceFixed}
                         onChange={(e) =>
                           handleItemChange(
                             item.id,
@@ -528,7 +542,7 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                             parseFloat(e.target.value) || 0,
                           )
                         }
-                        className="mt-1 w-full rounded-lg bg-slate-50 border-slate-200 p-2 text-slate-900 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white"
+                        className="mt-1 w-full rounded-lg bg-slate-50 border-slate-200 p-2 text-slate-900 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white/5 dark:border-white/10 dark:text-white"
                       />
                     </div>
                   </div>
