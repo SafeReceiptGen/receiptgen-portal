@@ -143,13 +143,19 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
     handleChange("items", newItems);
   };
 
-  const addItem = (name = "New Product", detail = "") => {
+  const addItem = (
+    name = "New Product",
+    detail = "",
+    price = 0,
+    priceFixed = false,
+  ) => {
     const newItem: LineItem = {
       id: Math.random().toString(36).substr(2, 9),
       name,
       detail,
       quantity: 1,
-      price: 0,
+      price,
+      priceFixed,
     };
     handleChange("items", [...data.items, newItem]);
   };
@@ -463,7 +469,14 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                       <button
                         key={p.id}
                         type="button"
-                        onClick={() => addItem(p.name, p.description ?? "")}
+                        onClick={() =>
+                          addItem(
+                            p.name,
+                            p.description ?? "",
+                            p.defaultPrice ? parseFloat(p.defaultPrice) : 0,
+                            !!p.defaultPrice,
+                          )
+                        }
                         title={p.name}
                         className="group/chip inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition-all hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 hover:shadow-blue-100 active:scale-95 dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:hover:border-blue-400/60 dark:hover:bg-blue-500/10 dark:hover:text-blue-300"
                       >
@@ -551,6 +564,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                         <input
                           type="number"
                           value={item.price}
+                          disabled={item.priceFixed}
                           onChange={(e) =>
                             handleItemChange(
                               item.id,
@@ -558,7 +572,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                               parseFloat(e.target.value) || 0,
                             )
                           }
-                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition-colors focus:border-blue-400 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition-colors focus:border-blue-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:bg-white/5 dark:text-white"
                         />
                       </div>
                     </div>

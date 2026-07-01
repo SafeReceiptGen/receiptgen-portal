@@ -91,7 +91,7 @@ export function StoreCatalogManager({ store }: { store: Store }) {
                         <p className="font-medium">{item.name}</p>
                         <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
                           {item.defaultPrice && (
-                            <span className="font-medium text-foreground/70">${item.defaultPrice}</span>
+                            <span className="font-medium text-foreground/70">₵{item.defaultPrice}</span>
                           )}
                           {item.description && (
                             <span className="truncate max-w-[200px]">{item.description}</span>
@@ -137,7 +137,7 @@ export function StoreCatalogManager({ store }: { store: Store }) {
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">Default Price (Optional)</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₵</span>
                   <Input 
                     placeholder="29.99" 
                     className="pl-7"

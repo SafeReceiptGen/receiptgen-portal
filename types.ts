@@ -4,6 +4,8 @@ export interface LineItem {
   detail: string;
   quantity: number;
   price: number;
+  /** True when price comes from the store catalog and should not be edited */
+  priceFixed?: boolean;
 }
 
 export interface ReceiptData {
@@ -40,15 +42,7 @@ export const INITIAL_RECEIPT_DATA: ReceiptData = {
   storePhone: "0244444444",
   receiptNumber: "N 469",
   date: new Date().toISOString(),
-  items: [
-    {
-      id: "1",
-      name: "Air Force 1",
-      detail: "while, high",
-      quantity: 2,
-      price: 570.0,
-    },
-  ],
+  items: [],
   currency: "GHS",
   vatRate: 20,
   paymentMethod: "mobile_money",
