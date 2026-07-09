@@ -11,7 +11,10 @@ export interface LineItem {
 export interface ReceiptData {
   /** Real store UUID from GET /stores — required for POST /receipts */
   storeId: string;
+  /** Brand / trading name shown on the receipt header (`retailers.name`). */
   storeName: string;
+  /** Per-location / branch name (`stores.name`); shown under the brand when distinct. */
+  storeLocation: string;
   storePhone: string;
   receiptNumber: string;
   date: string; // ISO string
@@ -39,6 +42,7 @@ export interface ReceiptData {
 export const INITIAL_RECEIPT_DATA: ReceiptData = {
   storeId: "",
   storeName: "Safe Receipt",
+  storeLocation: "",
   storePhone: "0244444444",
   receiptNumber: "N 469",
   date: new Date().toISOString(),

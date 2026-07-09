@@ -651,9 +651,12 @@ export interface VerifiedReceipt {
   returnDeadline: string | null;
   receiptNumber: string;
   paymentMethod: string;
+  /** Per-location / branch name (`stores.name`). */
   storeName: string;
   storePhone?: string | null;
   customerName?: string | null;
+  /** Brand / trading name (`retailers.name`) — primary identity on receipts. */
+  retailerName?: string | null;
   retailerLogoUrl?: string | null;
   items: VerifiedReceiptItem[];
 }

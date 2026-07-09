@@ -89,7 +89,14 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                   <h1 className="text-xl font-bold tracking-tight text-zinc-900">
                     {data.storeName}
                   </h1>
-                  <p className="text-zinc-500 text-sm">{data.storePhone}</p>
+                  {(data.storeLocation ?? "").trim() &&
+                  (data.storeLocation ?? "").trim() !==
+                    data.storeName.trim() ? (
+                    <p className="text-zinc-500 text-sm">{data.storeLocation}</p>
+                  ) : null}
+                  {data.storePhone ? (
+                    <p className="text-zinc-500 text-sm">{data.storePhone}</p>
+                  ) : null}
                 </div>
               </div>
               <div className="text-[10px] text-zinc-500 text-right leading-tight">

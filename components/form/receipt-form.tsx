@@ -118,10 +118,12 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
     const mapReturnCondition = (val: any) => ({"0": "Unused", unused: "Unused", "1": "Original Packaging", original_packaging: "Original Packaging", "2": "Any Condition", any_condition: "Any Condition", "3": "Defective Only", defective_only: "Defective Only"})[String(val)] || "Original Packaging";
     const mapRefundType = (val: any) => ({"0": "Full Refund", full_refund: "Full Refund", "1": "Partial Refund", partial_refund: "Partial Refund", "2": "Store Credit", store_credit: "Store Credit", "3": "Exchange Only", exchange_only: "Exchange Only"})[String(val)] || "Store Credit";
 
+    // Keep storeName as the retailer brand (hydrated in form-screen).
+    // Location name (s.name) must not overwrite the receipt header identity.
     onChange({
       ...dataRef.current,
       storeId: s.id,
-      storeName: s.name,
+      storeLocation: s.name,
       storePhone: s.phone ?? "",
       ...(policy && {
         returnWindow: mapReturnWindow(policy.returnWindow),
@@ -228,7 +230,8 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                           onChange({
                             ...data,
                             storeId: selected.id,
-                            storeName: selected.name,
+                            // Preserve brand in storeName; selector binds location + policy.
+                            storeLocation: selected.name,
                             storePhone: selected.phone ?? "",
                             ...(policy && {
                               returnWindow: mapReturnWindow(policy.returnWindow),
@@ -270,7 +273,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-slate-600 dark:text-white/60">
-                    Store Name
+                    Brand / Store Name
                   </Label>
                   <Input
                     type="text"
@@ -279,7 +282,6 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                       onChange({
                         ...data,
                         storeName: e.target.value,
-                        storeId: "",
                       })
                     }
                     className="w-full bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/20"
@@ -296,7 +298,6 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                       onChange({
                         ...data,
                         storePhone: e.target.value,
-                        storeId: "",
                       })
                     }
                     className="w-full bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/20"

@@ -30,6 +30,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
   },
+  storeLocation: {
+    fontSize: 12,
+    color: "#71717a",
+    marginTop: 4,
+  },
   storePhone: {
     fontSize: 12,
     color: "#71717a", // zinc-500 equivalent
@@ -300,6 +305,10 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
             ) : null}
             <View style={{ flexShrink: 1 }}>
               <Text style={styles.storeName}>{data.storeName}</Text>
+              {(data.storeLocation ?? "").trim() &&
+              (data.storeLocation ?? "").trim() !== data.storeName.trim() ? (
+                <Text style={styles.storeLocation}>{data.storeLocation}</Text>
+              ) : null}
               {data.storePhone ? (
                 <Text style={styles.storePhone}>{data.storePhone}</Text>
               ) : null}

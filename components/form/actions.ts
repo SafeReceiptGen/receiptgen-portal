@@ -19,6 +19,7 @@ const lineItemSchema = z.object({
 const receiptSchema = z.object({
   storeId: z.string().optional().default(""),
   storeName: z.string().min(1, "Store name is required"),
+  storeLocation: z.string().optional().default(""),
   storePhone: z.string().optional().default(""),
   receiptNumber: z.string().optional().default(""),
   date: z.string().optional().default(""),

@@ -107,7 +107,7 @@ export default async function DigitalReceiptPage({
               <div>
                 <BrandLogoImage
                   url={receipt.retailerLogoUrl}
-                  alt={`${receipt.storeName} logo`}
+                  alt={`${receipt.retailerName?.trim() || receipt.storeName} logo`}
                   className="mb-3 rounded-md object-contain ring-1 ring-slate-200 dark:ring-white/15"
                   style={{
                     width: RECEIPT_LOGO_SLOT_PX,
@@ -115,8 +115,15 @@ export default async function DigitalReceiptPage({
                   }}
                 />
                 <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-                  {receipt.storeName}
+                  {receipt.retailerName?.trim() || receipt.storeName}
                 </h1>
+                {receipt.retailerName?.trim() &&
+                receipt.storeLocation?.trim() &&
+                receipt.retailerName.trim() !== receipt.storeLocation.trim() ? (
+                  <p className="mt-1 text-sm text-slate-500">
+                    {receipt.storeLocation}
+                  </p>
+                ) : null}
 <div className="mt-2 flex flex-col gap-2">
 
 <div className="inline-flex items-center gap-2">

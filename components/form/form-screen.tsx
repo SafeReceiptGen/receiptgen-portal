@@ -75,6 +75,8 @@ export default function ReceiptFormScreen({
     hydratedRetailerProfile.current = true;
     setData((prev) => ({
       ...prev,
+      // Brand / trading name belongs on the receipt header — not the location name.
+      storeName: retailer.name?.trim() || prev.storeName,
       logoUrl: retailer.logoUrl?.trim() ?? "",
       companyName: retailer.companyName ?? prev.companyName,
       website: retailer.website ?? prev.website,
