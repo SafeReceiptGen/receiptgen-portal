@@ -120,10 +120,12 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
     const mapReturnCondition = (val: any) => ({"0": "Unused", unused: "Unused", "1": "Original Packaging", original_packaging: "Original Packaging", "2": "Any Condition", any_condition: "Any Condition", "3": "Defective Only", defective_only: "Defective Only"})[String(val)] || "Original Packaging";
     const mapRefundType = (val: any) => ({"0": "Full Refund", full_refund: "Full Refund", "1": "Partial Refund", partial_refund: "Partial Refund", "2": "Store Credit", store_credit: "Store Credit", "3": "Exchange Only", exchange_only: "Exchange Only"})[String(val)] || "Store Credit";
 
+    // Keep storeName as the retailer brand (hydrated in form-screen).
+    // Location name (s.name) must not overwrite the receipt header identity.
     onChange({
       ...dataRef.current,
       storeId: s.id,
-      storeName: s.name,
+      storeLocation: s.name,
       storePhone: s.phone ?? "",
       ...(policy && {
         returnWindow: mapReturnWindow(policy.returnWindow),
@@ -229,7 +231,10 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                     <select
                       className="w-full appearance-none rounded-xl bg-slate-50 border border-slate-200 px-4 py-3.5 pr-10 text-base text-slate-900 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 dark:bg-white/5 dark:border-white/10 dark:text-white"
                       value={
-                        userStores.find((s) => s.name === data.storeName)?.id
+                        data.storeId &&
+                        userStores.some((s) => s.id === data.storeId)
+                          ? data.storeId
+                          : ""
                       }
                       onChange={(e) => {
                         const selected = userStores.find(
@@ -245,7 +250,8 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                           onChange({
                             ...data,
                             storeId: selected.id,
-                            storeName: selected.name,
+                            // Preserve brand in storeName; selector binds location + policy.
+                            storeLocation: selected.name,
                             storePhone: selected.phone ?? "",
                             ...(policy && {
                               returnWindow: mapReturnWindow(policy.returnWindow),
@@ -283,7 +289,7 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
 
             <div className="space-y-2">
               <Label className="text-sm text-slate-600 dark:text-white/70">
-                Store Name
+              Store Name
               </Label>
               <Input
                 type="text"
@@ -292,7 +298,6 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                   onChange({
                     ...data,
                     storeName: e.target.value,
-                    storeId: "",
                   })
                 }
                 className="w-full rounded-xl bg-slate-50 border-slate-200 p-4 text-lg text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/35"
@@ -309,7 +314,6 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                   onChange({
                     ...data,
                     storePhone: e.target.value,
-                    storeId: "",
                   })
                 }
                 className="w-full rounded-xl bg-slate-50 border-slate-200 p-4 text-lg text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/35"

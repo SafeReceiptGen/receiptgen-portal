@@ -86,7 +86,7 @@ export function ReceiptDetailsSheet({
                   <div className="flex items-start gap-3">
                     <BrandLogoImage
                       url={receipt.retailerLogoUrl}
-                      alt={`${receipt.store.name} logo`}
+                      alt={`${receipt.retailerName?.trim() || receipt.store.name} logo`}
                       className="shrink-0 rounded-md object-contain ring-1 ring-zinc-200"
                       style={{
                         width: RECEIPT_LOGO_SLOT_PX,
@@ -95,8 +95,16 @@ export function ReceiptDetailsSheet({
                     />
                     <div className="flex flex-col min-w-0">
                       <h1 className="text-xl font-bold tracking-tight text-zinc-900">
-                        {receipt.store.name}
+                        {receipt.retailerName?.trim() || receipt.store.name}
                       </h1>
+                      {receipt.retailerName?.trim() &&
+                      receipt.store.name.trim() &&
+                      receipt.retailerName.trim() !==
+                        receipt.store.name.trim() ? (
+                        <p className="text-zinc-500 text-sm">
+                          {receipt.store.name}
+                        </p>
+                      ) : null}
                       {receipt.store.phone && (
                         <p className="text-zinc-500 text-sm">
                           {receipt.store.phone}
