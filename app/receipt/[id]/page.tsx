@@ -118,10 +118,10 @@ export default async function DigitalReceiptPage({
                   {receipt.retailerName?.trim() || receipt.storeName}
                 </h1>
                 {receipt.retailerName?.trim() &&
-                receipt.storeName.trim() &&
-                receipt.retailerName.trim() !== receipt.storeName.trim() ? (
+                receipt.storeLocation?.trim() &&
+                receipt.retailerName.trim() !== receipt.storeLocation.trim() ? (
                   <p className="mt-1 text-sm text-slate-500">
-                    {receipt.storeName}
+                    {receipt.storeLocation}
                   </p>
                 ) : null}
 <div className="mt-2 flex flex-col gap-2">

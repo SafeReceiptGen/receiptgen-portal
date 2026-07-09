@@ -109,7 +109,12 @@ export interface ReturnRequest {
 export interface ReceiptForReturn {
   id: string;
   receiptNumber: string;
+  /** Primary display name on receipts — brand / trading name when available. */
   storeName: string;
+  /** Brand / trading name (`retailers.name`). */
+  retailerName?: string;
+  /** Per-location / branch name (`stores.name`). */
+  storeLocation?: string;
   /** Retailer-wide logo; null/undefined when not set. */
   retailerLogoUrl?: string | null;
   storePhone: string;

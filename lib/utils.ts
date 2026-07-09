@@ -38,7 +38,9 @@ export function mapToReceiptForReturn(
   return {
     id: receipt.id,
     receiptNumber: receipt.receiptNumber,
-    // Prefer brand / trading name for customer-facing receipt identity.
+    retailerName: receipt.retailerName?.trim() || undefined,
+    storeLocation: receipt.storeName.trim() || undefined,
+    // Brand for customer-facing identity; fall back to location when brand is absent.
     storeName: receipt.retailerName?.trim() || receipt.storeName,
     retailerLogoUrl: receipt.retailerLogoUrl ?? null,
     storePhone: receipt.storePhone?.trim() ?? "",
