@@ -317,7 +317,7 @@ export default async function DigitalReceiptPage({
   <div className="flex items-end justify-between">
     <div>
       <p className="text-xs font-bold tracking-wide text-slate-500">
-        SAFERECEIPT.COM
+        GETSAFERECEIPTS.COM
       </p>
 
       <p className="mt-1 text-xs text-slate-400">
