@@ -48,7 +48,7 @@ export const INITIAL_RECEIPT_DATA: ReceiptData = {
   date: new Date().toISOString(),
   items: [],
   currency: "GHS",
-  vatRate: 20,
+  vatRate: 0,
   paymentMethod: "mobile_money",
   marketingText: "",
   companyName: "",

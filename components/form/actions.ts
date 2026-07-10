@@ -120,7 +120,8 @@ export async function generateReceipt(
         storeId,
         date: dateIso,
         currency: result.data.currency,
-        vatRate: result.data.vatRate,
+        // VAT disabled for now — totals must equal the sum of line items.
+        vatRate: 0,
         paymentMethod: result.data.paymentMethod,
         customerName: result.data.customerName,
         customerPhone: result.data.customerPhone,
