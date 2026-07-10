@@ -27,8 +27,8 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
     );
   }, [data.items]);
 
-  const vatAmount = subtotal * (data.vatRate / (100 + data.vatRate));
-  const total = subtotal; // Assuming prices are inclusive based on the image logic
+  // VAT is disabled for now — total equals the sum of line items.
+  const total = subtotal;
 
   // Format currency helper
   const formatPrice = (price: number) => {
