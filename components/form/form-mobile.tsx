@@ -38,6 +38,7 @@ import { ActionState } from "./actions";
 import Link from "next/link";
 import { Store } from "@/lib/api";
 import { PAYMENT_METHOD_OPTIONS } from "@/lib/payment-methods";
+import { CatalogProductPicker } from "./catalog-product-picker";
 import { returnWindowEnum } from "@/types/enums";
 import { trackCtaClick } from "@/lib/analytics";
 
@@ -434,49 +435,19 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                   </span>
                 </div>
 
-                {productsLoading ? (
-                  <div className="flex gap-3 overflow-hidden">
-                    {[1, 2, 3].map((n) => (
-                      <div
-                        key={n}
-                        className="h-16 w-28 shrink-0 animate-pulse rounded-xl bg-slate-100 dark:bg-white/8"
-                      />
-                    ))}
-                  </div>
-                ) : savedProducts.length > 0 ? (
-                  <div className="-mx-6 flex gap-3 overflow-x-auto px-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                    {savedProducts.map((p) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() =>
-                          addItem(
-                            p.name,
-                            p.description ?? "",
-                            p.defaultPrice ? parseFloat(p.defaultPrice) : 0,
-                            !!p.defaultPrice,
-                          )
-                        }
-                        className="group/card flex shrink-0 flex-col items-start gap-0.5 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-left shadow-sm transition-all active:scale-95 hover:border-blue-400 hover:shadow-blue-100/60 dark:border-white/10 dark:bg-white/5 dark:hover:border-blue-400/50 dark:hover:bg-blue-500/8"
-                      >
-                        <div className="flex items-center gap-1.5">
-                          <Plus
-                            size={12}
-                            className="shrink-0 text-slate-400 transition-colors group-hover/card:text-blue-500 dark:text-white/30 dark:group-hover/card:text-blue-400"
-                          />
-                          <span className="max-w-32 truncate text-sm font-semibold text-slate-800 dark:text-white">
-                            {p.name}
-                          </span>
-                        </div>
-                        {p.description && (
-                          <p className="ml-5.5 max-w-32 truncate text-[11px] text-slate-400 dark:text-white/35">
-                            {p.description}
-                          </p>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
+                <CatalogProductPicker
+                  products={savedProducts}
+                  currency={data.currency}
+                  isLoading={productsLoading}
+                  onSelect={(p) =>
+                    addItem(
+                      p.name,
+                      p.description ?? "",
+                      p.defaultPrice ? parseFloat(p.defaultPrice) : 0,
+                      !!p.defaultPrice,
+                    )
+                  }
+                />
 
                 <div className="border-b border-slate-100 dark:border-white/8" />
               </div>
