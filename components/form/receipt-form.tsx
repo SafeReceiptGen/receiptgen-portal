@@ -43,6 +43,7 @@ import { ActionState } from "./actions";
 import Link from "next/link";
 import { Store } from "@/lib/api";
 import { PAYMENT_METHOD_OPTIONS } from "@/lib/payment-methods";
+import { CatalogProductPicker } from "./catalog-product-picker";
 
 interface ReceiptFormProps {
   data: ReceiptData;
@@ -455,41 +456,19 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                   </span>
                 </div>
 
-                {productsLoading ? (
-                  <div className="flex gap-2 overflow-hidden">
-                    {[1, 2, 3, 4].map((n) => (
-                      <div
-                        key={n}
-                        className="h-7 w-24 shrink-0 animate-pulse rounded-full bg-slate-100 dark:bg-white/8"
-                      />
-                    ))}
-                  </div>
-                ) : savedProducts.length > 0 ? (
-                  <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                    {savedProducts.map((p) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() =>
-                          addItem(
-                            p.name,
-                            p.description ?? "",
-                            p.defaultPrice ? parseFloat(p.defaultPrice) : 0,
-                            !!p.defaultPrice,
-                          )
-                        }
-                        title={p.name}
-                        className="group/chip inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition-all hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 hover:shadow-blue-100 active:scale-95 dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:hover:border-blue-400/60 dark:hover:bg-blue-500/10 dark:hover:text-blue-300"
-                      >
-                        <Plus
-                          size={11}
-                          className="shrink-0 text-slate-400 transition-colors group-hover/chip:text-blue-500 dark:text-white/30 dark:group-hover/chip:text-blue-400"
-                        />
-                        {p.name}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
+                <CatalogProductPicker
+                  products={savedProducts}
+                  currency={data.currency}
+                  isLoading={productsLoading}
+                  onSelect={(p) =>
+                    addItem(
+                      p.name,
+                      p.description ?? "",
+                      p.defaultPrice ? parseFloat(p.defaultPrice) : 0,
+                      !!p.defaultPrice,
+                    )
+                  }
+                />
 
                 <div className="border-b border-slate-100 dark:border-white/8" />
               </div>
