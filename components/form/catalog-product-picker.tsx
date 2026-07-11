@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ComponentProps } from "react";
 import { ChevronsUpDown, Plus, Search } from "lucide-react";
 import { SavedProduct } from "@/lib/api";
 import { formatCurrency } from "@/lib/currency";
@@ -38,17 +38,16 @@ interface CatalogProductCommandProps {
   products: SavedProduct[];
   currency: string;
   onSelect: (product: SavedProduct) => void;
+  className?: string;
   listClassName?: string;
 }
 
 function CatalogPickerTrigger({
   open,
   className,
-  onClick,
-}: {
+  ...props
+}: ComponentProps<"button"> & {
   open: boolean;
-  className?: string;
-  onClick?: () => void;
 }) {
   return (
     <button
@@ -56,11 +55,11 @@ function CatalogPickerTrigger({
       role="combobox"
       aria-expanded={open}
       aria-label="Search catalog products"
-      onClick={onClick}
       className={cn(
         "flex w-full items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 outline-none transition-colors hover:border-blue-400 hover:bg-white focus-visible:border-blue-400 focus-visible:ring-2 focus-visible:ring-blue-400/20 dark:border-white/10 dark:bg-white/5 dark:text-white/50 dark:hover:border-blue-400/60 dark:hover:bg-white/8 dark:focus-visible:ring-blue-400/20",
         className,
       )}
+      {...props}
     >
       <Search size={14} className="shrink-0 text-slate-400 dark:text-white/35" />
       <span className="truncate">Add from catalog…</span>
@@ -76,12 +75,13 @@ function CatalogProductCommand({
   products,
   currency,
   onSelect,
+  className,
   listClassName,
 }: CatalogProductCommandProps) {
   return (
-    <Command shouldFilter className="flex min-h-0 flex-1 flex-col">
+    <Command shouldFilter className={className}>
       <CommandInput placeholder="Search catalog…" />
-      <CommandList className={cn("max-h-[300px]", listClassName)}>
+      <CommandList className={listClassName}>
         <CommandEmpty>No products found.</CommandEmpty>
         <CommandGroup>
           {products.map((product) => {
@@ -175,6 +175,7 @@ export function CatalogProductPicker({
                 products={products}
                 currency={currency}
                 onSelect={handleSelect}
+                className="min-h-0 flex-1"
                 listClassName="max-h-none min-h-0 flex-1 overflow-y-auto overscroll-contain"
               />
             </div>
