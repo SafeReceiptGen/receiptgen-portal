@@ -12,7 +12,12 @@ const lineItemSchema = z.object({
   id: z.string(),
   name: z.string().min(1, "Item name is required"),
   detail: z.string().optional().default(""),
-  quantity: z.number().min(0).optional().default(1),
+  quantity: z
+    .number()
+    .int("Quantity must be a whole number")
+    .min(1, "Quantity must be at least 1")
+    .optional()
+    .default(1),
   price: z.number().min(0).optional().default(0),
 });
 

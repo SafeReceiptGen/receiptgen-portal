@@ -140,9 +140,17 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
   };
 
   const handleItemChange = (id: string, field: keyof LineItem, value: any) => {
-    const newItems = data.items.map((item) =>
-      item.id === id ? { ...item, [field]: value } : item,
-    );
+    const newItems = data.items.map((item) => {
+      if (item.id !== id) return item;
+      if (field === "quantity") {
+        const qty = Number(value);
+        return {
+          ...item,
+          quantity: Number.isFinite(qty) ? Math.max(1, Math.trunc(qty)) : 1,
+        };
+      }
+      return { ...item, [field]: value };
+    });
     handleChange("items", newItems);
   };
 
@@ -526,12 +534,17 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                         </label>
                         <input
                           type="number"
+                          min={1}
+                          step={1}
+                          inputMode="numeric"
                           value={item.quantity}
                           onChange={(e) =>
                             handleItemChange(
                               item.id,
                               "quantity",
-                              parseInt(e.target.value) || 0,
+                              e.target.value === ""
+                                ? 1
+                                : parseInt(e.target.value, 10),
                             )
                           }
                           className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition-colors focus:border-blue-400 dark:border-white/10 dark:bg-white/5 dark:text-white"
