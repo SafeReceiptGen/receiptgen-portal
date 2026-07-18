@@ -1,4 +1,4 @@
-import { verifyApi, ApiRequestError } from "@/lib/api";
+import { verifyApi, ApiRequestError, returnsApi } from "@/lib/api";
 import { formatCurrency } from "@/lib/currency";
 import { format } from "date-fns";
 import Link from "next/link";
@@ -50,6 +50,14 @@ export default async function DigitalReceiptPage({
     );
   }
 
+  let activeReturn: { id: string; returnNumber: string } | null = null;
+  try {
+    const eligibility = await returnsApi.getEligibility(token);
+    activeReturn = eligibility.activeReturn ?? null;
+  } catch {
+    activeReturn = null;
+  }
+
   // ─── Calculations ──────────────────────────────────────────────────────────
   const subtotal = receipt.items.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -57,6 +65,7 @@ export default async function DigitalReceiptPage({
   );
 
   const hasPolicy = receipt.returnWindow !== "No returns";
+  const returnLocked = activeReturn != null;
   const returnDeadlineLabel = formatReturnDeadline(receipt.returnDeadline);
 
   return (
@@ -337,27 +346,42 @@ export default async function DigitalReceiptPage({
 
       {/* ── Floating Action Bar ── */}
       <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-slate-200/80 bg-white/95 px-4 pb-safe pt-4 shadow-[0_-8px_30px_-15px_rgba(0,0,0,0.1)] backdrop-blur-xl dark:border-white/10 dark:bg-[#071427]/95">
-        <div className="mx-auto flex max-w-lg items-center justify-between pb-4">
-          <div className="mr-4 flex-1">
+        <div className="mx-auto flex max-w-lg items-center justify-between gap-3 pb-4">
+          <div className="mr-1 min-w-0 flex-1">
             <p className="text-xs font-medium text-slate-500 dark:text-white/60">
-              Need to return an item?
+              {returnLocked ? "Return already in progress" : "Need to return an item?"}
             </p>
-            <p className="text-[10px] text-slate-400 mt-0.5 dark:text-white/40">
-              Subject to store policy
+            <p className="mt-0.5 text-[10px] leading-snug text-slate-400 dark:text-white/40">
+              {returnLocked
+                ? "Please wait until the current request is reviewed or completed."
+                : "Subject to store policy"}
             </p>
           </div>
-          <Link
-            href={`/receipt/${token}/return`}
-            className={cn(
-              "group relative flex items-center justify-center gap-2 overflow-hidden rounded-full bg-slate-900 px-6 py-3.5 pl-7 text-sm font-semibold text-white shadow-lg ring-1 ring-black/5 transition-all hover:bg-slate-800 active:scale-[0.98] dark:bg-white dark:text-slate-900 dark:ring-white/10 dark:hover:bg-white/90",
-              !hasPolicy && "opacity-50 grayscale cursor-not-allowed pointer-events-none"
-            )}
-          >
-            <span className="relative z-10">Start a Return</span>
-            <span className="relative z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/20 transition-transform group-hover:translate-x-0.5 dark:bg-black/10">
-              <ChevronRight size={14} strokeWidth={3} />
-            </span>
-          </Link>
+          {returnLocked && activeReturn ? (
+            <Link
+              href={`/return/${activeReturn.id}?token=${encodeURIComponent(token)}`}
+              className="group relative flex shrink-0 items-center justify-center gap-2 overflow-hidden rounded-full bg-slate-900 px-5 py-3.5 pl-6 text-sm font-semibold text-white shadow-lg ring-1 ring-black/5 transition-all hover:bg-slate-800 active:scale-[0.98] dark:bg-white dark:text-slate-900 dark:ring-white/10 dark:hover:bg-white/90"
+            >
+              <span className="relative z-10">View Return</span>
+              <span className="relative z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/20 transition-transform group-hover:translate-x-0.5 dark:bg-black/10">
+                <ChevronRight size={14} strokeWidth={3} />
+              </span>
+            </Link>
+          ) : (
+            <Link
+              href={`/receipt/${token}/return`}
+              aria-disabled={!hasPolicy}
+              className={cn(
+                "group relative flex shrink-0 items-center justify-center gap-2 overflow-hidden rounded-full bg-slate-900 px-6 py-3.5 pl-7 text-sm font-semibold text-white shadow-lg ring-1 ring-black/5 transition-all hover:bg-slate-800 active:scale-[0.98] dark:bg-white dark:text-slate-900 dark:ring-white/10 dark:hover:bg-white/90",
+                !hasPolicy && "pointer-events-none cursor-not-allowed opacity-50 grayscale"
+              )}
+            >
+              <span className="relative z-10">Start a Return</span>
+              <span className="relative z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/20 transition-transform group-hover:translate-x-0.5 dark:bg-black/10">
+                <ChevronRight size={14} strokeWidth={3} />
+              </span>
+            </Link>
+          )}
         </div>
       </div>
     </div>

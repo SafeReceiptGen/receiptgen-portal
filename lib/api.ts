@@ -436,6 +436,11 @@ export interface SubmitReturnPayload {
 export interface ReturnEligibilityResponse {
   eligible: boolean;
   reasons: string[];
+  /** Present when another return for this receipt is still active. */
+  activeReturn: {
+    id: string;
+    returnNumber: string;
+  } | null;
   receipt: {
     id: string;
     receiptNumber: string;

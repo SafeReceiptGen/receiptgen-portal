@@ -126,6 +126,7 @@ export default function ReturnRequestClient({
   const [newReturnId, setNewReturnId] = useState("");
   const [returnNumber, setReturnNumber] = useState("");
   const [eligibilityError, setEligibilityError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isRestored, setIsRestored] = useState(false);
   const [submittedLogisticsMethod, setSubmittedLogisticsMethod] =
     useState<LogisticsMethod | null>(null);
@@ -319,6 +320,7 @@ export default function ReturnRequestClient({
 
   const onSubmit = async () => {
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
       const data = getValues();
       setSubmittedLogisticsMethod(data.logistics.method);
@@ -333,6 +335,11 @@ export default function ReturnRequestClient({
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
       console.error("Failed to submit return request:", error);
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "Failed to submit return request. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -805,6 +812,11 @@ export default function ReturnRequestClient({
       </div>
 
       <div className="w-full max-w-lg mt-6 pb-4">
+        {submitError && (
+          <p className="mb-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-center text-xs text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
+            {submitError}
+          </p>
+        )}
         <div className="flex gap-3">
           {currentStep > 0 && (
             <button type="button" onClick={prevStep} className="rounded-xl border border-slate-200 bg-white px-5 py-3.5 font-semibold text-slate-600 transition-colors hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/8">
