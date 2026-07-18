@@ -14,7 +14,7 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { ReceiptData } from "@/types";
 import { fetchReceiptLogoForPdf } from "@/lib/receipt-logo-pdf";
@@ -31,6 +31,7 @@ import {
 import { pdf } from "@react-pdf/renderer";
 import { ReceiptPDF } from "./receipt-pdf";
 import { QRCodeCanvas } from "qrcode.react";
+import { useExpandableScreen } from "@/components/ui/expandable-screen";
 
 export default function ConversionDialog({
   onClose,
@@ -48,7 +49,21 @@ export default function ConversionDialog({
   const [copied, setCopied] = React.useState(false);
   const { data: session } = authClient.useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const queryClient = useQueryClient();
+  const { collapse } = useExpandableScreen();
+
+  const goToDashboard = () => {
+    onClose();
+    collapse();
+    void queryClient.invalidateQueries({ queryKey: ["receipts"] });
+    void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    if (pathname !== "/dashboard") {
+      router.push("/dashboard");
+    } else {
+      router.refresh();
+    }
+  };
 
   const savableItems = React.useMemo(() => {
     if (!receiptData) return [];
@@ -404,7 +419,7 @@ export default function ConversionDialog({
             <div className="flex items-center gap-3">
               <Button
                 size="sm"
-                onClick={() => router.push("/dashboard")}
+                onClick={goToDashboard}
                 variant="outline"
                 className="h-8 rounded-full px-4 text-[13px] font-medium border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-white/70 dark:hover:bg-white/5"
               >
@@ -443,7 +458,7 @@ export default function ConversionDialog({
           <div className="px-6 py-5 flex justify-end">
             <Button
               size="sm"
-              onClick={() => router.push("/dashboard")}
+              onClick={goToDashboard}
               className="h-8 cursor-pointer rounded-full bg-blue-700 px-4 text-[13px] font-medium text-white hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-white/90"
             >
               Go to dashboard
