@@ -17,8 +17,6 @@ export type RefundMethod = "ORIGINAL_PAYMENT" | "STORE_CREDIT" | "BANK_TRANSFER"
 
 export type LogisticsMethod = "HOME_PICKUP" | "DROP_OFF";
 
-export type RejectedAction = "SELL_TO_PLATFORM" | "RETURN_ITEMS" | "CLOSE_CASE";
-
 export interface ReturnItem {
   id: string;
   name: string;
@@ -94,7 +92,6 @@ export interface ReturnRequest {
   /** Raw API refund_type (e.g. exchange_only) for customer copy. */
   refundTypeCode?: string;
   rejectionReason?: string;
-  rejectedAction?: RejectedAction;
   currency: string;
   requestedAt: string; // ISO string
   collectedAt?: string;
