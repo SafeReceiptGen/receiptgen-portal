@@ -24,7 +24,6 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  ShoppingBag,
   RotateCcw,
   MapPin,
   Phone,
@@ -274,26 +273,19 @@ export default function ReturnStatusClient({
               {/* Action buttons for rejected */}
               {isRejected && (
                 <div className="mt-6 flex flex-col gap-2">
-                  <button
-                    type="button"
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition-all hover:bg-slate-800 active:scale-[0.99] dark:bg-white dark:text-slate-900 dark:ring-white/10 dark:hover:bg-white/90"
-                  >
-                    <ShoppingBag size={16} />
-                    Sell to SafeReceipts
-                  </button>
-                  <button
-                    type="button"
+                  <Link
+                    href={`/receipt/${returnData.receiptQrToken ?? returnData.receiptId}`}
                     className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition-all hover:bg-slate-800 active:scale-[0.99] dark:bg-white dark:text-slate-900 dark:ring-white/10 dark:hover:bg-white/90"
                   >
                     <RotateCcw size={16} />
-                    Return Item(s)
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-xl border border-slate-200 py-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50 dark:border-white/10 dark:text-white/70 dark:hover:bg-white/4"
+                    Initiate Return/Exchange
+                  </Link>
+                  <Link
+                    href={`/receipt/${returnData.receiptQrToken ?? returnData.receiptId}`}
+                    className="rounded-xl border border-slate-200 py-3 text-center text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50 dark:border-white/10 dark:text-white/70 dark:hover:bg-white/4"
                   >
                     Close Case
-                  </button>
+                  </Link>
                 </div>
               )}
 
