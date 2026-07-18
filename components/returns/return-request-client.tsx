@@ -86,12 +86,14 @@ function normalizeDraftItems(
     if (purchased === 1) {
       returnQuantity = 1;
     } else if (draft.selected) {
-      if (
-        returnQuantity == null ||
-        returnQuantity < 1 ||
-        returnQuantity > purchased
-      ) {
+      if (returnQuantity == null || !Number.isFinite(returnQuantity)) {
         returnQuantity = 1;
+      } else {
+        // Keep UI range [0, purchased]; submit validation still requires ≥ 1.
+        returnQuantity = Math.min(
+          purchased,
+          Math.max(0, Math.trunc(returnQuantity)),
+        );
       }
     } else {
       returnQuantity = undefined;
@@ -423,11 +425,28 @@ export default function ReturnRequestClient({
               <Controller
                 control={form.control}
                 name="items"
-                render={({ field }) => (
-                  <ItemSelector items={field.value} currency={receipt.currency} onChange={field.onChange} />
-                )}
+                render={({ field }) => {
+                  const itemFieldErrors = form.formState.errors.items;
+                  const itemErrors: Record<string, string | undefined> = {};
+                  if (Array.isArray(itemFieldErrors)) {
+                    field.value.forEach((item, index) => {
+                      const msg =
+                        itemFieldErrors[index]?.returnQuantity?.message;
+                      if (msg) itemErrors[item.id] = msg;
+                    });
+                  }
+                  return (
+                    <ItemSelector
+                      items={field.value}
+                      currency={receipt.currency}
+                      onChange={field.onChange}
+                      itemErrors={itemErrors}
+                    />
+                  );
+                }}
               />
-              {form.formState.errors.items && (
+              {form.formState.errors.items &&
+                !Array.isArray(form.formState.errors.items) && (
                 <p className="text-red-500 text-xs mt-2">{form.formState.errors.items.message}</p>
               )}
             </div>

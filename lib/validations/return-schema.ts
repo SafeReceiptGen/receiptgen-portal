@@ -9,15 +9,39 @@ const ReturnItemSchema = z
     quantity: z.number().min(1),
     price: z.number().min(0),
     selected: z.boolean(),
-    returnQuantity: z.number().int().min(1).optional(),
+    returnQuantity: z.number().int().optional(),
   })
   .superRefine((data, ctx) => {
     if (!data.selected || data.quantity <= 1) return;
     const rq = data.returnQuantity;
-    if (rq == null || rq < 1 || rq > data.quantity) {
+    if (rq == null) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Select how many units you are returning.",
+        path: ["returnQuantity"],
+      });
+      return;
+    }
+    if (rq < 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Quantity cannot be negative.",
+        path: ["returnQuantity"],
+      });
+      return;
+    }
+    if (rq === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Quantity must be at least 1, or deselect this item.",
+        path: ["returnQuantity"],
+      });
+      return;
+    }
+    if (rq > data.quantity) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Quantity cannot exceed the purchased amount (${data.quantity}).`,
         path: ["returnQuantity"],
       });
     }

@@ -76,8 +76,21 @@ export async function submitReturnRequest(
     items: selectedItems.map((item) => {
       const qty =
         item.quantity === 1 ? 1 : item.returnQuantity;
-      if (qty == null || qty < 1) {
+      if (qty == null) {
         throw new Error("Return quantity is required for each selected line.");
+      }
+      if (qty < 0) {
+        throw new Error("Return quantity cannot be negative.");
+      }
+      if (qty < 1) {
+        throw new Error(
+          "Return quantity must be at least 1 for each selected line.",
+        );
+      }
+      if (qty > item.quantity) {
+        throw new Error(
+          `Return quantity cannot exceed the purchased amount (${item.quantity}).`,
+        );
       }
       return {
         lineItemId: item.id,

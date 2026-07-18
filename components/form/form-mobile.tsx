@@ -144,9 +144,17 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
   };
 
   const handleItemChange = (id: string, field: keyof LineItem, value: any) => {
-    const newItems = data.items.map((item) =>
-      item.id === id ? { ...item, [field]: value } : item,
-    );
+    const newItems = data.items.map((item) => {
+      if (item.id !== id) return item;
+      if (field === "quantity") {
+        const qty = Number(value);
+        return {
+          ...item,
+          quantity: Number.isFinite(qty) ? Math.max(1, Math.trunc(qty)) : 1,
+        };
+      }
+      return { ...item, [field]: value };
+    });
     handleChange("items", newItems);
   };
 
@@ -491,12 +499,17 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                       </Label>
                       <Input
                         type="number"
+                        min={1}
+                        step={1}
+                        inputMode="numeric"
                         value={item.quantity}
                         onChange={(e) =>
                           handleItemChange(
                             item.id,
                             "quantity",
-                            parseInt(e.target.value) || 0,
+                            e.target.value === ""
+                              ? 1
+                              : parseInt(e.target.value, 10),
                           )
                         }
                         className="mt-1 w-full rounded-lg bg-slate-50 border-slate-200 p-2 text-center text-slate-900 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white"
