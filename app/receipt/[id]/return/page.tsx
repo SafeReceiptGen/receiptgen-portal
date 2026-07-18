@@ -4,6 +4,7 @@ import {
   returnsApi,
 } from "@/lib/api";
 import { checkEligibility } from "@/lib/eligibility";
+import { ACTIVE_RETURN_IN_PROGRESS_MESSAGE } from "@/lib/return-active";
 import { formatCurrency } from "@/lib/currency";
 import { format } from "date-fns";
 import Link from "next/link";
@@ -13,9 +14,9 @@ import {
   Package,
   Calendar,
   Undo2,
-  AlertCircle,
   ChevronRight,
   ShieldAlert,
+  Clock,
 } from "lucide-react";
 import { cn, mapToReceiptForReturn } from "@/lib/utils";
 
@@ -71,6 +72,8 @@ export default async function EligibilityDashboardPage({
   }
 
   const fallback = checkEligibility(receipt, []);
+  const activeReturn = serverEligibility?.activeReturn ?? null;
+  const returnInProgress = activeReturn != null;
 
   const eligible =
     serverEligibility !== null
@@ -80,13 +83,15 @@ export default async function EligibilityDashboardPage({
   const daysRemaining =
     serverEligibility?.policy?.daysRemaining ?? fallback.daysRemaining;
 
-  const reason = !eligible
-    ? serverEligibility?.reasons?.length
-      ? serverEligibility.reasons.join(" ")
-      : fallback.reason
-    : serverEligibility?.policy?.daysRemaining != null
-      ? `You have ${serverEligibility.policy.daysRemaining} day${serverEligibility.policy.daysRemaining === 1 ? "" : "s"} remaining to return items from this receipt.`
-      : fallback.reason;
+  const reason = returnInProgress
+    ? ACTIVE_RETURN_IN_PROGRESS_MESSAGE
+    : !eligible
+      ? serverEligibility?.reasons?.length
+        ? serverEligibility.reasons.join(" ")
+        : fallback.reason
+      : serverEligibility?.policy?.daysRemaining != null
+        ? `You have ${serverEligibility.policy.daysRemaining} day${serverEligibility.policy.daysRemaining === 1 ? "" : "s"} remaining to return items from this receipt.`
+        : fallback.reason;
 
   const alreadyReturnedItemIds =
     serverEligibility?.items
@@ -98,6 +103,8 @@ export default async function EligibilityDashboardPage({
     daysRemaining,
     reason,
     alreadyReturnedItemIds,
+    returnInProgress,
+    activeReturn,
   };
 
   return (
@@ -129,6 +136,18 @@ export default async function EligibilityDashboardPage({
                   ? "Last day!"
                   : `${eligibility.daysRemaining} days remaining`}
               </span>
+            </>
+          ) : eligibility.returnInProgress ? (
+            <>
+              <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-amber-50 ring-4 ring-amber-100 dark:bg-amber-500/10 dark:ring-amber-500/20">
+                <Clock
+                  size={40}
+                  className="text-amber-500 dark:text-amber-400"
+                />
+              </div>
+              <h1 className="font-display text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                Return In Progress
+              </h1>
             </>
           ) : (
             <>
@@ -272,6 +291,13 @@ export default async function EligibilityDashboardPage({
               className="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-6 text-base font-semibold text-white shadow-lg ring-1 ring-black/5 transition-all hover:bg-primary-dark active:scale-[0.98] dark:ring-white/10"
             >
               Start Return Request <ChevronRight size={18} />
+            </Link>
+          ) : eligibility.returnInProgress && eligibility.activeReturn ? (
+            <Link
+              href={`/return/${eligibility.activeReturn.id}?token=${encodeURIComponent(token)}`}
+              className="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 text-base font-semibold text-white shadow-lg ring-1 ring-black/5 transition-all hover:bg-slate-800 active:scale-[0.98] dark:bg-white dark:text-slate-900 dark:hover:bg-white/90"
+            >
+              View Return Status <ChevronRight size={18} />
             </Link>
           ) : (
             <a

@@ -1,7 +1,8 @@
-import { verifyApi, ApiRequestError } from "@/lib/api";
+import { verifyApi, ApiRequestError, returnsApi } from "@/lib/api";
 import ReturnRequestClient from "@/components/returns/return-request-client";
 import { Package } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { mapToReceiptForReturn } from "@/lib/utils";
 
 export default async function ReturnRequestServerPage({
@@ -42,6 +43,20 @@ export default async function ReturnRequestServerPage({
           Back to Receipt
         </Link>
       </div>
+    );
+  }
+
+  let activeReturnId: string | null = null;
+  try {
+    const eligibility = await returnsApi.getEligibility(token);
+    activeReturnId = eligibility.activeReturn?.id ?? null;
+  } catch {
+    // Ignore eligibility fetch failures; submit still enforces the lock.
+  }
+
+  if (activeReturnId) {
+    redirect(
+      `/return/${activeReturnId}?token=${encodeURIComponent(token)}`,
     );
   }
 
