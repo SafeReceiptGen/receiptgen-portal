@@ -1,9 +1,17 @@
+import type { DiscountReason } from "@/lib/discount";
+
 export interface LineItem {
   id: string;
   name: string;
   detail: string;
   quantity: number;
+  /** Amount charged to the customer (sale price when discounted). */
   price: number;
+  /** Listed / catalog price before any discount. */
+  originalPrice: number;
+  discountReason?: DiscountReason | null;
+  /** UI-only: whether discount fields are shown for this line. */
+  discountEnabled?: boolean;
   /** True when price comes from the store catalog and should not be edited */
   priceFixed?: boolean;
 }

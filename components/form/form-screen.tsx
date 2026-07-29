@@ -90,13 +90,20 @@ export default function ReceiptFormScreen({
     initialActionState,
   );
 
-  // When server action succeeds: update qrUrl then capture
+  // When server action succeeds: update qr fields then capture
   useEffect(() => {
     if (state.success) {
-      if (state.qrCodeToken) {
-        setData((prev) => ({ ...prev, qrUrl: state.qrCodeToken!, qrCodeToken: state.qrCodeToken! }));
+      if (state.qrCodeToken || state.qrUrl) {
+        setData((prev) => ({
+          ...prev,
+          qrCodeToken: state.qrCodeToken ?? prev.qrCodeToken,
+          qrUrl: state.qrUrl ?? prev.qrUrl,
+        }));
       }
-      requestAnimationFrame(() => captureReceipt());
+      // Wait a frame after state flush so the preview QR is painted before capture.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => captureReceipt());
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
@@ -317,7 +324,10 @@ export default function ReceiptFormScreen({
                   <ReceiptPreview
                     data={data}
                     ref={receiptRef}
-                    showQr={isAuthenticated && !!data.qrCodeToken?.trim()}
+                    showQr={
+                      isAuthenticated &&
+                      !!(data.qrCodeToken?.trim() || data.qrUrl?.trim())
+                    }
                   />
                 </div>
               </div>

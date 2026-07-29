@@ -133,7 +133,17 @@ export interface ReceiptLineItem {
   name: string;
   detail?: string;
   quantity: number;
+  /** Charged / sale price. */
   price: number;
+  /** Listed price before discount. Defaults to price on the API when omitted. */
+  originalPrice?: number;
+  discountReason?:
+    | "customer_negotiation"
+    | "promotion_sale"
+    | "loyalty_customer"
+    | "damaged_open_box"
+    | "other"
+    | null;
 }
 
 export interface CreateReceiptPayload {
@@ -197,8 +207,16 @@ export interface SingleReceiptItem {
   name: string;
   detail: string | null;
   quantity: number;
+  originalPrice?: string;
   unitPrice: string;
   lineTotal: string;
+  discountReason?:
+    | "customer_negotiation"
+    | "promotion_sale"
+    | "loyalty_customer"
+    | "damaged_open_box"
+    | "other"
+    | null;
 }
 
 export interface SingleReceipt {
@@ -464,8 +482,16 @@ export interface ReturnEligibilityResponse {
     name: string;
     detail: string | null;
     quantity: number;
+    originalPrice?: string;
     unitPrice: string;
     lineTotal: string;
+    discountReason?:
+      | "customer_negotiation"
+      | "promotion_sale"
+      | "loyalty_customer"
+      | "damaged_open_box"
+      | "other"
+      | null;
     alreadyReturned: number;
     returnable: number;
   }>;
@@ -642,8 +668,16 @@ export interface VerifiedReceiptItem {
   name: string;
   detail: string | null;
   quantity: number;
+  originalPrice?: string;
   unitPrice: string;
   lineTotal: string;
+  discountReason?:
+    | "customer_negotiation"
+    | "promotion_sale"
+    | "loyalty_customer"
+    | "damaged_open_box"
+    | "other"
+    | null;
   sortOrder: number;
 }
 

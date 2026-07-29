@@ -185,6 +185,13 @@ export default function ConversionDialog({
 
   const qrCanvasRef = React.useRef<HTMLCanvasElement>(null);
 
+  // Prefer the server-built verification URL; fall back to composing from the bare token.
+  const dynamicQrUrl =
+    receiptData?.qrUrl?.trim() ||
+    (qrCodeToken
+      ? `${process.env.NEXT_PUBLIC_URL || "http://localhost:3000"}/receipt/${qrCodeToken}`
+      : "");
+
   const handleDownloadPDF = async () => {
     if (!receiptData) return;
 
@@ -211,7 +218,7 @@ export default function ConversionDialog({
       const blob = await pdf(
         <ReceiptPDF
           data={receiptData}
-          showQr={!!qrCodeToken}
+          showQr={!!dynamicQrUrl}
           qrDataUrl={qrDataUrl}
           logoDataUrl={logoDataUrl}
           logoNaturalWidth={logoWidthPt}
@@ -250,15 +257,11 @@ export default function ConversionDialog({
     saveItemsMutation.mutate(itemsToSave);
   };
 
-  const dynamicQrUrl = qrCodeToken
-    ? `${process.env.NEXT_PUBLIC_URL || "http://localhost:3000"}/receipt/${qrCodeToken}`
-    : "";
-
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="gap-0 overflow-hidden border-slate-200 bg-white p-0 text-slate-900 shadow-2xl sm:max-w-sm dark:border-white/10 dark:bg-[#071427] dark:text-white">
         {/* Render QRCodeCanvas hidden to extract its dataUrl for PDF generation */}
-        {qrCodeToken && (
+        {dynamicQrUrl && (
           <div style={{ display: "none" }}>
             <QRCodeCanvas
               value={dynamicQrUrl}

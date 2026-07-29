@@ -10,6 +10,7 @@ import {
 import { ReceiptData } from "@/types";
 import { fitReceiptLogoPdfDimensions } from "@/lib/receipt-logo-display";
 import { formatPaymentMethodLabel } from "@/lib/receipt-display-labels";
+import { isLineItemDiscounted } from "@/lib/discount";
 
 // QR and retailer logo are embedded as raster data URLs from the receipt builder (`conversion-dialog`).
 
@@ -95,6 +96,30 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "#a1a1aa",
     marginTop: 2,
+  },
+  discountBreakdown: {
+    marginTop: 2,
+  },
+  discountRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 1,
+  },
+  discountLabel: {
+    fontSize: 9,
+    color: "#71717a",
+  },
+  discountValue: {
+    fontSize: 9,
+    color: "#71717a",
+  },
+  discountSavedLabel: {
+    fontSize: 9,
+    color: "#059669",
+  },
+  discountSavedValue: {
+    fontSize: 9,
+    color: "#059669",
   },
   financialsContainer: {
     backgroundColor: "#f4f4f5", // zinc-100 equivalent
@@ -329,25 +354,60 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
 
         {/* Items */}
         <View style={styles.itemsContainer}>
-          {data.items.map((item, index) => (
-            <View key={item.id} style={styles.itemRow} wrap={false}>
-              <Text style={styles.itemIndex}>{index + 1}.</Text>
-              <View style={styles.itemDetails}>
-                <View style={styles.itemNamePriceContainer}>
-                  <Text style={styles.itemName}>{item.name}</Text>
-                  <Text style={styles.itemTotalPrice}>
-                    {formatPrice(item.price * item.quantity)} {data.currency}
-                  </Text>
+          {data.items.map((item, index) => {
+            const originalPrice = item.originalPrice ?? item.price;
+            const discounted = isLineItemDiscounted(originalPrice, item.price);
+            const saved = originalPrice - item.price;
+
+            return (
+              <View key={item.id} style={styles.itemRow} wrap={false}>
+                <Text style={styles.itemIndex}>{index + 1}.</Text>
+                <View style={styles.itemDetails}>
+                  <View style={styles.itemNamePriceContainer}>
+                    <Text style={styles.itemName}>{item.name}</Text>
+                    <Text style={styles.itemTotalPrice}>
+                      {formatPrice(item.price * item.quantity)} {data.currency}
+                    </Text>
+                  </View>
+                  {item.detail ? (
+                    <Text style={styles.itemDetailText}>{item.detail}</Text>
+                  ) : null}
+                  {discounted ? (
+                    <View style={styles.discountBreakdown}>
+                      <View style={styles.discountRow}>
+                        <Text style={styles.discountLabel}>Original Price</Text>
+                        <Text style={styles.discountValue}>
+                          {formatPrice(originalPrice)} {data.currency}
+                        </Text>
+                      </View>
+                      <View style={styles.discountRow}>
+                        <Text style={styles.discountLabel}>You Paid</Text>
+                        <Text style={styles.discountValue}>
+                          {formatPrice(item.price)} {data.currency}
+                        </Text>
+                      </View>
+                      <View style={styles.discountRow}>
+                        <Text style={styles.discountSavedLabel}>You Saved</Text>
+                        <Text style={styles.discountSavedValue}>
+                          {formatPrice(saved)} {data.currency}
+                        </Text>
+                      </View>
+                      {item.quantity > 1 ? (
+                        <Text style={styles.itemQtyPrice}>
+                          {item.quantity} x {formatPrice(item.price)}{" "}
+                          {data.currency}
+                        </Text>
+                      ) : null}
+                    </View>
+                  ) : (
+                    <Text style={styles.itemQtyPrice}>
+                      {item.quantity} x {formatPrice(item.price)} {data.currency}
+                    </Text>
+                  )}
                 </View>
-                {item.detail ? (
-                  <Text style={styles.itemDetailText}>{item.detail}</Text>
-                ) : null}
-                <Text style={styles.itemQtyPrice}>
-                  {item.quantity} x {formatPrice(item.price)} {data.currency}
-                </Text>
               </View>
-            </View>
-          ))}
+            );
+          })}
         </View>
 
         {/* Financials Block */}

@@ -8,18 +8,89 @@ import { addMockReceipt } from "@/lib/mock-data";
 import { portalPublicOrigin } from "@/lib/portal-public-url";
 
 // Zod schema — most fields are optional, validation is lenient
-const lineItemSchema = z.object({
-  id: z.string(),
-  name: z.string().min(1, "Item name is required"),
-  detail: z.string().optional().default(""),
-  quantity: z
-    .number()
-    .int("Quantity must be a whole number")
-    .min(1, "Quantity must be at least 1")
-    .optional()
-    .default(1),
-  price: z.number().min(0).optional().default(0),
-});
+const discountReasonSchema = z.enum([
+  "customer_negotiation",
+  "promotion_sale",
+  "loyalty_customer",
+  "damaged_open_box",
+  "other",
+]);
+
+const moneyEquals = (a: number, b: number) =>
+  Math.round(a * 100) === Math.round(b * 100);
+
+const lineItemSchema = z
+  .object({
+    id: z.string(),
+    name: z.string().min(1, "Item name is required"),
+    detail: z.string().optional().default(""),
+    quantity: z
+      .number()
+      .int("Quantity must be a whole number")
+      .min(1, "Quantity must be at least 1")
+      .optional()
+      .default(1),
+    price: z.number().min(0).optional().default(0),
+    originalPrice: z.number().min(0).optional(),
+    discountReason: discountReasonSchema.nullable().optional(),
+    discountEnabled: z.boolean().optional(),
+    priceFixed: z.boolean().optional(),
+  })
+  .superRefine((item, ctx) => {
+    const originalPrice = item.originalPrice ?? item.price ?? 0;
+    const salePrice = item.price ?? 0;
+
+    if (salePrice > originalPrice && !moneyEquals(salePrice, originalPrice)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["price"],
+        message: "Sale price cannot exceed original price",
+      });
+    }
+
+    const isDiscounted =
+      originalPrice > salePrice && !moneyEquals(originalPrice, salePrice);
+
+    if (isDiscounted || item.discountEnabled) {
+      if (isDiscounted && !(salePrice > 0)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["price"],
+          message: "Sale price must be greater than zero",
+        });
+      }
+      if (isDiscounted && !item.discountReason) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["discountReason"],
+          message:
+            "Discount reason is required when sale price is less than original price",
+        });
+      }
+      if (item.discountEnabled && moneyEquals(originalPrice, salePrice)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["price"],
+          message: "Enter a sale price lower than the original price",
+        });
+      }
+    }
+  })
+  .transform((item) => {
+    const originalPrice = item.originalPrice ?? item.price ?? 0;
+    const salePrice = item.price ?? 0;
+    const isDiscounted =
+      originalPrice > salePrice && !moneyEquals(originalPrice, salePrice);
+    return {
+      id: item.id,
+      name: item.name,
+      detail: item.detail,
+      quantity: item.quantity,
+      price: salePrice,
+      originalPrice,
+      discountReason: isDiscounted ? (item.discountReason ?? null) : null,
+    };
+  });
 
 const receiptSchema = z.object({
   storeId: z.string().optional().default(""),
@@ -50,7 +121,10 @@ const receiptSchema = z.object({
 export type ActionState = {
   success: boolean;
   message: string;
+  /** Bare verification token from the API (path segment for /receipt/{token}). */
   qrCodeToken?: string;
+  /** Full customer-facing verification URL. */
+  qrUrl?: string;
   errors?: Record<string, string[] | undefined>;
 };
 
@@ -79,8 +153,11 @@ export async function generateReceipt(
     const result = receiptSchema.safeParse(receiptData);
 
     if (!result.success) {
-      const fieldErrors = result.error.flatten().fieldErrors;
-      const firstError = Object.values(fieldErrors).flat().filter(Boolean)[0];
+      const flattened = result.error.flatten();
+      const fieldErrors = flattened.fieldErrors;
+      const firstError =
+        flattened.formErrors[0] ||
+        Object.values(fieldErrors).flat().filter(Boolean)[0];
       return {
         success: false,
         message: firstError || "Please check your form for errors.",
@@ -136,6 +213,8 @@ export async function generateReceipt(
           detail: item.detail,
           quantity: item.quantity,
           price: item.price,
+          originalPrice: item.originalPrice,
+          discountReason: item.discountReason,
         })),
       }),
     });
@@ -190,6 +269,7 @@ export async function generateReceipt(
         detail: item.detail,
         quantity: item.quantity,
         price: item.price,
+        originalPrice: item.originalPrice,
         selected: false,
       })),
       currency: formData.currency,
@@ -217,7 +297,8 @@ export async function generateReceipt(
     return {
       success: true,
       message: "Receipt generated successfully!",
-      qrCodeToken: qrUrl,
+      qrCodeToken,
+      qrUrl,
     };
   } catch (error) {
     console.error("Receipt generation failed:", error);

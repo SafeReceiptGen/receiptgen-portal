@@ -6,6 +6,7 @@ import { formatPaymentMethodLabel } from "@/lib/receipt-display-labels";
 import Link from "next/link";
 import { BrandLogoImage } from "@/components/receipt/brand-logo-image";
 import { RECEIPT_LOGO_SLOT_PX } from "@/lib/receipt-logo-display";
+import { isLineItemDiscounted } from "@/lib/discount";
 
 interface ReceiptPreviewProps {
   data: ReceiptData;
@@ -51,10 +52,12 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
       : data.returnWindow;
   const hasPolicy = data.returnWindow !== "No returns";
 
-  // Only encode URLs returned from the API (path segment must be qrCodeToken, not orderId).
-  const dynamicQrUrl = data.qrCodeToken?.trim()
-    ? `${process.env.NEXT_PUBLIC_URL || "http://localhost:3000"}/receipt/${data.qrCodeToken}`
-    : "";
+  // Prefer the server-built verification URL; fall back to composing from the bare token.
+  const dynamicQrUrl = data.qrUrl?.trim()
+    ? data.qrUrl.trim()
+    : data.qrCodeToken?.trim()
+      ? `${process.env.NEXT_PUBLIC_URL || "http://localhost:3000"}/receipt/${data.qrCodeToken.trim()}`
+      : "";
 
   return (
     <div className="flex items-start justify-center w-full h-full p-8 overflow-auto overscroll-contain custom-scrollbar">
@@ -127,31 +130,69 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
           >
             {/* Line Items */}
             <div className="flex flex-col gap-6 mb-8 text-left">
-              {data.items.map((item, index) => (
-                <div key={item.id} className="flex gap-4 items-start text-xs">
-                  <div className="w-4 pt-0.5 font-medium text-zinc-400">
-                    {index + 1}.
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start mb-1">
-                      <span className="font-bold text-sm text-zinc-900 w-2/3 leading-tight">
-                        {item.name}
-                      </span>
-                      <span className="font-bold text-sm whitespace-nowrap">
-                        {formatPrice(item.price * item.quantity)}{" "}
-                        {data.currency}
-                      </span>
+              {data.items.map((item, index) => {
+                const originalPrice = item.originalPrice ?? item.price;
+                const discounted = isLineItemDiscounted(
+                  originalPrice,
+                  item.price,
+                );
+                const saved = originalPrice - item.price;
+
+                return (
+                  <div key={item.id} className="flex gap-4 items-start text-xs">
+                    <div className="w-4 pt-0.5 font-medium text-zinc-400">
+                      {index + 1}.
                     </div>
-                    <p className="text-zinc-500 mb-1 leading-normal">
-                      {item.detail}
-                    </p>
-                    <div className="text-zinc-400">
-                      {item.quantity} x {formatPrice(item.price)}{" "}
-                      {data.currency}
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="font-bold text-sm text-zinc-900 w-2/3 leading-tight">
+                          {item.name}
+                        </span>
+                        <span className="font-bold text-sm whitespace-nowrap">
+                          {formatPrice(item.price * item.quantity)}{" "}
+                          {data.currency}
+                        </span>
+                      </div>
+                      <p className="text-zinc-500 mb-1 leading-normal">
+                        {item.detail}
+                      </p>
+                      {discounted ? (
+                        <div className="space-y-0.5 text-zinc-500">
+                          <div className="flex justify-between gap-3">
+                            <span>Original Price</span>
+                            <span className="whitespace-nowrap">
+                              {formatPrice(originalPrice)} {data.currency}
+                            </span>
+                          </div>
+                          <div className="flex justify-between gap-3">
+                            <span>You Paid</span>
+                            <span className="whitespace-nowrap">
+                              {formatPrice(item.price)} {data.currency}
+                            </span>
+                          </div>
+                          <div className="flex justify-between gap-3 text-emerald-600">
+                            <span>You Saved</span>
+                            <span className="whitespace-nowrap">
+                              {formatPrice(saved)} {data.currency}
+                            </span>
+                          </div>
+                          {item.quantity > 1 ? (
+                            <div className="text-zinc-400 pt-0.5">
+                              {item.quantity} x {formatPrice(item.price)}{" "}
+                              {data.currency}
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : (
+                        <div className="text-zinc-400">
+                          {item.quantity} x {formatPrice(item.price)}{" "}
+                          {data.currency}
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Financials Block */}
