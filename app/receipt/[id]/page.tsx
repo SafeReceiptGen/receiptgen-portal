@@ -12,6 +12,7 @@ import {
 } from "@/lib/receipt-display-labels";
 import { BrandLogoImage } from "@/components/receipt/brand-logo-image";
 import { RECEIPT_LOGO_SLOT_PX } from "@/lib/receipt-logo-display";
+import { isLineItemDiscounted } from "@/lib/discount";
 
 export default async function DigitalReceiptPage({
   params,
@@ -210,41 +211,79 @@ export default async function DigitalReceiptPage({
           >
             {/* Items List */}
             <div className="mb-10 space-y-8">
-              {receipt.items.map((item, idx) => (
-                <div key={item.id} className="flex items-start text-sm py-1">
-                  <span className="w-6 shrink-0 pt-0.5 font-medium text-slate-400">
-                    {idx + 1}.
-                  </span>
+              {receipt.items.map((item, idx) => {
+                const originalPrice = item.originalPrice ?? item.price;
+                const discounted = isLineItemDiscounted(
+                  originalPrice,
+                  item.price,
+                );
+                const saved = originalPrice - item.price;
 
-                  <div className="flex-1 space-y-1">
-                    {/* Name + Price row */}
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="font-bold text-slate-900  leading-snug pr-4">
-                        {item.name}
-                      </span>
+                return (
+                  <div key={item.id} className="flex items-start text-sm py-1">
+                    <span className="w-6 shrink-0 pt-0.5 font-medium text-slate-400">
+                      {idx + 1}.
+                    </span>
 
-                      <span className="font-bold whitespace-nowrap text-slate-900">
-                        {formatCurrency(
-                          item.price * item.quantity,
-                          receipt.currency
-                        )}
-                      </span>
+                    <div className="flex-1 space-y-1">
+                      {/* Name + Price row */}
+                      <div className="flex items-start justify-between gap-4">
+                        <span className="font-bold text-slate-900  leading-snug pr-4">
+                          {item.name}
+                        </span>
+
+                        <span className="font-bold whitespace-nowrap text-slate-900">
+                          {formatCurrency(
+                            item.price * item.quantity,
+                            receipt.currency,
+                          )}
+                        </span>
+                      </div>
+
+                      {/* Variant / Detail */}
+                      {item.detail && (
+                        <p className=" mt-2 text-xs text-slate-500 leading-relaxed">
+                          {item.detail}
+                        </p>
+                      )}
+
+                      {discounted ? (
+                        <div className="mt-2 space-y-1 text-xs text-slate-500">
+                          <div className="flex justify-between gap-3">
+                            <span>Original Price</span>
+                            <span className="whitespace-nowrap">
+                              {formatCurrency(originalPrice, receipt.currency)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between gap-3">
+                            <span>You Paid</span>
+                            <span className="whitespace-nowrap">
+                              {formatCurrency(item.price, receipt.currency)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between gap-3 text-emerald-600">
+                            <span>You Saved</span>
+                            <span className="whitespace-nowrap">
+                              {formatCurrency(saved, receipt.currency)}
+                            </span>
+                          </div>
+                          {item.quantity > 1 ? (
+                            <p className="pt-0.5 text-xs font-medium text-slate-400">
+                              {item.quantity} ×{" "}
+                              {formatCurrency(item.price, receipt.currency)}
+                            </p>
+                          ) : null}
+                        </div>
+                      ) : (
+                        <p className=" mt-2 text-xs font-medium text-slate-400">
+                          {item.quantity} ×{" "}
+                          {formatCurrency(item.price, receipt.currency)}
+                        </p>
+                      )}
                     </div>
-
-                    { /* Variant / Detail */ }
-                    {item.detail && (
-                      <p className=" mt-2 text-xs text-slate-500 leading-relaxed">
-                        {item.detail}
-                      </p>
-                    )}
-
-                    {/* Qty + unit price */}
-                    <p className=" mt-2 text-xs font-medium text-slate-400">
-                      {item.quantity} × {formatCurrency(item.price, receipt.currency)}
-                    </p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Totals Box */}

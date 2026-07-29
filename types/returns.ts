@@ -23,7 +23,10 @@ export interface ReturnItem {
   detail: string;
   /** Units purchased on the receipt (max returnable per line). */
   quantity: number;
+  /** Amount charged (sale / unit price). */
   price: number;
+  /** Listed price before discount; equals price when not discounted. */
+  originalPrice?: number;
   selected: boolean;
   /** Units the customer is returning; required when `quantity` > 1 and line is selected. */
   returnQuantity?: number;

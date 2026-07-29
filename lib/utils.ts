@@ -51,6 +51,7 @@ export function mapToReceiptForReturn(
       detail: item.detail ?? "",
       quantity: item.quantity,
       price: parseFloat(item.unitPrice),
+      originalPrice: parseFloat(item.originalPrice ?? item.unitPrice),
       selected: false,
     })),
     currency: receipt.currency,

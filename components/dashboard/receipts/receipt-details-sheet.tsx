@@ -14,6 +14,10 @@ import { formatPaymentMethodLabel } from "@/lib/receipt-display-labels";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BrandLogoImage } from "@/components/receipt/brand-logo-image";
 import { RECEIPT_LOGO_SLOT_PX } from "@/lib/receipt-logo-display";
+import {
+  discountReasonLabel,
+  isLineItemDiscounted,
+} from "@/lib/discount";
 
 interface ReceiptDetailsSheetProps {
   receiptId: string | null;
@@ -140,35 +144,79 @@ export function ReceiptDetailsSheet({
               >
                 {/* Line Items */}
                 <div className="flex flex-col gap-6 mb-8 text-left">
-                  {receipt.items.map((item, index) => (
-                    <div
-                      key={item.id}
-                      className="flex gap-4 items-start text-xs"
-                    >
-                      <div className="w-4 pt-0.5 font-medium text-zinc-400">
-                        {index + 1}.
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start mb-1">
-                          <span className="font-bold text-sm text-zinc-900 w-2/3 leading-tight">
-                            {item.name}
-                          </span>
-                          <span className="font-bold text-sm whitespace-nowrap">
-                            {formatPrice(item.lineTotal)} {receipt.currency}
-                          </span>
+                  {receipt.items.map((item, index) => {
+                    const originalPrice = parseFloat(
+                      item.originalPrice ?? item.unitPrice,
+                    );
+                    const salePrice = parseFloat(item.unitPrice);
+                    const discounted = isLineItemDiscounted(
+                      originalPrice,
+                      salePrice,
+                    );
+                    const saved = originalPrice - salePrice;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex gap-4 items-start text-xs"
+                      >
+                        <div className="w-4 pt-0.5 font-medium text-zinc-400">
+                          {index + 1}.
                         </div>
-                        {item.detail && (
-                          <p className="text-zinc-500 mb-1 leading-normal">
-                            {item.detail}
-                          </p>
-                        )}
-                        <div className="text-zinc-400">
-                          {item.quantity} x {formatPrice(item.unitPrice)}{" "}
-                          {receipt.currency}
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="font-bold text-sm text-zinc-900 w-2/3 leading-tight">
+                              {item.name}
+                            </span>
+                            <span className="font-bold text-sm whitespace-nowrap">
+                              {formatPrice(item.lineTotal)} {receipt.currency}
+                            </span>
+                          </div>
+                          {item.detail && (
+                            <p className="text-zinc-500 mb-1 leading-normal">
+                              {item.detail}
+                            </p>
+                          )}
+                          {discounted ? (
+                            <div className="space-y-0.5 text-zinc-500">
+                              <div className="flex justify-between gap-3">
+                                <span>Original Price</span>
+                                <span className="whitespace-nowrap">
+                                  {formatPrice(String(originalPrice))}{" "}
+                                  {receipt.currency}
+                                </span>
+                              </div>
+                              <div className="flex justify-between gap-3">
+                                <span>Sold At</span>
+                                <span className="whitespace-nowrap">
+                                  {formatPrice(item.unitPrice)}{" "}
+                                  {receipt.currency}
+                                </span>
+                              </div>
+                              <div className="flex justify-between gap-3 text-emerald-600">
+                                <span>Discount</span>
+                                <span className="whitespace-nowrap">
+                                  {formatPrice(String(saved))}{" "}
+                                  {receipt.currency}
+                                </span>
+                              </div>
+                              {item.discountReason ? (
+                                <p className="pt-0.5 text-zinc-400">
+                                  Reason:{" "}
+                                  {discountReasonLabel(item.discountReason)}
+                                </p>
+                              ) : null}
+                            </div>
+                          ) : (
+                            <div className="text-zinc-400">
+                              {item.quantity} x {formatPrice(item.unitPrice)}{" "}
+                              {receipt.currency}
+                            </div>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Financials Block */}

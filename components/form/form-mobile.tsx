@@ -41,6 +41,7 @@ import { PAYMENT_METHOD_OPTIONS } from "@/lib/payment-methods";
 import { CatalogProductPicker } from "./catalog-product-picker";
 import { returnWindowEnum } from "@/types/enums";
 import { trackCtaClick } from "@/lib/analytics";
+import { DISCOUNT_REASONS, type DiscountReason } from "@/lib/discount";
 
 interface MobileWizardProps {
   data: ReceiptData;
@@ -153,7 +154,47 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
           quantity: Number.isFinite(qty) ? Math.max(1, Math.trunc(qty)) : 1,
         };
       }
+      if (field === "originalPrice") {
+        const originalPrice = Number(value) || 0;
+        if (item.discountEnabled) {
+          return { ...item, originalPrice };
+        }
+        return { ...item, originalPrice, price: originalPrice };
+      }
+      if (field === "price" && item.discountEnabled) {
+        return { ...item, price: Number(value) || 0 };
+      }
       return { ...item, [field]: value };
+    });
+    handleChange("items", newItems);
+  };
+
+  const enableDiscount = (id: string) => {
+    const newItems = data.items.map((item) => {
+      if (item.id !== id) return item;
+      const originalPrice = item.originalPrice ?? item.price;
+      return {
+        ...item,
+        discountEnabled: true,
+        originalPrice,
+        price: originalPrice,
+        discountReason: null,
+      };
+    });
+    handleChange("items", newItems);
+  };
+
+  const disableDiscount = (id: string) => {
+    const newItems = data.items.map((item) => {
+      if (item.id !== id) return item;
+      const originalPrice = item.originalPrice ?? item.price;
+      return {
+        ...item,
+        discountEnabled: false,
+        originalPrice,
+        price: originalPrice,
+        discountReason: null,
+      };
     });
     handleChange("items", newItems);
   };
@@ -170,6 +211,9 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
       detail,
       quantity: 1,
       price,
+      originalPrice: price,
+      discountEnabled: false,
+      discountReason: null,
       priceFixed,
     };
     handleChange("items", [...data.items, newItem]);
@@ -517,16 +561,16 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                     </div>
                     <div className="flex-2">
                       <Label className="text-xs text-slate-400 uppercase dark:text-white/50">
-                        Price
+                        Original Price
                       </Label>
                       <Input
                         type="number"
-                        value={item.price}
-                        disabled={item.priceFixed}
+                        value={item.originalPrice ?? item.price}
+                        disabled={item.priceFixed || item.discountEnabled}
                         onChange={(e) =>
                           handleItemChange(
                             item.id,
-                            "price",
+                            "originalPrice",
                             parseFloat(e.target.value) || 0,
                           )
                         }
@@ -534,6 +578,81 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                       />
                     </div>
                   </div>
+
+                  {!item.discountEnabled ? (
+                    <button
+                      type="button"
+                      onClick={() => enableDiscount(item.id)}
+                      className="text-left text-xs font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                    >
+                      Apply Discounted Price
+                    </button>
+                  ) : (
+                    <div className="space-y-3 rounded-xl border border-blue-200/80 bg-blue-50/60 p-3 dark:border-blue-500/20 dark:bg-blue-500/10">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                          Discounted Price
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => disableDiscount(item.id)}
+                          className="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-white/50 dark:hover:text-white/80"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-xs text-slate-500 uppercase dark:text-white/50">
+                            Sale Price
+                          </Label>
+                          <Input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            value={item.price}
+                            onChange={(e) =>
+                              handleItemChange(
+                                item.id,
+                                "price",
+                                parseFloat(e.target.value) || 0,
+                              )
+                            }
+                            className="mt-1 w-full rounded-lg bg-white border-slate-200 p-2 text-slate-900 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-slate-500 uppercase dark:text-white/50">
+                            Discount Reason
+                          </Label>
+                          <Select
+                            value={item.discountReason ?? undefined}
+                            onValueChange={(value) =>
+                              handleItemChange(
+                                item.id,
+                                "discountReason",
+                                value as DiscountReason,
+                              )
+                            }
+                          >
+                            <SelectTrigger className="mt-1 w-full rounded-lg bg-white border-slate-200 text-slate-900 focus:ring-blue-400 focus:ring-offset-0 dark:bg-white/5 dark:border-white/10 dark:text-white">
+                              <SelectValue placeholder="Select reason" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {DISCOUNT_REASONS.map((reason) => (
+                                <SelectItem
+                                  key={reason.value}
+                                  value={reason.value}
+                                >
+                                  {reason.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -661,7 +780,10 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
             <ReceiptPreview
               data={data}
               ref={ref}
-              showQr={isAuthenticated && !!data.qrCodeToken?.trim()}
+              showQr={
+                isAuthenticated &&
+                !!(data.qrCodeToken?.trim() || data.qrUrl?.trim())
+              }
             />
           </div>
         )}

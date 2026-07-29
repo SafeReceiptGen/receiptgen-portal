@@ -44,6 +44,7 @@ import Link from "next/link";
 import { Store } from "@/lib/api";
 import { PAYMENT_METHOD_OPTIONS } from "@/lib/payment-methods";
 import { CatalogProductPicker } from "./catalog-product-picker";
+import { DISCOUNT_REASONS, type DiscountReason } from "@/lib/discount";
 
 interface ReceiptFormProps {
   data: ReceiptData;
@@ -149,7 +150,47 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
           quantity: Number.isFinite(qty) ? Math.max(1, Math.trunc(qty)) : 1,
         };
       }
+      if (field === "originalPrice") {
+        const originalPrice = Number(value) || 0;
+        if (item.discountEnabled) {
+          return { ...item, originalPrice };
+        }
+        return { ...item, originalPrice, price: originalPrice };
+      }
+      if (field === "price" && item.discountEnabled) {
+        return { ...item, price: Number(value) || 0 };
+      }
       return { ...item, [field]: value };
+    });
+    handleChange("items", newItems);
+  };
+
+  const enableDiscount = (id: string) => {
+    const newItems = data.items.map((item) => {
+      if (item.id !== id) return item;
+      const originalPrice = item.originalPrice ?? item.price;
+      return {
+        ...item,
+        discountEnabled: true,
+        originalPrice,
+        price: originalPrice,
+        discountReason: null,
+      };
+    });
+    handleChange("items", newItems);
+  };
+
+  const disableDiscount = (id: string) => {
+    const newItems = data.items.map((item) => {
+      if (item.id !== id) return item;
+      const originalPrice = item.originalPrice ?? item.price;
+      return {
+        ...item,
+        discountEnabled: false,
+        originalPrice,
+        price: originalPrice,
+        discountReason: null,
+      };
     });
     handleChange("items", newItems);
   };
@@ -166,6 +207,9 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
       detail,
       quantity: 1,
       price,
+      originalPrice: price,
+      discountEnabled: false,
+      discountReason: null,
       priceFixed,
     };
     handleChange("items", [...data.items, newItem]);
@@ -552,16 +596,16 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                       </div>
                       <div>
                         <label className="text-[10px] uppercase text-slate-400 dark:text-white/45">
-                          Price ({data.currency})
+                          Original Price ({data.currency})
                         </label>
                         <input
                           type="number"
-                          value={item.price}
-                          disabled={item.priceFixed}
+                          value={item.originalPrice ?? item.price}
+                          disabled={item.priceFixed || item.discountEnabled}
                           onChange={(e) =>
                             handleItemChange(
                               item.id,
-                              "price",
+                              "originalPrice",
                               parseFloat(e.target.value) || 0,
                             )
                           }
@@ -569,6 +613,81 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                         />
                       </div>
                     </div>
+
+                    {!item.discountEnabled ? (
+                      <button
+                        type="button"
+                        onClick={() => enableDiscount(item.id)}
+                        className="mt-1 text-left text-[11px] font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                      >
+                        Apply Discounted Price
+                      </button>
+                    ) : (
+                      <div className="mt-2 space-y-3 rounded-lg border border-blue-200/80 bg-blue-50/60 p-3 dark:border-blue-500/20 dark:bg-blue-500/10">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                            Discounted Price
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => disableDiscount(item.id)}
+                            className="text-[11px] font-medium text-slate-500 hover:text-slate-700 dark:text-white/50 dark:hover:text-white/80"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-[10px] uppercase text-slate-500 dark:text-white/45">
+                              Sale Price ({data.currency})
+                            </label>
+                            <input
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              value={item.price}
+                              onChange={(e) =>
+                                handleItemChange(
+                                  item.id,
+                                  "price",
+                                  parseFloat(e.target.value) || 0,
+                                )
+                              }
+                              className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition-colors focus:border-blue-400 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] uppercase text-slate-500 dark:text-white/45">
+                              Discount Reason
+                            </label>
+                            <Select
+                              value={item.discountReason ?? undefined}
+                              onValueChange={(value) =>
+                                handleItemChange(
+                                  item.id,
+                                  "discountReason",
+                                  value as DiscountReason,
+                                )
+                              }
+                            >
+                              <SelectTrigger className="h-8 w-full bg-white border-slate-200 text-slate-900 focus:ring-blue-400 focus:ring-offset-0 dark:bg-white/5 dark:border-white/10 dark:text-white">
+                                <SelectValue placeholder="Select reason" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {DISCOUNT_REASONS.map((reason) => (
+                                  <SelectItem
+                                    key={reason.value}
+                                    value={reason.value}
+                                  >
+                                    {reason.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
