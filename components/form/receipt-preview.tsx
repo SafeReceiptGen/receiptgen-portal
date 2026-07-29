@@ -2,11 +2,16 @@ import React, { useMemo } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { RotateCcw } from "lucide-react";
 import { ReceiptData } from "@/types";
-import { formatPaymentMethodLabel } from "@/lib/receipt-display-labels";
+import { formatPaymentMethodLabel, formatReceiptPaymentStatusLabel } from "@/lib/receipt-display-labels";
 import Link from "next/link";
 import { BrandLogoImage } from "@/components/receipt/brand-logo-image";
 import { RECEIPT_LOGO_SLOT_PX } from "@/lib/receipt-logo-display";
 import { isLineItemDiscounted } from "@/lib/discount";
+import {
+  balanceDueFrom,
+  deriveReceiptPaymentStatus,
+  roundMoney,
+} from "@/lib/receipt-payment";
 
 interface ReceiptPreviewProps {
   data: ReceiptData;
@@ -30,6 +35,9 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
 
   // VAT is disabled for now — total equals the sum of line items.
   const total = subtotal;
+  const effectivePaid = roundMoney(data.amountPaid ?? total);
+  const balanceDue = balanceDueFrom(total, effectivePaid);
+  const paymentStatus = deriveReceiptPaymentStatus(total, effectivePaid);
 
   // Format currency helper
   const formatPrice = (price: number) => {
@@ -201,6 +209,38 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                 <span className="text-lg font-bold">Total</span>
                 <span className="text-2xl font-bold tracking-tight">
                   {formatPrice(total)} {data.currency}
+                </span>
+              </div>
+
+              {paymentStatus !== "paid_in_full" ? (
+                <>
+                  <div className="flex justify-between text-xs text-zinc-600 mb-1">
+                    <span>Amount paid</span>
+                    <span className="font-medium">
+                      {formatPrice(effectivePaid)} {data.currency}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs text-zinc-600 mb-3">
+                    <span>Balance due</span>
+                    <span className="font-semibold text-zinc-900">
+                      {formatPrice(balanceDue)} {data.currency}
+                    </span>
+                  </div>
+                </>
+              ) : null}
+
+              <div className="flex justify-between text-xs text-zinc-600 mb-1">
+                <span>Payment status</span>
+                <span
+                  className={
+                    paymentStatus === "paid_in_full"
+                      ? "font-semibold text-emerald-700"
+                      : paymentStatus === "partially_paid"
+                        ? "font-semibold text-amber-700"
+                        : "font-semibold text-rose-700"
+                  }
+                >
+                  {formatReceiptPaymentStatusLabel(paymentStatus)}
                 </span>
               </div>
 

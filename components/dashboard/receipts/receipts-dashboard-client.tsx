@@ -76,6 +76,10 @@ export function ReceiptsDashboardClient() {
         else if (f.id === "receiptNumber") {
           apiParams.search = f.value;
         }
+        // Outstanding balances shortcut
+        else if (f.id === "paymentStatus" && f.value === "outstanding") {
+          apiParams.outstanding = "true";
+        }
         // Handle Selects / Direct Matches (Store, Status, Payment Method)
         else {
           apiParams[f.id] = f.value;

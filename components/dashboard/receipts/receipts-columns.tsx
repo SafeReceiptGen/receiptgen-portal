@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
 import { ListReceipt, Store as StoreType } from "@/lib/api";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
-import { Store as StoreIcon, Calendar, Tag } from "lucide-react";
+import { Store as StoreIcon, Calendar, Tag, Wallet } from "lucide-react";
+import { formatReceiptPaymentStatusLabel } from "@/lib/receipt-display-labels";
 
 export const getReceiptsColumns = (
   onRowClick: (id: string) => void,
@@ -123,19 +123,73 @@ export const getReceiptsColumns = (
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue("total"));
       const currency = row.original.currency;
+      const balanceDue = parseFloat(row.original.balanceDue ?? "0");
 
       const formatted = new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: currency,
       }).format(amount);
 
-      return <div className="font-medium">{formatted}</div>;
+      return (
+        <div className="leading-tight">
+          <div className="font-medium">{formatted}</div>
+          {balanceDue > 0 ? (
+            <div className="text-xs text-amber-700">
+              Due{" "}
+              {new Intl.NumberFormat("en-US", {
+                style: "currency",
+                currency,
+              }).format(balanceDue)}
+            </div>
+          ) : null}
+        </div>
+      );
     },
     meta: {
       label: "Amount",
       variant: "number",
     },
     enableColumnFilter: false,
+  },
+  {
+    id: "paymentStatus",
+    accessorKey: "paymentStatus",
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title="Payment"
+        label="Payment"
+      />
+    ),
+    cell: ({ row }) => {
+      const paymentStatus = row.original.paymentStatus ?? "paid_in_full";
+      return (
+        <Badge
+          variant={
+            paymentStatus === "paid_in_full"
+              ? "default"
+              : paymentStatus === "partially_paid"
+                ? "secondary"
+                : "destructive"
+          }
+          className="capitalize"
+        >
+          {formatReceiptPaymentStatusLabel(paymentStatus)}
+        </Badge>
+      );
+    },
+    meta: {
+      label: "Payment",
+      variant: "select",
+      icon: Wallet,
+      options: [
+        { label: "Outstanding", value: "outstanding" },
+        { label: "Paid in Full", value: "paid_in_full" },
+        { label: "Partially Paid", value: "partially_paid" },
+        { label: "Unpaid", value: "unpaid" },
+      ],
+    },
+    enableColumnFilter: true,
   },
   {
     id: "status",

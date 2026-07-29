@@ -126,6 +126,9 @@ export interface ReceiptForReturn {
   currency: string;
   subtotal: number;
   total: number;
+  amountPaid?: number;
+  balanceDue?: number;
+  paymentStatus?: "unpaid" | "partially_paid" | "paid_in_full";
   paymentMethod: string;
   /** Receipt lifecycle from API (e.g. issued, voided); optional for locally built previews */
   status?: string;

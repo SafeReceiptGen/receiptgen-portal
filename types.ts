@@ -30,6 +30,12 @@ export interface ReceiptData {
   currency: string;
   vatRate: number;
   paymentMethod: string;
+  /** Amount received at issuance. Defaults to total (paid in full). */
+  amountPaid: number;
+  /**
+   * UI-only: once true, amountPaid is not auto-synced when line totals change.
+   */
+  amountPaidTouched?: boolean;
   marketingText: string;
   companyName: string;
   tin: string; // Tax Identification Number
@@ -58,6 +64,8 @@ export const INITIAL_RECEIPT_DATA: ReceiptData = {
   currency: "GHS",
   vatRate: 0,
   paymentMethod: "mobile_money",
+  amountPaid: 0,
+  amountPaidTouched: false,
   marketingText: "",
   companyName: "",
   tin: "",

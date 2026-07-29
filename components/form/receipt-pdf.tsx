@@ -9,8 +9,13 @@ import {
 } from "@react-pdf/renderer";
 import { ReceiptData } from "@/types";
 import { fitReceiptLogoPdfDimensions } from "@/lib/receipt-logo-display";
-import { formatPaymentMethodLabel } from "@/lib/receipt-display-labels";
+import { formatPaymentMethodLabel, formatReceiptPaymentStatusLabel } from "@/lib/receipt-display-labels";
 import { isLineItemDiscounted } from "@/lib/discount";
+import {
+  balanceDueFrom,
+  deriveReceiptPaymentStatus,
+  roundMoney,
+} from "@/lib/receipt-payment";
 
 // QR and retailer logo are embedded as raster data URLs from the receipt builder (`conversion-dialog`).
 
@@ -276,6 +281,9 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
     0
   );
   const total = subtotal;
+  const effectivePaid = roundMoney(data.amountPaid ?? total);
+  const balanceDue = balanceDueFrom(total, effectivePaid);
+  const paymentStatus = deriveReceiptPaymentStatus(total, effectivePaid);
 
   const formatPrice = (price: number) => {
     return price.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -416,6 +424,28 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
             <Text style={styles.totalLabel}>Total</Text>
             <Text style={styles.totalValue}>
               {formatPrice(total)} {data.currency}
+            </Text>
+          </View>
+          {paymentStatus !== "paid_in_full" ? (
+            <>
+              <View style={[styles.paymentContainer, { marginBottom: 4 }]}>
+                <Text style={styles.paymentLabel}>Amount paid</Text>
+                <Text style={styles.paymentValue}>
+                  {formatPrice(effectivePaid)} {data.currency}
+                </Text>
+              </View>
+              <View style={[styles.paymentContainer, { marginBottom: 8 }]}>
+                <Text style={styles.paymentLabel}>Balance due</Text>
+                <Text style={styles.paymentValue}>
+                  {formatPrice(balanceDue)} {data.currency}
+                </Text>
+              </View>
+            </>
+          ) : null}
+          <View style={[styles.paymentContainer, { marginBottom: 4 }]}>
+            <Text style={styles.paymentLabel}>Payment status</Text>
+            <Text style={styles.paymentValue}>
+              {formatReceiptPaymentStatusLabel(paymentStatus)}
             </Text>
           </View>
           <View style={styles.paymentContainer}>

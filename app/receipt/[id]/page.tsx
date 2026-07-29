@@ -7,6 +7,7 @@ import Image from "next/image";
 import { cn, mapToReceiptForReturn } from "@/lib/utils";
 import {
   formatPaymentMethodLabel,
+  formatReceiptPaymentStatusLabel,
   formatReceiptStatusLabel,
   formatReturnDeadline,
 } from "@/lib/receipt-display-labels";
@@ -64,6 +65,9 @@ export default async function DigitalReceiptPage({
     (sum, item) => sum + item.price * item.quantity,
     0
   );
+  const amountPaid = receipt.amountPaid ?? receipt.total;
+  const balanceDue = receipt.balanceDue ?? Math.max(0, receipt.total - amountPaid);
+  const paymentStatus = receipt.paymentStatus ?? "paid_in_full";
 
   const hasPolicy = receipt.returnWindow !== "No returns";
   const returnLocked = activeReturn != null;
@@ -181,11 +185,32 @@ export default async function DigitalReceiptPage({
               )}
 
 <div className="mb-5 flex justify-center">
-  <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-5 py-2">
-    <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+  <div
+    className={cn(
+      "inline-flex items-center gap-2 rounded-full px-5 py-2",
+      paymentStatus === "paid_in_full" && "bg-emerald-100",
+      paymentStatus === "partially_paid" && "bg-amber-100",
+      paymentStatus === "unpaid" && "bg-rose-100",
+    )}
+  >
+    <div
+      className={cn(
+        "h-2.5 w-2.5 rounded-full",
+        paymentStatus === "paid_in_full" && "bg-emerald-500",
+        paymentStatus === "partially_paid" && "bg-amber-500",
+        paymentStatus === "unpaid" && "bg-rose-500",
+      )}
+    />
 
-    <span className="text-sm font-bold uppercase tracking-wide text-emerald-700">
-      Paid
+    <span
+      className={cn(
+        "text-sm font-bold uppercase tracking-wide",
+        paymentStatus === "paid_in_full" && "text-emerald-700",
+        paymentStatus === "partially_paid" && "text-amber-800",
+        paymentStatus === "unpaid" && "text-rose-700",
+      )}
+    >
+      {formatReceiptPaymentStatusLabel(paymentStatus)}
     </span>
   </div>
 </div>
@@ -294,6 +319,22 @@ export default async function DigitalReceiptPage({
                   {formatCurrency(subtotal, receipt.currency)}
                 </span>
               </div>
+              {paymentStatus !== "paid_in_full" ? (
+                <>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500">Amount paid</span>
+                    <span className="font-semibold text-slate-700">
+                      {formatCurrency(amountPaid, receipt.currency)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500">Balance due</span>
+                    <span className="font-semibold text-amber-700">
+                      {formatCurrency(balanceDue, receipt.currency)}
+                    </span>
+                  </div>
+                </>
+              ) : null}
               <div className="flex items-center justify-between text-sm pt-2 border-t border-slate-100">
                 <span className="text-slate-500">Payment method</span>
                 <span className="font-semibold text-slate-700">
