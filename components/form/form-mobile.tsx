@@ -108,6 +108,7 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
   storesLoading,
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [qtyDrafts, setQtyDrafts] = useState<Record<string, string>>({});
   const { isExiting, isOpening } = useExpandableScreen();
 
   const selectedStore = userStores.find((s) => s.id === data.storeId);
@@ -226,10 +227,43 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
   };
 
   const removeItem = (id: string) => {
+    setQtyDrafts((prev) => {
+      if (prev[id] === undefined) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
     handleChange(
       "items",
       data.items.filter((item) => item.id !== id),
     );
+  };
+
+  const handleQtyChange = (id: string, raw: string) => {
+    if (raw === "") {
+      setQtyDrafts((prev) => ({ ...prev, [id]: "" }));
+      return;
+    }
+    const parsed = parseInt(raw, 10);
+    if (!Number.isFinite(parsed)) return;
+    setQtyDrafts((prev) => {
+      if (prev[id] === undefined) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    handleItemChange(id, "quantity", parsed);
+  };
+
+  const handleQtyBlur = (id: string) => {
+    if (qtyDrafts[id] === undefined) return;
+    handleItemChange(id, "quantity", 1);
+    setQtyDrafts((prev) => {
+      if (prev[id] === undefined) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
   };
 
   const nextStep = () => {
@@ -632,16 +666,15 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                         min={1}
                         step={1}
                         inputMode="numeric"
-                        value={item.quantity}
-                        onChange={(e) =>
-                          handleItemChange(
-                            item.id,
-                            "quantity",
-                            e.target.value === ""
-                              ? 1
-                              : parseInt(e.target.value, 10),
-                          )
+                        value={
+                          qtyDrafts[item.id] !== undefined
+                            ? qtyDrafts[item.id]
+                            : item.quantity
                         }
+                        onChange={(e) =>
+                          handleQtyChange(item.id, e.target.value)
+                        }
+                        onBlur={() => handleQtyBlur(item.id)}
                         className="mt-1 w-full rounded-lg bg-slate-50 border-slate-200 p-2 text-center text-slate-900 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white"
                       />
                     </div>

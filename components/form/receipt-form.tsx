@@ -105,6 +105,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
   storesLoading,
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>("general");
+  const [qtyDrafts, setQtyDrafts] = useState<Record<string, string>>({});
   const { isExiting, isOpening } = useExpandableScreen();
   
   const selectedStore = userStores.find(s => s.id === data.storeId);
@@ -222,10 +223,43 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
   };
 
   const removeItem = (id: string) => {
+    setQtyDrafts((prev) => {
+      if (prev[id] === undefined) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
     handleChange(
       "items",
       data.items.filter((item) => item.id !== id),
     );
+  };
+
+  const handleQtyChange = (id: string, raw: string) => {
+    if (raw === "") {
+      setQtyDrafts((prev) => ({ ...prev, [id]: "" }));
+      return;
+    }
+    const parsed = parseInt(raw, 10);
+    if (!Number.isFinite(parsed)) return;
+    setQtyDrafts((prev) => {
+      if (prev[id] === undefined) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    handleItemChange(id, "quantity", parsed);
+  };
+
+  const handleQtyBlur = (id: string) => {
+    if (qtyDrafts[id] === undefined) return;
+    handleItemChange(id, "quantity", 1);
+    setQtyDrafts((prev) => {
+      if (prev[id] === undefined) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
   };
 
   return (
@@ -667,16 +701,15 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                           min={1}
                           step={1}
                           inputMode="numeric"
-                          value={item.quantity}
-                          onChange={(e) =>
-                            handleItemChange(
-                              item.id,
-                              "quantity",
-                              e.target.value === ""
-                                ? 1
-                                : parseInt(e.target.value, 10),
-                            )
+                          value={
+                            qtyDrafts[item.id] !== undefined
+                              ? qtyDrafts[item.id]
+                              : item.quantity
                           }
+                          onChange={(e) =>
+                            handleQtyChange(item.id, e.target.value)
+                          }
+                          onBlur={() => handleQtyBlur(item.id)}
                           className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition-colors focus:border-blue-400 dark:border-white/10 dark:bg-white/5 dark:text-white"
                         />
                       </div>
