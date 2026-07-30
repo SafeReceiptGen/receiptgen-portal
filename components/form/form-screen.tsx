@@ -83,6 +83,18 @@ export default function ReceiptFormScreen({
     }));
   }, [isAuthenticated, retailer]);
 
+  // Keep amount paid synced to line-item total until the retailer edits it.
+  useEffect(() => {
+    if (data.amountPaidTouched) return;
+    const total = data.items.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0,
+    );
+    const rounded = Math.round(total * 100) / 100;
+    if (Math.round(data.amountPaid * 100) === Math.round(rounded * 100)) return;
+    setData((prev) => ({ ...prev, amountPaid: rounded }));
+  }, [data.items, data.amountPaidTouched, data.amountPaid]);
+
   // ── Server action (authenticated only) ──────────────────────────────────
   const boundAction = generateReceipt.bind(null, data);
   const [state, formAction, pending] = useActionState(

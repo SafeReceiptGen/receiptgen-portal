@@ -7,6 +7,8 @@ export const receiptsListQueryOptions = (params?: {
   status?: string;
   limit?: number;
   paymentMethod?: string;
+  paymentStatus?: string;
+  outstanding?: boolean | string;
   search?: string;
   from?: string;
   to?: string;

@@ -23,6 +23,19 @@ export function formatReceiptStatusLabel(value: string | undefined | null): stri
   return RECEIPT_STATUS_LABELS[value] ?? value.replace(/_/g, " ");
 }
 
+const RECEIPT_PAYMENT_STATUS_LABELS: Record<string, string> = {
+  unpaid: "Unpaid",
+  partially_paid: "Partially Paid",
+  paid_in_full: "Paid in Full",
+};
+
+export function formatReceiptPaymentStatusLabel(
+  value: string | undefined | null,
+): string {
+  if (!value) return "—";
+  return RECEIPT_PAYMENT_STATUS_LABELS[value] ?? value.replace(/_/g, " ");
+}
+
 /** Formats return deadline for display on public receipt pages (e.g. "Jun 12, 2026"). */
 export function formatReturnDeadline(iso: string | null | undefined): string | null {
   if (!iso) return null;

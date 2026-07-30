@@ -154,6 +154,8 @@ export interface CreateReceiptPayload {
   currency: string;
   vatRate: number;
   paymentMethod: string;
+  /** Amount received at issuance. Omitted → paid in full. */
+  amountPaid?: number;
   items: ReceiptLineItem[];
   customerName: string;
   customerPhone: string;
@@ -167,11 +169,34 @@ export interface CreatedReceipt {
   total: string;
 }
 
+export type ReceiptPaymentStatus =
+  | "unpaid"
+  | "partially_paid"
+  | "paid_in_full";
+
+export interface ReceiptPaymentLedgerEntry {
+  id: string;
+  amount: string;
+  paymentMethod:
+    | "check"
+    | "cash"
+    | "mobile_money"
+    | "card"
+    | "bank_transfer"
+    | "wallet";
+  note: string | null;
+  recordedBy: string | null;
+  createdAt: string;
+}
+
 export interface ListReceipt {
   id: string;
   receiptNumber: string;
   date: string;
   total: string;
+  amountPaid: string;
+  balanceDue: string;
+  paymentStatus: ReceiptPaymentStatus;
   currency: "GHS" | "USD" | "EUR" | "GBP" | "NGN" | "KES" | "ZAR";
   status: "issued" | "voided" | "returned";
   paymentMethod:
@@ -239,11 +264,15 @@ export interface SingleReceipt {
   vatRate: string;
   vatAmount: string;
   total: string;
+  amountPaid: string;
+  balanceDue: string;
+  paymentStatus: ReceiptPaymentStatus;
   marketingText: string | null;
   qrCodeToken: string;
   status: "issued" | "voided" | "returned";
   returnDeadline: string | null;
   createdAt: string;
+  payments?: ReceiptPaymentLedgerEntry[];
   store: {
     id: string;
     name: string;
@@ -272,15 +301,49 @@ export const receiptsApi = {
     status?: string;
     limit?: number;
     paymentMethod?: string;
+    paymentStatus?: string;
+    outstanding?: boolean | string;
     search?: string;
     from?: string;
     to?: string;
   }) => {
-    const qs = new URLSearchParams(params as Record<string, string>).toString();
-    return request<ListReceiptsResponse>(`/receipts${qs ? `?${qs}` : ""}`);
+    const qs = new URLSearchParams();
+    if (params) {
+      for (const [key, value] of Object.entries(params)) {
+        if (value === undefined || value === null || value === "") continue;
+        qs.set(key, String(value));
+      }
+    }
+    const query = qs.toString();
+    return request<ListReceiptsResponse>(`/receipts${query ? `?${query}` : ""}`);
   },
 
   get: (id: string) => request<SingleReceipt>(`/receipts/${id}`),
+
+  recordPayment: (
+    id: string,
+    payload: {
+      amount: number;
+      paymentMethod?: string;
+      note?: string;
+    },
+  ) =>
+    request<SingleReceipt>(`/receipts/${id}/payments`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  settlePayment: (
+    id: string,
+    payload?: {
+      paymentMethod?: string;
+      note?: string;
+    },
+  ) =>
+    request<SingleReceipt>(`/receipts/${id}/payments/settle`, {
+      method: "POST",
+      body: JSON.stringify(payload ?? {}),
+    }),
 };
 
 // ─── Stores ──────────────────────────────────────────────────────────────────
@@ -685,6 +748,9 @@ export interface VerifiedReceipt {
   id: string;
   date: string;
   total: string;
+  amountPaid: string;
+  balanceDue: string;
+  paymentStatus: ReceiptPaymentStatus;
   currency: string;
   status: string;
   returnDeadline: string | null;

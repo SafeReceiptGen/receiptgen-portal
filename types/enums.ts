@@ -54,6 +54,12 @@ export enum receiptStatusEnum {
   "returned",
 }
 
+export enum receiptPaymentStatusEnum {
+  "unpaid",
+  "partially_paid",
+  "paid_in_full",
+}
+
 export enum subscriptionTierEnum {
   "free",
   "basic",

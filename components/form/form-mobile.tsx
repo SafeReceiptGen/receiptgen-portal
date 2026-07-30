@@ -42,6 +42,12 @@ import { CatalogProductPicker } from "./catalog-product-picker";
 import { returnWindowEnum } from "@/types/enums";
 import { trackCtaClick } from "@/lib/analytics";
 import { DISCOUNT_REASONS, type DiscountReason } from "@/lib/discount";
+import {
+  balanceDueFrom,
+  deriveReceiptPaymentStatus,
+  roundMoney,
+} from "@/lib/receipt-payment";
+import { formatReceiptPaymentStatusLabel } from "@/lib/receipt-display-labels";
 
 interface MobileWizardProps {
   data: ReceiptData;
@@ -102,6 +108,7 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
   storesLoading,
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [qtyDrafts, setQtyDrafts] = useState<Record<string, string>>({});
   const { isExiting, isOpening } = useExpandableScreen();
 
   const selectedStore = userStores.find((s) => s.id === data.storeId);
@@ -220,10 +227,43 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
   };
 
   const removeItem = (id: string) => {
+    setQtyDrafts((prev) => {
+      if (prev[id] === undefined) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
     handleChange(
       "items",
       data.items.filter((item) => item.id !== id),
     );
+  };
+
+  const handleQtyChange = (id: string, raw: string) => {
+    if (raw === "") {
+      setQtyDrafts((prev) => ({ ...prev, [id]: "" }));
+      return;
+    }
+    const parsed = parseInt(raw, 10);
+    if (!Number.isFinite(parsed)) return;
+    setQtyDrafts((prev) => {
+      if (prev[id] === undefined) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    handleItemChange(id, "quantity", parsed);
+  };
+
+  const handleQtyBlur = (id: string) => {
+    if (qtyDrafts[id] === undefined) return;
+    handleItemChange(id, "quantity", 1);
+    setQtyDrafts((prev) => {
+      if (prev[id] === undefined) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
   };
 
   const nextStep = () => {
@@ -471,6 +511,86 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                 </SelectContent>
               </Select>
             </div>
+            {(() => {
+              const itemsTotal = roundMoney(
+                data.items.reduce(
+                  (sum, item) => sum + item.price * item.quantity,
+                  0,
+                ),
+              );
+              const amountPaid = roundMoney(data.amountPaid);
+              const balanceDue = balanceDueFrom(itemsTotal, amountPaid);
+              const paymentStatus = deriveReceiptPaymentStatus(
+                itemsTotal,
+                amountPaid,
+              );
+              return (
+                <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/5">
+                  <div className="space-y-2">
+                    <Label className="text-sm text-slate-600 dark:text-white/70">
+                      Amount Paid
+                    </Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      max={itemsTotal}
+                      value={Number.isFinite(amountPaid) ? amountPaid : 0}
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value);
+                        onChange({
+                          ...data,
+                          amountPaid: Number.isFinite(value)
+                            ? Math.max(0, value)
+                            : 0,
+                          amountPaidTouched: true,
+                        });
+                      }}
+                      className="w-full rounded-xl bg-white border-slate-200 p-4 text-lg text-slate-900 h-auto focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white"
+                    />
+                  </div>
+                  <div className="flex justify-between text-sm text-slate-600 dark:text-white/60">
+                    <span>Balance due</span>
+                    <span className="font-medium text-slate-900 dark:text-white">
+                      {balanceDue.toFixed(2)} {data.currency}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-slate-600 dark:text-white/60">
+                      Payment status
+                    </span>
+                    <span
+                      className={cn(
+                        "rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide",
+                        paymentStatus === "paid_in_full" &&
+                          "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+                        paymentStatus === "partially_paid" &&
+                          "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300",
+                        paymentStatus === "unpaid" &&
+                          "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300",
+                      )}
+                    >
+                      {formatReceiptPaymentStatusLabel(paymentStatus)}
+                    </span>
+                  </div>
+                  {data.amountPaidTouched ? (
+                    <button
+                      type="button"
+                      className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+                      onClick={() =>
+                        onChange({
+                          ...data,
+                          amountPaid: itemsTotal,
+                          amountPaidTouched: false,
+                        })
+                      }
+                    >
+                      Reset to paid in full
+                    </button>
+                  ) : null}
+                </div>
+              );
+            })()}
           </div>
         )}
 
@@ -546,16 +666,15 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                         min={1}
                         step={1}
                         inputMode="numeric"
-                        value={item.quantity}
-                        onChange={(e) =>
-                          handleItemChange(
-                            item.id,
-                            "quantity",
-                            e.target.value === ""
-                              ? 1
-                              : parseInt(e.target.value, 10),
-                          )
+                        value={
+                          qtyDrafts[item.id] !== undefined
+                            ? qtyDrafts[item.id]
+                            : item.quantity
                         }
+                        onChange={(e) =>
+                          handleQtyChange(item.id, e.target.value)
+                        }
+                        onBlur={() => handleQtyBlur(item.id)}
                         className="mt-1 w-full rounded-lg bg-slate-50 border-slate-200 p-2 text-center text-slate-900 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white"
                       />
                     </div>
