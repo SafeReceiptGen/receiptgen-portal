@@ -106,6 +106,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [qtyDrafts, setQtyDrafts] = useState<Record<string, string>>({});
+  const [moneyDrafts, setMoneyDrafts] = useState<Record<string, string>>({});
   const { isExiting, isOpening } = useExpandableScreen();
   
   const selectedStore = userStores.find(s => s.id === data.storeId);
@@ -229,6 +230,17 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
       delete next[id];
       return next;
     });
+    setMoneyDrafts((prev) => {
+      const originalKey = `originalPrice:${id}`;
+      const priceKey = `price:${id}`;
+      if (prev[originalKey] === undefined && prev[priceKey] === undefined) {
+        return prev;
+      }
+      const next = { ...prev };
+      delete next[originalKey];
+      delete next[priceKey];
+      return next;
+    });
     handleChange(
       "items",
       data.items.filter((item) => item.id !== id),
@@ -261,6 +273,40 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
       return next;
     });
   };
+
+  const handleMoneyChange = (
+    key: string,
+    raw: string,
+    commit: (value: number) => void,
+  ) => {
+    if (raw === "") {
+      setMoneyDrafts((prev) => ({ ...prev, [key]: "" }));
+      return;
+    }
+    const parsed = parseFloat(raw);
+    if (!Number.isFinite(parsed)) return;
+    setMoneyDrafts((prev) => {
+      if (prev[key] === undefined) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+    commit(parsed);
+  };
+
+  const handleMoneyBlur = (key: string, commit: (value: number) => void) => {
+    if (moneyDrafts[key] === undefined) return;
+    commit(0);
+    setMoneyDrafts((prev) => {
+      if (prev[key] === undefined) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
+  const moneyInputValue = (key: string, committed: number) =>
+    moneyDrafts[key] !== undefined ? moneyDrafts[key] : committed;
 
   return (
     <Tabs
@@ -556,17 +602,31 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                           min={0}
                           step="0.01"
                           max={itemsTotal}
-                          value={Number.isFinite(amountPaid) ? amountPaid : 0}
-                          onChange={(e) => {
-                            const value = parseFloat(e.target.value);
-                            onChange({
-                              ...data,
-                              amountPaid: Number.isFinite(value)
-                                ? Math.max(0, value)
-                                : 0,
-                              amountPaidTouched: true,
-                            });
-                          }}
+                          value={moneyInputValue(
+                            "amountPaid",
+                            Number.isFinite(amountPaid) ? amountPaid : 0,
+                          )}
+                          onChange={(e) =>
+                            handleMoneyChange(
+                              "amountPaid",
+                              e.target.value,
+                              (value) =>
+                                onChange({
+                                  ...data,
+                                  amountPaid: Math.max(0, value),
+                                  amountPaidTouched: true,
+                                }),
+                            )
+                          }
+                          onBlur={() =>
+                            handleMoneyBlur("amountPaid", (value) =>
+                              onChange({
+                                ...data,
+                                amountPaid: Math.max(0, value),
+                                amountPaidTouched: true,
+                              }),
+                            )
+                          }
                           className="w-full bg-white border-slate-200 text-slate-900 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white"
                         />
                       </div>
@@ -719,13 +779,32 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                         </label>
                         <input
                           type="number"
-                          value={item.originalPrice ?? item.price}
+                          value={moneyInputValue(
+                            `originalPrice:${item.id}`,
+                            item.originalPrice ?? item.price,
+                          )}
                           disabled={item.priceFixed || item.discountEnabled}
                           onChange={(e) =>
-                            handleItemChange(
-                              item.id,
-                              "originalPrice",
-                              parseFloat(e.target.value) || 0,
+                            handleMoneyChange(
+                              `originalPrice:${item.id}`,
+                              e.target.value,
+                              (value) =>
+                                handleItemChange(
+                                  item.id,
+                                  "originalPrice",
+                                  value,
+                                ),
+                            )
+                          }
+                          onBlur={() =>
+                            handleMoneyBlur(
+                              `originalPrice:${item.id}`,
+                              (value) =>
+                                handleItemChange(
+                                  item.id,
+                                  "originalPrice",
+                                  value,
+                                ),
                             )
                           }
                           className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition-colors focus:border-blue-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:bg-white/5 dark:text-white"
@@ -764,12 +843,21 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                               type="number"
                               min={0}
                               step="0.01"
-                              value={item.price}
+                              value={moneyInputValue(
+                                `price:${item.id}`,
+                                item.price,
+                              )}
                               onChange={(e) =>
-                                handleItemChange(
-                                  item.id,
-                                  "price",
-                                  parseFloat(e.target.value) || 0,
+                                handleMoneyChange(
+                                  `price:${item.id}`,
+                                  e.target.value,
+                                  (value) =>
+                                    handleItemChange(item.id, "price", value),
+                                )
+                              }
+                              onBlur={() =>
+                                handleMoneyBlur(`price:${item.id}`, (value) =>
+                                  handleItemChange(item.id, "price", value),
                                 )
                               }
                               className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition-colors focus:border-blue-400 dark:border-white/10 dark:bg-white/5 dark:text-white"
