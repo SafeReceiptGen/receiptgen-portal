@@ -148,7 +148,7 @@ export type ActionState = {
   errors?: Record<string, string[] | undefined>;
 };
 
-const API_URL = process.env.BETTER_AUTH_URL ?? "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 type CreateReceiptApiEnvelope = {
   success?: boolean;
