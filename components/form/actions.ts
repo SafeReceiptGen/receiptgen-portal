@@ -6,6 +6,10 @@ import { ReceiptData } from "@/types";
 import { ReceiptForReturn } from "@/types/returns";
 import { addMockReceipt } from "@/lib/mock-data";
 import { portalPublicOrigin } from "@/lib/portal-public-url";
+import {
+  balanceDueFrom,
+  deriveReceiptPaymentStatus,
+} from "@/lib/receipt-payment";
 
 // Zod schema — most fields are optional, validation is lenient
 const discountReasonSchema = z.enum([
@@ -296,13 +300,8 @@ export async function generateReceipt(
       subtotal: computedTotal,
       total: computedTotal,
       amountPaid,
-      balanceDue: Math.max(0, Math.round((computedTotal - amountPaid) * 100) / 100),
-      paymentStatus:
-        Math.round(amountPaid * 100) === 0
-          ? "unpaid"
-          : Math.round(amountPaid * 100) >= Math.round(computedTotal * 100)
-            ? "paid_in_full"
-            : "partially_paid",
+      balanceDue: balanceDueFrom(computedTotal, amountPaid),
+      paymentStatus: deriveReceiptPaymentStatus(computedTotal, amountPaid),
       paymentMethod: formData.paymentMethod,
       purchasedAt: formData.date
         ? new Date(formData.date).toISOString()
