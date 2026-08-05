@@ -52,13 +52,6 @@ const lineItemSchema = z
       originalPrice > salePrice && !moneyEquals(originalPrice, salePrice);
 
     if (isDiscounted || item.discountEnabled) {
-      if (isDiscounted && !(salePrice > 0)) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["price"],
-          message: "Sale price must be greater than zero",
-        });
-      }
       if (isDiscounted && !item.discountReason) {
         ctx.addIssue({
           code: "custom",

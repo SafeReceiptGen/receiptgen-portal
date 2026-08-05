@@ -171,9 +171,10 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
         const saleCents = Math.round(sale * 100);
         const originalCents = Math.round(originalPrice * 100);
         // Empty/invalid sale falls back to original (no false discount).
+        // saleCents === 0 is allowed (100% discount / free item).
         if (
           !Number.isFinite(sale) ||
-          saleCents <= 0 ||
+          saleCents < 0 ||
           saleCents > originalCents
         ) {
           return { ...item, price: originalPrice };
