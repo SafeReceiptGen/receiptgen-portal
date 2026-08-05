@@ -10,12 +10,16 @@ import {
 import { ReceiptData } from "@/types";
 import { fitReceiptLogoPdfDimensions } from "@/lib/receipt-logo-display";
 import { formatPaymentMethodLabel, formatReceiptPaymentStatusLabel } from "@/lib/receipt-display-labels";
-import { isLineItemDiscounted } from "@/lib/discount";
+import {
+  getLineItemDiscountTotals,
+  isLineItemDiscounted,
+} from "@/lib/discount";
 import {
   balanceDueFrom,
   deriveReceiptPaymentStatus,
   roundMoney,
 } from "@/lib/receipt-payment";
+import { formatPaymentLedgerDetails } from "@/lib/payment-ledger-display";
 
 // QR and retailer logo are embedded as raster data URLs from the receipt builder (`conversion-dialog`).
 
@@ -158,6 +162,48 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "medium",
   },
+  paymentHistoryContainer: {
+    marginBottom: 20,
+  },
+  paymentHistoryHeader: {
+    fontSize: 9,
+    fontWeight: "bold",
+    textTransform: "uppercase",
+    color: "#a1a1aa",
+    letterSpacing: 0.6,
+    marginBottom: 8,
+  },
+  paymentHistoryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "#f4f4f5",
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 6,
+  },
+  paymentHistoryAmount: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: "#27272a",
+  },
+  paymentHistoryDetails: {
+    fontSize: 9,
+    color: "#71717a",
+    marginTop: 2,
+  },
+  paymentHistoryDate: {
+    fontSize: 9,
+    color: "#a1a1aa",
+    textAlign: "right",
+  },
+  paymentHistoryNote: {
+    fontSize: 9,
+    color: "#71717a",
+    marginTop: 4,
+    lineHeight: 1.35,
+  },
   footerContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -284,6 +330,21 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
   const effectivePaid = roundMoney(data.amountPaid ?? total);
   const balanceDue = balanceDueFrom(total, effectivePaid);
   const paymentStatus = deriveReceiptPaymentStatus(total, effectivePaid);
+  const payments =
+    data.payments && data.payments.length > 0
+      ? data.payments
+      : effectivePaid > 0
+        ? [
+            {
+              id: "provisional-initial-payment",
+              amount: effectivePaid,
+              paymentMethod: data.paymentMethod,
+              reference: null,
+              note: null,
+              createdAt: data.date,
+            },
+          ]
+        : [];
 
   const formatPrice = (price: number) => {
     return price.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -302,6 +363,31 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
       })}`;
     } catch {
       return isoString;
+    }
+  };
+
+  const formatPaymentDate = (isoString: string) => {
+    try {
+      const d = new Date(isoString);
+      return d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch {
+      return isoString;
+    }
+  };
+
+  const formatPaymentTime = (isoString: string) => {
+    try {
+      const d = new Date(isoString);
+      return d.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+      });
+    } catch {
+      return "";
     }
   };
 
@@ -365,7 +451,12 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
           {data.items.map((item, index) => {
             const originalPrice = item.originalPrice ?? item.price;
             const discounted = isLineItemDiscounted(originalPrice, item.price);
-            const saved = originalPrice - item.price;
+            const { originalTotal, paidTotal, savedTotal } =
+              getLineItemDiscountTotals(
+                originalPrice,
+                item.price,
+                item.quantity,
+              );
 
             return (
               <View key={item.id} style={styles.itemRow} wrap={false}>
@@ -385,27 +476,21 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
                       <View style={styles.discountRow}>
                         <Text style={styles.discountLabel}>Original Price</Text>
                         <Text style={styles.discountValue}>
-                          {formatPrice(originalPrice)} {data.currency}
+                          {formatPrice(originalTotal)} {data.currency}
                         </Text>
                       </View>
                       <View style={styles.discountRow}>
                         <Text style={styles.discountLabel}>You Paid</Text>
                         <Text style={styles.discountValue}>
-                          {formatPrice(item.price)} {data.currency}
+                          {formatPrice(paidTotal)} {data.currency}
                         </Text>
                       </View>
                       <View style={styles.discountRow}>
                         <Text style={styles.discountSavedLabel}>You Saved</Text>
                         <Text style={styles.discountSavedValue}>
-                          {formatPrice(saved)} {data.currency}
+                          {formatPrice(savedTotal)} {data.currency}
                         </Text>
                       </View>
-                      {item.quantity > 1 ? (
-                        <Text style={styles.itemQtyPrice}>
-                          {item.quantity} x {formatPrice(item.price)}{" "}
-                          {data.currency}
-                        </Text>
-                      ) : null}
                     </View>
                   ) : (
                     <Text style={styles.itemQtyPrice}>
@@ -455,6 +540,36 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
             </Text>
           </View>
         </View>
+
+        {payments.length > 0 ? (
+          <View style={styles.paymentHistoryContainer}>
+            <Text style={styles.paymentHistoryHeader}>Payment history</Text>
+            {payments.map((payment) => (
+              <View key={payment.id} style={styles.paymentHistoryRow} wrap={false}>
+                <View style={{ flex: 1, paddingRight: 8 }}>
+                  <Text style={styles.paymentHistoryAmount}>
+                    {formatPrice(payment.amount)} {data.currency}
+                  </Text>
+                  <Text style={styles.paymentHistoryDetails}>
+                    {formatPaymentLedgerDetails(payment)}
+                  </Text>
+                </View>
+                <View>
+                  <Text style={styles.paymentHistoryDate}>
+                    {formatPaymentDate(payment.createdAt)}
+                  </Text>
+                  <Text style={styles.paymentHistoryDate}>
+                    {formatPaymentTime(payment.createdAt)}
+                  </Text>
+                </View>
+              </View>
+            ))}
+            <Text style={styles.paymentHistoryNote}>
+              Every payment toward this receipt is recorded here so you can see
+              a complete history of what has been received.
+            </Text>
+          </View>
+        ) : null}
 
         {/* Footer / Return Policy */}
         <View style={styles.footerContainer} wrap={false}>

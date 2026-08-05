@@ -130,6 +130,15 @@ export interface ReceiptForReturn {
   balanceDue?: number;
   paymentStatus?: "unpaid" | "partially_paid" | "paid_in_full";
   paymentMethod: string;
+  /** Append-only payment ledger (newest first). */
+  payments?: {
+    id: string;
+    amount: number;
+    paymentMethod: string;
+    reference?: string | null;
+    note?: string | null;
+    createdAt: string;
+  }[];
   /** Receipt lifecycle from API (e.g. issued, voided); optional for locally built previews */
   status?: string;
   purchasedAt: string; // ISO string

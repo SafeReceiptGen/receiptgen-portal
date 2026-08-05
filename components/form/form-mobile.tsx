@@ -170,7 +170,19 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
         return { ...item, originalPrice, price: originalPrice };
       }
       if (field === "price" && item.discountEnabled) {
-        return { ...item, price: Number(value) || 0 };
+        const originalPrice = item.originalPrice ?? item.price;
+        const sale = Number(value);
+        const saleCents = Math.round(sale * 100);
+        const originalCents = Math.round(originalPrice * 100);
+        // Empty/invalid sale falls back to original (no false discount).
+        if (
+          !Number.isFinite(sale) ||
+          saleCents <= 0 ||
+          saleCents > originalCents
+        ) {
+          return { ...item, price: originalPrice };
+        }
+        return { ...item, price: sale };
       }
       return { ...item, [field]: value };
     });
@@ -282,9 +294,13 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
     key: string,
     raw: string,
     commit: (value: number) => void,
+    emptyFallback?: number,
   ) => {
     if (raw === "") {
       setMoneyDrafts((prev) => ({ ...prev, [key]: "" }));
+      if (emptyFallback !== undefined) {
+        commit(emptyFallback);
+      }
       return;
     }
     const parsed = parseFloat(raw);
@@ -298,9 +314,13 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
     commit(parsed);
   };
 
-  const handleMoneyBlur = (key: string, commit: (value: number) => void) => {
+  const handleMoneyBlur = (
+    key: string,
+    commit: (value: number) => void,
+    emptyFallback = 0,
+  ) => {
     if (moneyDrafts[key] === undefined) return;
-    commit(0);
+    commit(emptyFallback);
     setMoneyDrafts((prev) => {
       if (prev[key] === undefined) return prev;
       const next = { ...prev };
@@ -810,11 +830,15 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                                 e.target.value,
                                 (value) =>
                                   handleItemChange(item.id, "price", value),
+                                item.originalPrice ?? item.price,
                               )
                             }
                             onBlur={() =>
-                              handleMoneyBlur(`price:${item.id}`, (value) =>
-                                handleItemChange(item.id, "price", value),
+                              handleMoneyBlur(
+                                `price:${item.id}`,
+                                (value) =>
+                                  handleItemChange(item.id, "price", value),
+                                item.originalPrice ?? item.price,
                               )
                             }
                             className="mt-1 w-full rounded-lg bg-white border-slate-200 p-2 text-slate-900 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white"

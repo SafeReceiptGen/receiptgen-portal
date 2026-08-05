@@ -21,6 +21,7 @@ import { BrandLogoImage } from "@/components/receipt/brand-logo-image";
 import { RECEIPT_LOGO_SLOT_PX } from "@/lib/receipt-logo-display";
 import {
   discountReasonLabel,
+  getLineItemDiscountTotals,
   isLineItemDiscounted,
 } from "@/lib/discount";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PAYMENT_METHOD_OPTIONS } from "@/lib/payment-methods";
+import { formatPaymentLedgerDetails } from "@/lib/payment-ledger-display";
 import { format } from "date-fns";
 
 interface ReceiptDetailsSheetProps {
@@ -62,6 +64,7 @@ export function ReceiptDetailsSheet({
   const [settleOpen, setSettleOpen] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentReference, setPaymentReference] = useState("");
   const [paymentNote, setPaymentNote] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -75,12 +78,14 @@ export function ReceiptDetailsSheet({
       receiptsApi.recordPayment(receiptId!, {
         amount: parseFloat(paymentAmount),
         paymentMethod: paymentMethod || undefined,
+        reference: paymentReference.trim() || undefined,
         note: paymentNote.trim() || undefined,
       }),
     onSuccess: async () => {
       setActionError(null);
       setRecordOpen(false);
       setPaymentAmount("");
+      setPaymentReference("");
       setPaymentNote("");
       await invalidate();
     },
@@ -93,11 +98,13 @@ export function ReceiptDetailsSheet({
     mutationFn: () =>
       receiptsApi.settlePayment(receiptId!, {
         paymentMethod: paymentMethod || undefined,
+        reference: paymentReference.trim() || undefined,
         note: paymentNote.trim() || undefined,
       }),
     onSuccess: async () => {
       setActionError(null);
       setSettleOpen(false);
+      setPaymentReference("");
       setPaymentNote("");
       await invalidate();
     },
@@ -140,6 +147,7 @@ export function ReceiptDetailsSheet({
     setActionError(null);
     setPaymentAmount("");
     setPaymentMethod(receipt?.paymentMethod ?? "");
+    setPaymentReference("");
     setPaymentNote("");
     setRecordOpen(true);
   };
@@ -147,6 +155,7 @@ export function ReceiptDetailsSheet({
   const openSettleDialog = () => {
     setActionError(null);
     setPaymentMethod(receipt?.paymentMethod ?? "");
+    setPaymentReference("");
     setPaymentNote("");
     setSettleOpen(true);
   };
@@ -294,6 +303,12 @@ export function ReceiptDetailsSheet({
                         item.originalPrice ?? item.unitPrice,
                       );
                       const discounted = isLineItemDiscounted(original, unit);
+                      const { originalTotal, paidTotal } =
+                        getLineItemDiscountTotals(
+                          original,
+                          unit,
+                          item.quantity,
+                        );
                       return (
                         <div key={item.id} className="flex gap-3 text-sm">
                           <div className="w-5 text-zinc-400">{index + 1}</div>
@@ -314,11 +329,11 @@ export function ReceiptDetailsSheet({
                             {discounted ? (
                               <div className="text-xs text-zinc-500 space-y-0.5 pt-1">
                                 <div>
-                                  Original: {formatPrice(String(original))}{" "}
+                                  Original: {formatPrice(String(originalTotal))}{" "}
                                   {receipt.currency}
                                 </div>
                                 <div>
-                                  You Paid: {formatPrice(item.unitPrice)}{" "}
+                                  You Paid: {formatPrice(String(paidTotal))}{" "}
                                   {receipt.currency}
                                 </div>
                                 {item.discountReason ? (
@@ -395,12 +410,16 @@ export function ReceiptDetailsSheet({
                                 {formatPrice(payment.amount)} {receipt.currency}
                               </div>
                               <div className="text-zinc-500">
-                                {formatPaymentMethodLabel(payment.paymentMethod)}
-                                {payment.note ? ` · ${payment.note}` : ""}
+                                {formatPaymentLedgerDetails(payment)}
                               </div>
                             </div>
-                            <div className="text-zinc-400 shrink-0">
-                              {format(new Date(payment.createdAt), "MMM d, yyyy")}
+                            <div className="text-zinc-400 shrink-0 text-right">
+                              <div>
+                                {format(new Date(payment.createdAt), "MMM d, yyyy")}
+                              </div>
+                              <div>
+                                {format(new Date(payment.createdAt), "h:mm a")}
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -528,6 +547,17 @@ export function ReceiptDetailsSheet({
               </Select>
             </div>
             <div className="space-y-1.5">
+              <Label htmlFor="payment-reference">
+                Payment reference (optional)
+              </Label>
+              <Input
+                id="payment-reference"
+                value={paymentReference}
+                onChange={(e) => setPaymentReference(e.target.value)}
+                placeholder="e.g. MoMo txn ID"
+              />
+            </div>
+            <div className="space-y-1.5">
               <Label htmlFor="payment-note">Note (optional)</Label>
               <Input
                 id="payment-note"
@@ -589,6 +619,17 @@ export function ReceiptDetailsSheet({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="settle-reference">
+                Payment reference (optional)
+              </Label>
+              <Input
+                id="settle-reference"
+                value={paymentReference}
+                onChange={(e) => setPaymentReference(e.target.value)}
+                placeholder="e.g. MoMo txn ID"
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="settle-note">Note (optional)</Label>

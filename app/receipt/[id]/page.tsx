@@ -11,9 +11,13 @@ import {
   formatReceiptStatusLabel,
   formatReturnDeadline,
 } from "@/lib/receipt-display-labels";
+import { formatPaymentLedgerDetails } from "@/lib/payment-ledger-display";
 import { BrandLogoImage } from "@/components/receipt/brand-logo-image";
 import { RECEIPT_LOGO_SLOT_PX } from "@/lib/receipt-logo-display";
-import { isLineItemDiscounted } from "@/lib/discount";
+import {
+  getLineItemDiscountTotals,
+  isLineItemDiscounted,
+} from "@/lib/discount";
 
 export default async function DigitalReceiptPage({
   params,
@@ -242,7 +246,12 @@ export default async function DigitalReceiptPage({
                   originalPrice,
                   item.price,
                 );
-                const saved = originalPrice - item.price;
+                const { originalTotal, paidTotal, savedTotal } =
+                  getLineItemDiscountTotals(
+                    originalPrice,
+                    item.price,
+                    item.quantity,
+                  );
 
                 return (
                   <div key={item.id} className="flex items-start text-sm py-1">
@@ -277,27 +286,21 @@ export default async function DigitalReceiptPage({
                           <div className="flex justify-between gap-3">
                             <span>Original Price</span>
                             <span className="whitespace-nowrap">
-                              {formatCurrency(originalPrice, receipt.currency)}
+                              {formatCurrency(originalTotal, receipt.currency)}
                             </span>
                           </div>
                           <div className="flex justify-between gap-3">
                             <span>You Paid</span>
                             <span className="whitespace-nowrap">
-                              {formatCurrency(item.price, receipt.currency)}
+                              {formatCurrency(paidTotal, receipt.currency)}
                             </span>
                           </div>
                           <div className="flex justify-between gap-3 text-emerald-600">
                             <span>You Saved</span>
                             <span className="whitespace-nowrap">
-                              {formatCurrency(saved, receipt.currency)}
+                              {formatCurrency(savedTotal, receipt.currency)}
                             </span>
                           </div>
-                          {item.quantity > 1 ? (
-                            <p className="pt-0.5 text-xs font-medium text-slate-400">
-                              {item.quantity} ×{" "}
-                              {formatCurrency(item.price, receipt.currency)}
-                            </p>
-                          ) : null}
                         </div>
                       ) : (
                         <p className=" mt-2 text-xs font-medium text-slate-400">
@@ -342,6 +345,43 @@ export default async function DigitalReceiptPage({
                 </span>
               </div>
             </div>
+
+            {receipt.payments && receipt.payments.length > 0 ? (
+              <div className="mb-8 space-y-3">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Payment history
+                </div>
+                <div className="space-y-2">
+                  {receipt.payments.map((payment) => (
+                    <div
+                      key={payment.id}
+                      className="flex justify-between gap-3 rounded-xl border border-slate-100 bg-white px-4 py-3 text-sm"
+                    >
+                      <div className="min-w-0">
+                        <div className="font-semibold text-slate-900">
+                          {formatCurrency(payment.amount, receipt.currency)}
+                        </div>
+                        <div className="mt-0.5 text-xs text-slate-500">
+                          {formatPaymentLedgerDetails(payment)}
+                        </div>
+                      </div>
+                      <div className="shrink-0 text-right text-xs text-slate-400">
+                        <div>
+                          {format(new Date(payment.createdAt), "MMM d, yyyy")}
+                        </div>
+                        <div>
+                          {format(new Date(payment.createdAt), "h:mm a")}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Every payment toward this receipt is recorded here so you can
+                  see a complete history of what has been received.
+                </p>
+              </div>
+            ) : null}
 
             {/* Return Policy Notice */}
             {hasPolicy && (
