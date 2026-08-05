@@ -14,8 +14,11 @@ export function deriveReceiptPaymentStatus(
 ): ReceiptPaymentStatus {
   const paid = roundMoney(amountPaid);
   const receiptTotal = roundMoney(total);
+  // Nothing owed (including free / zero-total receipts) is settled.
+  if (moneyEquals(receiptTotal, 0) || moneyEquals(paid, receiptTotal) || paid >= receiptTotal) {
+    return "paid_in_full";
+  }
   if (moneyEquals(paid, 0)) return "unpaid";
-  if (moneyEquals(paid, receiptTotal) || paid >= receiptTotal) return "paid_in_full";
   return "partially_paid";
 }
 
