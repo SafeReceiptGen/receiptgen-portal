@@ -36,6 +36,18 @@ export interface ReceiptData {
    * UI-only: once true, amountPaid is not auto-synced when line totals change.
    */
   amountPaidTouched?: boolean;
+  /**
+   * Payment ledger for PDF / preview. At create time this is a single
+   * provisional entry from amount paid; after issue it mirrors the API ledger.
+   */
+  payments?: {
+    id: string;
+    amount: number;
+    paymentMethod: string;
+    reference?: string | null;
+    note?: string | null;
+    createdAt: string;
+  }[];
   marketingText: string;
   companyName: string;
   tin: string; // Tax Identification Number

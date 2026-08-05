@@ -6,12 +6,17 @@ import { formatPaymentMethodLabel, formatReceiptPaymentStatusLabel } from "@/lib
 import Link from "next/link";
 import { BrandLogoImage } from "@/components/receipt/brand-logo-image";
 import { RECEIPT_LOGO_SLOT_PX } from "@/lib/receipt-logo-display";
-import { isLineItemDiscounted } from "@/lib/discount";
+import {
+  getLineItemDiscountTotals,
+  isLineItemDiscounted,
+} from "@/lib/discount";
 import {
   balanceDueFrom,
   deriveReceiptPaymentStatus,
   roundMoney,
 } from "@/lib/receipt-payment";
+import { formatPaymentLedgerDetails } from "@/lib/payment-ledger-display";
+import { format } from "date-fns";
 
 interface ReceiptPreviewProps {
   data: ReceiptData;
@@ -38,6 +43,21 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
   const effectivePaid = roundMoney(data.amountPaid ?? total);
   const balanceDue = balanceDueFrom(total, effectivePaid);
   const paymentStatus = deriveReceiptPaymentStatus(total, effectivePaid);
+  const payments =
+    data.payments && data.payments.length > 0
+      ? data.payments
+      : effectivePaid > 0
+        ? [
+            {
+              id: "provisional-initial-payment",
+              amount: effectivePaid,
+              paymentMethod: data.paymentMethod,
+              reference: null as string | null,
+              note: null as string | null,
+              createdAt: data.date,
+            },
+          ]
+        : [];
 
   // Format currency helper
   const formatPrice = (price: number) => {
@@ -144,7 +164,12 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                   originalPrice,
                   item.price,
                 );
-                const saved = originalPrice - item.price;
+                const { originalTotal, paidTotal, savedTotal } =
+                  getLineItemDiscountTotals(
+                    originalPrice,
+                    item.price,
+                    item.quantity,
+                  );
 
                 return (
                   <div key={item.id} className="flex gap-4 items-start text-xs">
@@ -169,27 +194,21 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                           <div className="flex justify-between gap-3">
                             <span>Original Price</span>
                             <span className="whitespace-nowrap">
-                              {formatPrice(originalPrice)} {data.currency}
+                              {formatPrice(originalTotal)} {data.currency}
                             </span>
                           </div>
                           <div className="flex justify-between gap-3">
                             <span>You Paid</span>
                             <span className="whitespace-nowrap">
-                              {formatPrice(item.price)} {data.currency}
+                              {formatPrice(paidTotal)} {data.currency}
                             </span>
                           </div>
                           <div className="flex justify-between gap-3 text-emerald-600">
                             <span>You Saved</span>
                             <span className="whitespace-nowrap">
-                              {formatPrice(saved)} {data.currency}
+                              {formatPrice(savedTotal)} {data.currency}
                             </span>
                           </div>
-                          {item.quantity > 1 ? (
-                            <div className="text-zinc-400 pt-0.5">
-                              {item.quantity} x {formatPrice(item.price)}{" "}
-                              {data.currency}
-                            </div>
-                          ) : null}
                         </div>
                       ) : (
                         <div className="text-zinc-400">
@@ -251,6 +270,39 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                 </span>
               </div>
             </div>
+
+            {payments.length > 0 ? (
+              <div className="mb-8 space-y-2">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                  Payment history
+                </div>
+                <div className="space-y-2">
+                  {payments.map((payment) => (
+                    <div
+                      key={payment.id}
+                      className="flex justify-between gap-3 text-xs border border-zinc-100 rounded-md px-3 py-2"
+                    >
+                      <div>
+                        <div className="font-medium text-zinc-800">
+                          {formatPrice(payment.amount)} {data.currency}
+                        </div>
+                        <div className="text-zinc-500">
+                          {formatPaymentLedgerDetails(payment)}
+                        </div>
+                      </div>
+                      <div className="text-zinc-400 shrink-0 text-right">
+                        <div>
+                          {format(new Date(payment.createdAt), "MMM d, yyyy")}
+                        </div>
+                        <div>
+                          {format(new Date(payment.createdAt), "h:mm a")}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             {/* Footer / Return Policy */}
             <div className="flex items-start gap-4 mb-8 text-left">

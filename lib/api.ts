@@ -184,8 +184,10 @@ export interface ReceiptPaymentLedgerEntry {
     | "card"
     | "bank_transfer"
     | "wallet";
+  /** External provider / transfer reference when applicable. */
+  reference?: string | null;
   note: string | null;
-  recordedBy: string | null;
+  recordedBy?: string | null;
   createdAt: string;
 }
 
@@ -325,6 +327,7 @@ export const receiptsApi = {
     payload: {
       amount: number;
       paymentMethod?: string;
+      reference?: string;
       note?: string;
     },
   ) =>
@@ -337,6 +340,7 @@ export const receiptsApi = {
     id: string,
     payload?: {
       paymentMethod?: string;
+      reference?: string;
       note?: string;
     },
   ) =>
@@ -764,6 +768,8 @@ export interface VerifiedReceipt {
   retailerName?: string | null;
   retailerLogoUrl?: string | null;
   items: VerifiedReceiptItem[];
+  /** Append-only payment ledger (newest first). */
+  payments?: ReceiptPaymentLedgerEntry[];
 }
 
 export const verifyApi = {
