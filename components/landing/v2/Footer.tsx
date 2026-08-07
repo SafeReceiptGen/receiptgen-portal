@@ -13,7 +13,7 @@ export const Footer = () => {
           </div>
 
           {/* Links */}
-          <div className="flex gap-8">
+          <div className="flex flex-wrap justify-center gap-8">
             <a
               href="#"
               className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
@@ -32,6 +32,12 @@ export const Footer = () => {
             >
               Contact
             </a>
+            <Link
+              href="/careers"
+              className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
+            >
+              Careers
+            </Link>
           </div>
 
           {/* Socials */}
