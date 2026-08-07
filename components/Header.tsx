@@ -91,13 +91,20 @@ export default function Header({
             {navItems.map((item) => (
               <Link
                 key={`mobile-${item}`}
-                href={`#${item.toLowerCase().replace(/\s+/g, "-")}`}
+                href={`/#${item.toLowerCase().replace(/\s+/g, "-")}`}
                 className="mobile-item text-4xl font-bold tracking-tight text-foreground transition-colors duration-200 hover:text-primary active:scale-95"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {item}
               </Link>
             ))}
+            <Link
+              href="/careers"
+              className="mobile-item text-4xl font-bold tracking-tight text-foreground transition-colors duration-200 hover:text-primary active:scale-95"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Careers
+            </Link>
           </nav>
 
           <div className="mobile-item h-px w-24 bg-foreground/10" />
@@ -156,12 +163,18 @@ export default function Header({
             {navItems.map((item) => (
               <Link
                 key={item}
-                href={`#${item.toLowerCase().replace(/\s+/g, "-")}`}
+                href={`/#${item.toLowerCase().replace(/\s+/g, "-")}`}
                 className="header-item text-sm font-medium text-foreground/70 transition-colors duration-200 hover:text-primary"
               >
                 {item}
               </Link>
             ))}
+            <Link
+              href="/careers"
+              className="header-item text-sm font-medium text-foreground/70 transition-colors duration-200 hover:text-primary"
+            >
+              Careers
+            </Link>
           </nav>
 
           {/* Desktop auth */}
