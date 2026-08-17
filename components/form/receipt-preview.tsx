@@ -1,26 +1,13 @@
 import React, { useMemo } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { RotateCcw } from "lucide-react";
 import { ReceiptData } from "@/types";
-import { formatPaymentMethodLabel, formatReceiptPaymentStatusLabel } from "@/lib/receipt-display-labels";
-import Link from "next/link";
-import { BrandLogoImage } from "@/components/receipt/brand-logo-image";
-import { RECEIPT_LOGO_SLOT_PX } from "@/lib/receipt-logo-display";
-import {
-  getLineItemDiscountTotals,
-  isLineItemDiscounted,
-} from "@/lib/discount";
-import {
-  balanceDueFrom,
-  deriveReceiptPaymentStatus,
-  roundMoney,
-} from "@/lib/receipt-payment";
-import { formatPaymentLedgerDetails } from "@/lib/payment-ledger-display";
-import { format } from "date-fns";
+import { ReceiptCard } from "@/components/receipt/receipt-card";
+import { receiptDataToCardModel } from "@/lib/receipt-card-model";
+import { portalPublicOrigin } from "@/lib/portal-public-url";
 
 interface ReceiptPreviewProps {
   data: ReceiptData;
-  ref: any;
+  ref: React.Ref<HTMLDivElement>;
   /** Only show QR when the user is authenticated and a real qrUrl exists from the server */
   showQr?: boolean;
 }
@@ -30,368 +17,62 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
   ref,
   showQr = false,
 }) => {
-  // Calculations
-  const subtotal = useMemo(() => {
-    return data.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0,
-    );
-  }, [data.items]);
+  const model = useMemo(() => receiptDataToCardModel(data), [data]);
 
-  // VAT is disabled for now — total equals the sum of line items.
-  const total = subtotal;
-  const effectivePaid = roundMoney(data.amountPaid ?? total);
-  const balanceDue = balanceDueFrom(total, effectivePaid);
-  const paymentStatus = deriveReceiptPaymentStatus(total, effectivePaid);
-  const payments =
-    data.payments && data.payments.length > 0
-      ? data.payments
-      : effectivePaid > 0
-        ? [
-            {
-              id: "provisional-initial-payment",
-              amount: effectivePaid,
-              paymentMethod: data.paymentMethod,
-              reference: null as string | null,
-              note: null as string | null,
-              createdAt: data.date,
-            },
-          ]
-        : [];
-
-  // Format currency helper
-  const formatPrice = (price: number) => {
-    return price.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
-
-  const formatDate = (isoString: string) => {
-    try {
-      const d = new Date(isoString);
-      return `${d.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })} ${d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`;
-    } catch (e) {
-      return isoString;
+  const dynamicQrUrl = useMemo(() => {
+    if (data.qrUrl?.trim()) return data.qrUrl.trim();
+    if (data.qrCodeToken?.trim()) {
+      return `${portalPublicOrigin()}/receipt/${data.qrCodeToken.trim()}`;
     }
-  };
+    return "";
+  }, [data.qrUrl, data.qrCodeToken]);
 
-  // Construct Policy String
-  const returnWindowDisplay =
-    data.returnWindow === "Custom"
-      ? data.customReturnWindow
-      : data.returnWindow;
-  const hasPolicy = data.returnWindow !== "No returns";
-
-  // Prefer the server-built verification URL; fall back to composing from the bare token.
-  const dynamicQrUrl = data.qrUrl?.trim()
-    ? data.qrUrl.trim()
-    : data.qrCodeToken?.trim()
-      ? `${process.env.NEXT_PUBLIC_URL || "http://localhost:3000"}/receipt/${data.qrCodeToken.trim()}`
-      : "";
-
-  return (
-    <div className="flex items-start justify-center w-full h-full p-8 overflow-auto overscroll-contain custom-scrollbar">
-      {/* 
-          Wrapper for Screenshot Capture. 
-          We use id="receipt-capture-target" to identify this specific DOM node. 
-          The padding ensures the shadow is captured.
-      */}
-      <div id="receipt-capture-target" ref={ref} className="p-4 rounded-[24px]">
-        <div className="relative w-full max-w-[380px] min-w-[320px] flex flex-col filter drop-shadow-[0_20px_25px_rgba(0,0,0,0.25)] my-auto transition-all duration-300">
-          {/* TOP SECTION: HEADER */}
-          {/* We mask the bottom corners to create the top half of the notches */}
-          <div
-            className="text-zinc-900 w-full rounded-t-[20px] p-8 pb-6 relative transition-all"
-            style={{
-              background:
-                "radial-gradient(circle at bottom left, transparent 12px, #ffffff 12.5px) top left / 51% 100% no-repeat, radial-gradient(circle at bottom right, transparent 12px, #ffffff 12.5px) top right / 51% 100% no-repeat",
-            }}
-          >
-            <div className="flex justify-between items-start mb-6">
-              <div className="flex items-start gap-3">
-                <BrandLogoImage
-                  url={data.logoUrl}
-                  alt={`${data.storeName} logo`}
-                  className="shrink-0 rounded-md object-contain ring-1 ring-zinc-200"
-                  style={{
-                    width: RECEIPT_LOGO_SLOT_PX,
-                    height: RECEIPT_LOGO_SLOT_PX,
-                  }}
-                />
-                <div className="flex flex-col min-w-0">
-                  <h1 className="text-xl font-bold tracking-tight text-zinc-900">
-                    {data.storeName}
-                  </h1>
-                  {(data.storeLocation ?? "").trim() &&
-                  (data.storeLocation ?? "").trim() !==
-                    data.storeName.trim() ? (
-                    <p className="text-zinc-500 text-sm">{data.storeLocation}</p>
-                  ) : null}
-                  {data.storePhone ? (
-                    <p className="text-zinc-500 text-sm">{data.storePhone}</p>
-                  ) : null}
-                </div>
-              </div>
-              <div className="text-[10px] text-zinc-500 text-right leading-tight">
-                <p className="mb-0.5">Receipt {data.receiptNumber}</p>
-                <p>{formatDate(data.date)}</p>
-              </div>
-            </div>
-
-            <div>
-              <h2 className="text-xl text-center font-bold mb-2">
-                Thank you for your purchase
-                {data.customerName ? `, ${data.customerName}` : ""}!
-              </h2>
-            </div>
-
-            {/* Dashed Separator Line - positioned at bottom to align with notch center */}
-            <div className="absolute bottom-0 left-[12px] right-[12px] border-b border-dashed border-zinc-300"></div>
-          </div>
-
-          {/* BOTTOM SECTION: BODY */}
-          {/* We mask the top corners to create the bottom half of the notches */}
-          <div
-            className="text-zinc-900 w-full rounded-b-[20px] p-8 pt-6 relative flex flex-col transition-all"
-            style={{
-              background:
-                "radial-gradient(circle at top left, transparent 12px, #ffffff 12.5px) bottom left / 51% 100% no-repeat, radial-gradient(circle at top right, transparent 12px, #ffffff 12.5px) bottom right / 51% 100% no-repeat",
-            }}
-          >
-            {/* Line Items */}
-            <div className="flex flex-col gap-6 mb-8 text-left">
-              {data.items.map((item, index) => {
-                const originalPrice = item.originalPrice ?? item.price;
-                const discounted = isLineItemDiscounted(
-                  originalPrice,
-                  item.price,
-                );
-                const { originalTotal, paidTotal, savedTotal } =
-                  getLineItemDiscountTotals(
-                    originalPrice,
-                    item.price,
-                    item.quantity,
-                  );
-
-                return (
-                  <div key={item.id} className="flex gap-4 items-start text-xs">
-                    <div className="w-4 pt-0.5 font-medium text-zinc-400">
-                      {index + 1}.
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start mb-1">
-                        <span className="font-bold text-sm text-zinc-900 w-2/3 leading-tight">
-                          {item.name}
-                        </span>
-                        <span className="font-bold text-sm whitespace-nowrap">
-                          {formatPrice(item.price * item.quantity)}{" "}
-                          {data.currency}
-                        </span>
-                      </div>
-                      <p className="text-zinc-500 mb-1 leading-normal">
-                        {item.detail}
-                      </p>
-                      {discounted ? (
-                        <div className="space-y-0.5 text-zinc-500">
-                          <div className="flex justify-between gap-3">
-                            <span>Original Price</span>
-                            <span className="whitespace-nowrap">
-                              {formatPrice(originalTotal)} {data.currency}
-                            </span>
-                          </div>
-                          <div className="flex justify-between gap-3">
-                            <span>You Paid</span>
-                            <span className="whitespace-nowrap">
-                              {formatPrice(paidTotal)} {data.currency}
-                            </span>
-                          </div>
-                          <div className="flex justify-between gap-3 text-emerald-600">
-                            <span>You Saved</span>
-                            <span className="whitespace-nowrap">
-                              {formatPrice(savedTotal)} {data.currency}
-                            </span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-zinc-400">
-                          {item.quantity} x {formatPrice(item.price)}{" "}
-                          {data.currency}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Financials Block */}
-            <div className="bg-zinc-100/80 rounded-lg p-4 mb-8">
-              <div className="flex justify-between items-baseline mb-4">
-                <span className="text-lg font-bold">Total</span>
-                <span className="text-2xl font-bold tracking-tight">
-                  {formatPrice(total)} {data.currency}
-                </span>
-              </div>
-
-              {paymentStatus !== "paid_in_full" ? (
-                <>
-                  <div className="flex justify-between text-xs text-zinc-600 mb-1">
-                    <span>Amount paid</span>
-                    <span className="font-medium">
-                      {formatPrice(effectivePaid)} {data.currency}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-xs text-zinc-600 mb-3">
-                    <span>Balance due</span>
-                    <span className="font-semibold text-zinc-900">
-                      {formatPrice(balanceDue)} {data.currency}
-                    </span>
-                  </div>
-                </>
-              ) : null}
-
-              <div className="flex justify-between text-xs text-zinc-600 mb-1">
-                <span>Payment status</span>
-                <span
-                  className={
-                    paymentStatus === "paid_in_full"
-                      ? "font-semibold text-emerald-700"
-                      : paymentStatus === "partially_paid"
-                        ? "font-semibold text-amber-700"
-                        : "font-semibold text-rose-700"
-                  }
-                >
-                  {formatReceiptPaymentStatusLabel(paymentStatus)}
-                </span>
-              </div>
-
-              <div className="flex justify-between text-xs text-zinc-600 mb-1">
-                <span>Payment method</span>
-                <span className="font-medium">
-                  {formatPaymentMethodLabel(data.paymentMethod)}
-                </span>
-              </div>
-            </div>
-
-            {payments.length > 0 ? (
-              <div className="mb-8 space-y-2">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                  Payment history
-                </div>
-                <div className="space-y-2">
-                  {payments.map((payment) => (
-                    <div
-                      key={payment.id}
-                      className="flex justify-between gap-3 text-xs border border-zinc-100 rounded-md px-3 py-2"
-                    >
-                      <div>
-                        <div className="font-medium text-zinc-800">
-                          {formatPrice(payment.amount)} {data.currency}
-                        </div>
-                        <div className="text-zinc-500">
-                          {formatPaymentLedgerDetails(payment)}
-                        </div>
-                      </div>
-                      <div className="text-zinc-400 shrink-0 text-right">
-                        <div>
-                          {format(new Date(payment.createdAt), "MMM d, yyyy")}
-                        </div>
-                        <div>
-                          {format(new Date(payment.createdAt), "h:mm a")}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            {/* Footer / Return Policy */}
-            <div className="flex items-start gap-4 mb-8 text-left">
-              <div className="flex-1 pt-1">
-                {/* Primary Content: Return Policy if exists, otherwise Marketing Text */}
-                {hasPolicy ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-1.5 text-blue-600">
-                      <RotateCcw size={12} strokeWidth={2.5} />
-                      <span className="text-[10px] font-bold uppercase tracking-wider">
-                        Return Policy
-                      </span>
-                    </div>
-                    <div className="text-sm font-semibold leading-snug text-zinc-800">
-                      <span className="text-zinc-500">Window:</span>{" "}
-                      {returnWindowDisplay} <br />
-                      <span className="text-zinc-500">Condition:</span>{" "}
-                      {data.returnCondition} <br />
-                      <span className="text-zinc-500">Refund:</span>{" "}
-                      {data.refundType}
-                    </div>
-                    {data.marketingText && (
-                      <p className="text-[10px] text-zinc-500 italic mt-2 border-t border-zinc-200 pt-2">
-                        "{data.marketingText}"
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <div>
-                    <p className="text-sm font-semibold leading-snug text-zinc-800">
-                      {data.marketingText}
-                    </p>
-                  </div>
-                )}
-                {hasPolicy && (
-                  <p className="mt-4 text-[10px] font-medium text-zinc-500">
-                    Scan to view receipt or start a return
-                  </p>
-                )}
-              </div>
-              {/* QR Code — only rendered when authenticated and a real URL exists */}
-              {showQr ? (
-                <div className="p-2 border border-zinc-200 rounded-lg bg-white shrink-0">
-                  <QRCodeSVG
-                    value={dynamicQrUrl}
-                    size={80}
-                    level="M"
-                    fgColor="#18181b"
-                  />
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center p-2 rounded-lg border border-dashed border-zinc-200 bg-zinc-50/50 shrink-0 w-[96px] h-[96px] gap-1.5">
-                  <div className="grid grid-cols-3 gap-0.5 opacity-20">
-                    {Array.from({ length: 9 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className={`w-2 h-2 rounded-[2px] bg-zinc-400 ${[0, 2, 6, 8].includes(i) ? "opacity-100" : "opacity-40"}`}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-[8px] text-zinc-400 text-center leading-tight font-medium tracking-wide uppercase">
-                    QR on
-                    <br />
-                    sign in
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Legal/Bottom */}
-            <div className="flex justify-between items-end text-[9px] text-zinc-400 uppercase tracking-wide border-t border-zinc-100 pt-4 mt-auto">
-              <div>
-                <p>{data.companyName}</p>
-                {/* <p>TIN: {data.tin}</p> */}
-              </div>
-              <div className="text-right">
-                <p>Check receipt</p>
-                <p className="text-blue-500 lowercase tracking-normal">
-                  {data.website}
-                </p>
-              </div>
-            </div>
+  const footerSlot = (
+    <div className="w-full">
+      {showQr && dynamicQrUrl ? (
+        <div className="flex flex-col items-end gap-2">
+          <p className="text-[10px] font-medium text-slate-500">
+            Scan to view receipt or start a return
+          </p>
+          <div className="shrink-0 rounded-lg border border-slate-200 bg-white p-2">
+            <QRCodeSVG
+              value={dynamicQrUrl}
+              size={80}
+              level="M"
+              fgColor="#18181b"
+            />
           </div>
         </div>
+      ) : (
+        <div className="ml-auto flex h-[96px] w-[96px] shrink-0 flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-slate-200 bg-slate-50/50 p-2">
+          <div className="grid grid-cols-3 gap-0.5 opacity-20">
+            {Array.from({ length: 9 }).map((_, i) => (
+              <div
+                key={i}
+                className={`h-2 w-2 rounded-[2px] bg-slate-400 ${[0, 2, 6, 8].includes(i) ? "opacity-100" : "opacity-40"}`}
+              />
+            ))}
+          </div>
+          <p className="text-center text-[8px] font-medium uppercase leading-tight tracking-wide text-slate-400">
+            QR on
+            <br />
+            sign in
+          </p>
+        </div>
+      )}
+    </div>
+  );
 
-        {/* SafeReceipt Branding */}
-        <div className="mt-4 text-[10px] text-zinc-500/50 text-center font-medium uppercase tracking-widest">
-          Generated with{" "}
-          <span className="font-bold text-zinc-400">SafeReceipt</span>
+  return (
+    <div className="custom-scrollbar flex h-full w-full items-start justify-center overflow-auto overscroll-contain p-8">
+      {/*
+          Wrapper for Screenshot Capture.
+          We use id="receipt-capture-target" to identify this specific DOM node.
+          The padding ensures the shadow is captured.
+      */}
+      <div id="receipt-capture-target" ref={ref} className="rounded-[24px] p-4">
+        <div className="relative my-auto flex w-full min-w-[320px] max-w-[380px] flex-col filter drop-shadow-[0_20px_25px_rgba(0,0,0,0.25)] transition-all duration-300">
+          <ReceiptCard model={model} footerSlot={footerSlot} />
         </div>
       </div>
     </div>
