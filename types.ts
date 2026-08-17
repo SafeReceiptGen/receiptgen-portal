@@ -63,6 +63,10 @@ export interface ReceiptData {
   customReturnWindow: string;
   returnCondition: string;
   refundType: string;
+  /** Receipt lifecycle (issued / voided / returned); set when re-downloading from dashboard. */
+  status?: string;
+  /** ISO return deadline; computed from window when absent (builder preview). */
+  returnDeadline?: string | null;
 }
 
 export const INITIAL_RECEIPT_DATA: ReceiptData = {
