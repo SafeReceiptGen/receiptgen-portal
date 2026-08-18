@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { receiptDetailQueryOptions } from "@/lib/queries/receipts";
+import { retailerQueryOptions } from "@/lib/queries/retailer";
 import { receiptsApi } from "@/lib/api";
 import {
   Sheet,
@@ -10,8 +11,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { QRCodeSVG } from "qrcode.react";
-import { Check, Copy, ExternalLink, RotateCcw } from "lucide-react";
+import { QRCodeCanvas, QRCodeSVG } from "qrcode.react";
+import { Check, Copy, Download, ExternalLink, RotateCcw } from "lucide-react";
 import {
   formatPaymentMethodLabel,
   formatReceiptPaymentStatusLabel,
@@ -24,6 +25,10 @@ import {
   getLineItemDiscountTotals,
   isLineItemDiscounted,
 } from "@/lib/discount";
+import {
+  downloadReceiptPdf,
+  mapSingleReceiptToReceiptData,
+} from "@/lib/receipt-pdf-download";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,6 +64,10 @@ export function ReceiptDetailsSheet({
   const { data: receipt, isLoading } = useQuery({
     ...receiptDetailQueryOptions(receiptId),
   });
+  const { data: retailer } = useQuery({
+    ...retailerQueryOptions,
+    enabled: !!receiptId,
+  });
 
   const [recordOpen, setRecordOpen] = useState(false);
   const [settleOpen, setSettleOpen] = useState(false);
@@ -68,6 +77,8 @@ export function ReceiptDetailsSheet({
   const [paymentNote, setPaymentNote] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const invalidate = async () => {
     await queryClient.invalidateQueries({ queryKey: ["receipts"] });
@@ -168,6 +179,29 @@ export function ReceiptDetailsSheet({
     });
   };
 
+  const handleDownloadPdf = async () => {
+    if (!receipt || downloading) return;
+
+    setDownloading(true);
+    try {
+      const qrDataUrl = qrCanvasRef.current?.toDataURL("image/png");
+      const receiptData = mapSingleReceiptToReceiptData(
+        receipt,
+        retailer,
+        dynamicQrUrl,
+      );
+      await downloadReceiptPdf(receiptData, {
+        qrDataUrl,
+        showQr: !!dynamicQrUrl,
+        filename: `SafeReceipt-${receipt.receiptNumber}.pdf`,
+      });
+    } catch (e) {
+      console.error("Failed to generate PDF", e);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <>
       <Sheet open={!!receiptId} onOpenChange={onOpenChange}>
@@ -192,12 +226,12 @@ export function ReceiptDetailsSheet({
                   <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                     Receipt link
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <a
                       href={dynamicQrUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="min-w-0 flex-1 truncate font-mono text-xs text-blue-600 hover:underline"
+                      className="min-w-0 flex-1 basis-24 truncate font-mono text-xs text-blue-600 hover:underline"
                       title={dynamicQrUrl}
                     >
                       {dynamicQrUrl}
@@ -232,6 +266,26 @@ export function ReceiptDetailsSheet({
                       )}
                       {copied ? "Copied!" : "Copy"}
                     </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 shrink-0 gap-1.5 px-2"
+                      disabled={downloading}
+                      onClick={() => void handleDownloadPdf()}
+                    >
+                      <Download className="size-3.5" />
+                      {downloading ? "…" : "Download"}
+                    </Button>
+                  </div>
+                  <div className="hidden" aria-hidden>
+                    <QRCodeCanvas
+                      value={dynamicQrUrl}
+                      size={160}
+                      level="M"
+                      fgColor="#18181b"
+                      ref={qrCanvasRef}
+                    />
                   </div>
                 </div>
               ) : null}
