@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { ReceiptData } from "@/types";
-import { fetchReceiptLogoForPdf } from "@/lib/receipt-logo-pdf";
+import { downloadReceiptPdf } from "@/lib/receipt-pdf-download";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Store, storesApi, SavedProduct } from "@/lib/api";
 import {
@@ -28,8 +28,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { pdf } from "@react-pdf/renderer";
-import { ReceiptPDF } from "./receipt-pdf";
 import { QRCodeCanvas } from "qrcode.react";
 import { useExpandableScreen } from "@/components/ui/expandable-screen";
 
@@ -195,41 +193,13 @@ export default function ConversionDialog({
   const handleDownloadPDF = async () => {
     if (!receiptData) return;
 
-    // Get QR Code data URL if canvas is rendered
-    let qrDataUrl = undefined;
-    if (qrCanvasRef.current) {
-      qrDataUrl = qrCanvasRef.current.toDataURL("image/png");
-    }
-
-    let logoDataUrl: string | undefined;
-    let logoWidthPt: number | undefined;
-    let logoHeightPt: number | undefined;
-    const logoTrim = receiptData.logoUrl?.trim();
-    if (logoTrim) {
-      const logoAsset = await fetchReceiptLogoForPdf(logoTrim);
-      if (logoAsset) {
-        logoDataUrl = logoAsset.dataUrl;
-        logoWidthPt = logoAsset.width;
-        logoHeightPt = logoAsset.height;
-      }
-    }
-
+    const qrDataUrl = qrCanvasRef.current?.toDataURL("image/png");
     try {
-      const blob = await pdf(
-        <ReceiptPDF
-          data={receiptData}
-          showQr={!!dynamicQrUrl}
-          qrDataUrl={qrDataUrl}
-          logoDataUrl={logoDataUrl}
-          logoNaturalWidth={logoWidthPt}
-          logoNaturalHeight={logoHeightPt}
-        />,
-      ).toBlob();
-
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `SafeReceipt-${Date.now()}.pdf`;
-      link.click();
+      await downloadReceiptPdf(receiptData, {
+        qrDataUrl,
+        showQr: !!dynamicQrUrl,
+        filename: `SafeReceipt-${Date.now()}.pdf`,
+      });
     } catch (e) {
       console.error("Failed to generate PDF", e);
     }
