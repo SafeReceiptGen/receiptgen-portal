@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { receiptDetailQueryOptions } from "@/lib/queries/receipts";
 import { retailerQueryOptions } from "@/lib/queries/retailer";
@@ -13,12 +13,15 @@ import {
 } from "@/components/ui/sheet";
 import { QRCodeCanvas, QRCodeSVG } from "qrcode.react";
 import { Check, Copy, Download, ExternalLink, RotateCcw } from "lucide-react";
+import html2canvas from "html2canvas-pro";
 import {
   formatPaymentMethodLabel,
   formatReceiptPaymentStatusLabel,
 } from "@/lib/receipt-display-labels";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BrandLogoImage } from "@/components/receipt/brand-logo-image";
+import { ReceiptCard } from "@/components/receipt/receipt-card";
+import { receiptDataToCardModel } from "@/lib/receipt-card-model";
 import { RECEIPT_LOGO_SLOT_PX } from "@/lib/receipt-logo-display";
 import {
   discountReasonLabel,
@@ -47,6 +50,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { PAYMENT_METHOD_OPTIONS } from "@/lib/payment-methods";
 import { formatPaymentLedgerDetails } from "@/lib/payment-ledger-display";
 import { format } from "date-fns";
@@ -79,6 +90,7 @@ export function ReceiptDetailsSheet({
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
+  const pngCaptureRef = useRef<HTMLDivElement>(null);
 
   const invalidate = async () => {
     await queryClient.invalidateQueries({ queryKey: ["receipts"] });
@@ -150,6 +162,19 @@ export function ReceiptDetailsSheet({
     ? `${process.env.NEXT_PUBLIC_URL || "http://localhost:3000"}/receipt/${receipt.qrCodeToken}`
     : "";
 
+  const downloadReceiptData = useMemo(() => {
+    if (!receipt) return null;
+    return mapSingleReceiptToReceiptData(receipt, retailer, dynamicQrUrl);
+  }, [receipt, retailer, dynamicQrUrl]);
+
+  const downloadCardModel = useMemo(
+    () =>
+      downloadReceiptData
+        ? receiptDataToCardModel(downloadReceiptData)
+        : null,
+    [downloadReceiptData],
+  );
+
   const balanceDue = receipt ? parseFloat(receipt.balanceDue ?? "0") : 0;
   const canCollectPayment =
     receipt?.status === "issued" && balanceDue > 0;
@@ -180,23 +205,40 @@ export function ReceiptDetailsSheet({
   };
 
   const handleDownloadPdf = async () => {
-    if (!receipt || downloading) return;
+    if (!receipt || !downloadReceiptData || downloading) return;
 
     setDownloading(true);
     try {
       const qrDataUrl = qrCanvasRef.current?.toDataURL("image/png");
-      const receiptData = mapSingleReceiptToReceiptData(
-        receipt,
-        retailer,
-        dynamicQrUrl,
-      );
-      await downloadReceiptPdf(receiptData, {
+      await downloadReceiptPdf(downloadReceiptData, {
         qrDataUrl,
         showQr: !!dynamicQrUrl,
         filename: `SafeReceipt-${receipt.receiptNumber}.pdf`,
       });
     } catch (e) {
       console.error("Failed to generate PDF", e);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleDownloadImage = async () => {
+    if (!receipt || !pngCaptureRef.current || downloading) return;
+
+    setDownloading(true);
+    try {
+      const canvas = await html2canvas(pngCaptureRef.current, {
+        scale: 2,
+        backgroundColor: null,
+        logging: false,
+        useCORS: true,
+      });
+      const link = document.createElement("a");
+      link.download = `SafeReceipt-${receipt.receiptNumber}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } catch (e) {
+      console.error("Failed to generate image", e);
     } finally {
       setDownloading(false);
     }
@@ -266,17 +308,38 @@ export function ReceiptDetailsSheet({
                       )}
                       {copied ? "Copied!" : "Copy"}
                     </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-8 shrink-0 gap-1.5 px-2"
-                      disabled={downloading}
-                      onClick={() => void handleDownloadPdf()}
-                    >
-                      <Download className="size-3.5" />
-                      {downloading ? "…" : "Download"}
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 shrink-0 gap-1.5 px-2"
+                          disabled={downloading}
+                        >
+                          <Download className="size-3.5" />
+                          {downloading ? "…" : "Download"}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-36">
+                        <DropdownMenuLabel className="text-xs font-normal text-slate-500">
+                          Download as:
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="cursor-pointer"
+                          onClick={() => void handleDownloadImage()}
+                        >
+                          Image
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="cursor-pointer"
+                          onClick={() => void handleDownloadPdf()}
+                        >
+                          PDF
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                   <div className="hidden" aria-hidden>
                     <QRCodeCanvas
@@ -555,6 +618,37 @@ export function ReceiptDetailsSheet({
                   </div>
                 </div>
               </div>
+              {downloadCardModel ? (
+                <div
+                  className="pointer-events-none fixed left-[-10000px] top-0"
+                  aria-hidden
+                >
+                  <div ref={pngCaptureRef} className="rounded-[24px] p-4">
+                    <div className="relative flex w-[380px] min-w-[320px] flex-col">
+                      <ReceiptCard
+                        model={downloadCardModel}
+                        footerSlot={
+                          dynamicQrUrl ? (
+                            <div className="flex w-full flex-col items-end gap-2">
+                              <p className="text-[10px] font-medium text-slate-500">
+                                Scan to view receipt or start a return
+                              </p>
+                              <div className="shrink-0 rounded-lg border border-slate-200 bg-white p-2">
+                                <QRCodeSVG
+                                  value={dynamicQrUrl}
+                                  size={80}
+                                  level="M"
+                                  fgColor="#18181b"
+                                />
+                              </div>
+                            </div>
+                          ) : null
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : null}
             </div>
           )}
         </SheetContent>

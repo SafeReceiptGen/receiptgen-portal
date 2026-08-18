@@ -5,6 +5,7 @@ import type { ReceiptPaymentStatus } from "@/lib/receipt-payment";
 import {
   balanceDueFrom,
   deriveReceiptPaymentStatus,
+  liveAmountPaid,
   roundMoney,
 } from "@/lib/receipt-payment";
 
@@ -105,7 +106,11 @@ export function receiptForReturnToCardModel(
   receipt: ReceiptForReturn,
 ): ReceiptCardModel {
   const total = receipt.total;
-  const amountPaid = roundMoney(receipt.amountPaid ?? total);
+  const amountPaid = liveAmountPaid(
+    total,
+    receipt.amountPaid,
+    receipt.payments,
+  );
   const paymentStatus =
     receipt.paymentStatus ?? deriveReceiptPaymentStatus(total, amountPaid);
   const balanceDue =
@@ -156,9 +161,13 @@ export function receiptDataToCardModel(data: ReceiptData): ReceiptCardModel {
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
-  const amountPaid = roundMoney(data.amountPaid ?? subtotal);
-  const paymentStatus = deriveReceiptPaymentStatus(subtotal, amountPaid);
-  const balanceDue = balanceDueFrom(subtotal, amountPaid);
+  const amountPaid = liveAmountPaid(subtotal, data.amountPaid, data.payments);
+  const paymentStatus =
+    data.paymentStatus ?? deriveReceiptPaymentStatus(subtotal, amountPaid);
+  const balanceDue =
+    data.balanceDue !== undefined
+      ? roundMoney(Math.max(0, data.balanceDue))
+      : balanceDueFrom(subtotal, amountPaid);
 
   return {
     retailerName: data.storeName,

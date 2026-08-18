@@ -27,3 +27,18 @@ export function balanceDueFrom(total: number, amountPaid: number): number {
   if (status === "paid_in_full") return 0;
   return roundMoney(Math.max(0, roundMoney(total) - roundMoney(amountPaid)));
 }
+
+/**
+ * Live amount received. After issuance, `amountPaid` is frozen at the first
+ * payment — later settlements live on the ledger (and balanceDue/paymentStatus).
+ */
+export function liveAmountPaid(
+  total: number,
+  amountPaid: number | undefined,
+  payments?: { amount: number }[] | null,
+): number {
+  if (payments && payments.length > 0) {
+    return roundMoney(payments.reduce((sum, payment) => sum + payment.amount, 0));
+  }
+  return roundMoney(amountPaid ?? total);
+}

@@ -176,6 +176,8 @@ export function mapSingleReceiptToReceiptData(
     vatRate: parseFloat(receipt.vatRate) || 0,
     paymentMethod: receipt.paymentMethod,
     amountPaid: parseFloat(receipt.amountPaid ?? receipt.total) || 0,
+    paymentStatus: receipt.paymentStatus,
+    balanceDue: parseFloat(receipt.balanceDue ?? "0") || 0,
     payments: (receipt.payments ?? []).map((payment) => ({
       id: payment.id,
       amount: parseFloat(payment.amount) || 0,
