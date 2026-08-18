@@ -30,8 +30,12 @@ export interface ReceiptData {
   currency: string;
   vatRate: number;
   paymentMethod: string;
-  /** Amount received at issuance. Defaults to total (paid in full). */
+  /** Amount received at issuance. Frozen after create; later payments live on `payments`. */
   amountPaid: number;
+  /** Live AR after issuance. Prefer this over deriving from frozen `amountPaid`. */
+  paymentStatus?: "unpaid" | "partially_paid" | "paid_in_full";
+  /** Live remaining balance after issuance. */
+  balanceDue?: number;
   /**
    * UI-only: once true, amountPaid is not auto-synced when line totals change.
    */
