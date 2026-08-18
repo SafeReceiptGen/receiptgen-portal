@@ -11,7 +11,7 @@ import {
 } from "@react-pdf/renderer";
 import { format } from "date-fns";
 import { ReceiptData } from "@/types";
-import { formatCurrency } from "@/lib/currency";
+import { formatCurrencyForPdf } from "@/lib/currency";
 import {
   getLineItemDiscountTotals,
   isLineItemDiscounted,
@@ -578,7 +578,7 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
                   <View style={styles.itemNamePriceContainer}>
                     <Text style={styles.itemName}>{item.name}</Text>
                     <Text style={styles.itemTotalPrice}>
-                      {formatCurrency(
+                      {formatCurrencyForPdf(
                         item.price * item.quantity,
                         model.currency,
                       )}
@@ -592,26 +592,26 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
                       <View style={styles.discountRow}>
                         <Text style={styles.discountLabel}>Original Price</Text>
                         <Text style={styles.discountLabel}>
-                          {formatCurrency(originalTotal, model.currency)}
+                          {formatCurrencyForPdf(originalTotal, model.currency)}
                         </Text>
                       </View>
                       <View style={styles.discountRow}>
                         <Text style={styles.discountLabel}>You Paid</Text>
                         <Text style={styles.discountLabel}>
-                          {formatCurrency(paidTotal, model.currency)}
+                          {formatCurrencyForPdf(paidTotal, model.currency)}
                         </Text>
                       </View>
                       <View style={styles.discountRow}>
                         <Text style={styles.discountSaved}>You Saved</Text>
                         <Text style={styles.discountSaved}>
-                          {formatCurrency(savedTotal, model.currency)}
+                          {formatCurrencyForPdf(savedTotal, model.currency)}
                         </Text>
                       </View>
                     </View>
                   ) : (
                     <Text style={styles.itemQtyPrice}>
                       {item.quantity} ×{" "}
-                      {formatCurrency(item.price, model.currency)}
+                      {formatCurrencyForPdf(item.price, model.currency)}
                     </Text>
                   )}
                 </View>
@@ -624,7 +624,7 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Total</Text>
             <Text style={styles.totalValue}>
-              {formatCurrency(subtotal, model.currency)}
+              {formatCurrencyForPdf(subtotal, model.currency)}
             </Text>
           </View>
           {model.paymentStatus !== "paid_in_full" ? (
@@ -632,13 +632,13 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
               <View style={styles.metaRow}>
                 <Text style={styles.metaLabel}>Amount paid</Text>
                 <Text style={styles.metaValue}>
-                  {formatCurrency(model.amountPaid, model.currency)}
+                  {formatCurrencyForPdf(model.amountPaid, model.currency)}
                 </Text>
               </View>
               <View style={styles.metaRow}>
                 <Text style={styles.metaLabel}>Balance due</Text>
                 <Text style={styles.balanceValue}>
-                  {formatCurrency(model.balanceDue, model.currency)}
+                  {formatCurrencyForPdf(model.balanceDue, model.currency)}
                 </Text>
               </View>
             </>
@@ -658,7 +658,7 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
               <View key={payment.id} style={styles.ledgerRow}>
                 <View style={{ flex: 1, paddingRight: 8 }}>
                   <Text style={styles.ledgerAmount}>
-                    {formatCurrency(payment.amount, model.currency)}
+                    {formatCurrencyForPdf(payment.amount, model.currency)}
                   </Text>
                   <Text style={styles.ledgerDetails}>
                     {formatPaymentLedgerDetails(payment)}
