@@ -176,6 +176,19 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginTop: 2,
   },
+  discountBlock: {
+    marginTop: 4,
+  },
+  discountQtyPrice: {
+    fontSize: 9,
+    color: "#94a3b8",
+    marginTop: 1,
+  },
+  discountQtyPriceSaved: {
+    fontSize: 9,
+    color: "#34d399",
+    marginTop: 1,
+  },
   discountLabel: {
     fontSize: 9,
     color: "#64748b",
@@ -564,12 +577,18 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
           {model.items.map((item, index) => {
             const originalPrice = item.originalPrice ?? item.price;
             const discounted = isLineItemDiscounted(originalPrice, item.price);
-            const { originalTotal, paidTotal, savedTotal } =
-              getLineItemDiscountTotals(
-                originalPrice,
-                item.price,
-                item.quantity,
-              );
+            const {
+              originalUnit,
+              saleUnit,
+              savedUnit,
+              originalTotal,
+              paidTotal,
+              savedTotal,
+            } = getLineItemDiscountTotals(
+              originalPrice,
+              item.price,
+              item.quantity,
+            );
 
             return (
               <View key={item.id} style={styles.itemRow} wrap={false}>
@@ -589,22 +608,45 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
                   ) : null}
                   {discounted ? (
                     <View>
-                      <View style={styles.discountRow}>
-                        <Text style={styles.discountLabel}>Original Price</Text>
-                        <Text style={styles.discountLabel}>
-                          {formatCurrencyForPdf(originalTotal, model.currency)}
+                      <View style={styles.discountBlock}>
+                        <View style={styles.discountRow}>
+                          <Text style={styles.discountLabel}>
+                            Original Price
+                          </Text>
+                          <Text style={styles.discountLabel}>
+                            {formatCurrencyForPdf(
+                              originalTotal,
+                              model.currency,
+                            )}
+                          </Text>
+                        </View>
+                        <Text style={styles.discountQtyPrice}>
+                          {item.quantity} ×{" "}
+                          {formatCurrencyForPdf(originalUnit, model.currency)}
                         </Text>
                       </View>
-                      <View style={styles.discountRow}>
-                        <Text style={styles.discountLabel}>You Paid</Text>
-                        <Text style={styles.discountLabel}>
-                          {formatCurrencyForPdf(paidTotal, model.currency)}
+                      <View style={styles.discountBlock}>
+                        <View style={styles.discountRow}>
+                          <Text style={styles.discountLabel}>You Paid</Text>
+                          <Text style={styles.discountLabel}>
+                            {formatCurrencyForPdf(paidTotal, model.currency)}
+                          </Text>
+                        </View>
+                        <Text style={styles.discountQtyPrice}>
+                          {item.quantity} ×{" "}
+                          {formatCurrencyForPdf(saleUnit, model.currency)}
                         </Text>
                       </View>
-                      <View style={styles.discountRow}>
-                        <Text style={styles.discountSaved}>You Saved</Text>
-                        <Text style={styles.discountSaved}>
-                          {formatCurrencyForPdf(savedTotal, model.currency)}
+                      <View style={styles.discountBlock}>
+                        <View style={styles.discountRow}>
+                          <Text style={styles.discountSaved}>You Saved</Text>
+                          <Text style={styles.discountSaved}>
+                            {formatCurrencyForPdf(savedTotal, model.currency)}
+                          </Text>
+                        </View>
+                        <Text style={styles.discountQtyPriceSaved}>
+                          {item.quantity} ×{" "}
+                          {formatCurrencyForPdf(savedUnit, model.currency)}
                         </Text>
                       </View>
                     </View>

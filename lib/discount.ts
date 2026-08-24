@@ -38,16 +38,20 @@ export function isLineItemDiscounted(
   return Math.round(originalPrice * 100) > Math.round(salePrice * 100);
 }
 
-/** Line-item discount totals (unit prices × quantity). */
+/** Line-item discount unit amounts and totals (unit prices × quantity). */
 export function getLineItemDiscountTotals(
   originalUnitPrice: number,
   saleUnitPrice: number,
   quantity: number,
 ) {
   const qty = Math.max(0, quantity);
+  const savedUnit = originalUnitPrice - saleUnitPrice;
   return {
+    originalUnit: originalUnitPrice,
+    saleUnit: saleUnitPrice,
+    savedUnit,
     originalTotal: originalUnitPrice * qty,
     paidTotal: saleUnitPrice * qty,
-    savedTotal: (originalUnitPrice - saleUnitPrice) * qty,
+    savedTotal: savedUnit * qty,
   };
 }

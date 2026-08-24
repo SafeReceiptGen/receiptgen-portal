@@ -152,12 +152,18 @@ export function ReceiptCard({ model, footerSlot, className }: ReceiptCardProps) 
           {model.items.map((item, idx) => {
             const originalPrice = item.originalPrice ?? item.price;
             const discounted = isLineItemDiscounted(originalPrice, item.price);
-            const { originalTotal, paidTotal, savedTotal } =
-              getLineItemDiscountTotals(
-                originalPrice,
-                item.price,
-                item.quantity,
-              );
+            const {
+              originalUnit,
+              saleUnit,
+              savedUnit,
+              originalTotal,
+              paidTotal,
+              savedTotal,
+            } = getLineItemDiscountTotals(
+              originalPrice,
+              item.price,
+              item.quantity,
+            );
 
             return (
               <div key={item.id} className="flex items-start py-1 text-sm">
@@ -182,24 +188,42 @@ export function ReceiptCard({ model, footerSlot, className }: ReceiptCardProps) 
                     </p>
                   ) : null}
                   {discounted ? (
-                    <div className="mt-2 space-y-1 text-xs text-slate-500">
-                      <div className="flex justify-between gap-3">
-                        <span>Original Price</span>
-                        <span className="whitespace-nowrap">
-                          {formatCurrency(originalTotal, model.currency)}
-                        </span>
+                    <div className="mt-2 space-y-2 text-xs text-slate-500">
+                      <div>
+                        <div className="flex justify-between gap-3">
+                          <span>Original Price</span>
+                          <span className="whitespace-nowrap">
+                            {formatCurrency(originalTotal, model.currency)}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 font-medium text-slate-400">
+                          {item.quantity} ×{" "}
+                          {formatCurrency(originalUnit, model.currency)}
+                        </p>
                       </div>
-                      <div className="flex justify-between gap-3">
-                        <span>You Paid</span>
-                        <span className="whitespace-nowrap">
-                          {formatCurrency(paidTotal, model.currency)}
-                        </span>
+                      <div>
+                        <div className="flex justify-between gap-3">
+                          <span>You Paid</span>
+                          <span className="whitespace-nowrap">
+                            {formatCurrency(paidTotal, model.currency)}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 font-medium text-slate-400">
+                          {item.quantity} ×{" "}
+                          {formatCurrency(saleUnit, model.currency)}
+                        </p>
                       </div>
-                      <div className="flex justify-between gap-3 text-emerald-600">
-                        <span>You Saved</span>
-                        <span className="whitespace-nowrap">
-                          {formatCurrency(savedTotal, model.currency)}
-                        </span>
+                      <div>
+                        <div className="flex justify-between gap-3 text-emerald-600">
+                          <span>You Saved</span>
+                          <span className="whitespace-nowrap">
+                            {formatCurrency(savedTotal, model.currency)}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 font-medium text-emerald-600/70">
+                          {item.quantity} ×{" "}
+                          {formatCurrency(savedUnit, model.currency)}
+                        </p>
                       </div>
                     </div>
                   ) : (
