@@ -3,8 +3,7 @@ import Link from "next/link";
 import { ChevronRight, Receipt } from "lucide-react";
 import Image from "next/image";
 import { cn, mapToReceiptForReturn } from "@/lib/utils";
-import { ReceiptCard } from "@/components/receipt/receipt-card";
-import { receiptForReturnToCardModel } from "@/lib/receipt-card-model";
+import { PublicReceiptView } from "@/components/receipt/public-receipt-view";
 
 export default async function DigitalReceiptPage({
   params,
@@ -51,7 +50,6 @@ export default async function DigitalReceiptPage({
 
   const hasPolicy = receipt.returnWindow !== "No returns";
   const returnLocked = activeReturn != null;
-  const cardModel = receiptForReturnToCardModel(receipt);
 
   return (
     <div className="min-h-screen bg-slate-50 selection:bg-blue-200 selection:text-blue-900 dark:bg-[#050B16] dark:selection:bg-blue-900 dark:selection:text-blue-200">
@@ -86,7 +84,7 @@ export default async function DigitalReceiptPage({
 
       <main className="mx-auto max-w-lg px-4 pb-32 pt-6 sm:px-6 md:pt-10">
         <div className="relative z-10 mx-auto w-full animate-in fade-in slide-in-from-bottom-4 fill-mode-both duration-500 ease-out">
-          <ReceiptCard model={cardModel} />
+          <PublicReceiptView receipt={receipt} />
         </div>
       </main>
 

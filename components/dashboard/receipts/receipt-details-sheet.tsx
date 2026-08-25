@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { receiptDetailQueryOptions } from "@/lib/queries/receipts";
 import { retailerQueryOptions } from "@/lib/queries/retailer";
@@ -21,13 +21,24 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { BrandLogoImage } from "@/components/receipt/brand-logo-image";
 import { ReceiptCard } from "@/components/receipt/receipt-card";
-import { receiptDataToCardModel } from "@/lib/receipt-card-model";
+import { ReceiptDocumentsSwitcher } from "@/components/receipt/receipt-documents-switcher";
 import { RECEIPT_LOGO_SLOT_PX } from "@/lib/receipt-logo-display";
 import {
   discountReasonLabel,
   getLineItemDiscountTotals,
   isLineItemDiscounted,
 } from "@/lib/discount";
+import {
+  defaultReceiptDocumentKind,
+  documentsFromReceiptData,
+  isInstallmentReceipt,
+  liveOutstandingBalance,
+  receiptDataToDocumentCardModel,
+  receiptDocumentFilename,
+  receiptDocumentImageFilename,
+  type ReceiptDocumentKind,
+} from "@/lib/receipt-documents";
+import { formatCurrency } from "@/lib/currency";
 import {
   downloadReceiptPdf,
   mapSingleReceiptToReceiptData,
@@ -89,6 +100,8 @@ export function ReceiptDetailsSheet({
   const [actionError, setActionError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [documentKind, setDocumentKind] =
+    useState<ReceiptDocumentKind>("standard");
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
   const pngCaptureRef = useRef<HTMLDivElement>(null);
 
@@ -167,17 +180,50 @@ export function ReceiptDetailsSheet({
     return mapSingleReceiptToReceiptData(receipt, retailer, dynamicQrUrl);
   }, [receipt, retailer, dynamicQrUrl]);
 
+  const documents = useMemo(
+    () =>
+      downloadReceiptData
+        ? documentsFromReceiptData(downloadReceiptData)
+        : [{ kind: "standard" as const, label: "Receipt" }],
+    [downloadReceiptData],
+  );
+
+  const selectedDocumentKind = documents.some((doc) => doc.kind === documentKind)
+    ? documentKind
+    : defaultReceiptDocumentKind(documents);
+
   const downloadCardModel = useMemo(
     () =>
       downloadReceiptData
-        ? receiptDataToCardModel(downloadReceiptData)
+        ? receiptDataToDocumentCardModel(
+            downloadReceiptData,
+            selectedDocumentKind,
+          )
         : null,
-    [downloadReceiptData],
+    [downloadReceiptData, selectedDocumentKind],
   );
 
   const balanceDue = receipt ? parseFloat(receipt.balanceDue ?? "0") : 0;
   const canCollectPayment =
     receipt?.status === "issued" && balanceDue > 0;
+  const installment = receipt
+    ? isInstallmentReceipt(
+        parseFloat(receipt.total),
+        parseFloat(receipt.amountPaid ?? receipt.total),
+      )
+    : false;
+  const outstanding = downloadReceiptData
+    ? liveOutstandingBalance({
+        total: downloadReceiptData.items.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0,
+        ),
+        amountPaid: downloadReceiptData.amountPaid,
+        balanceDue: downloadReceiptData.balanceDue,
+        paymentStatus: downloadReceiptData.paymentStatus,
+        payments: downloadReceiptData.payments,
+      })
+    : 0;
 
   const openRecordDialog = () => {
     setActionError(null);
@@ -196,6 +242,13 @@ export function ReceiptDetailsSheet({
     setSettleOpen(true);
   };
 
+  useEffect(() => {
+    if (!receipt || !downloadReceiptData) return;
+    setDocumentKind(
+      defaultReceiptDocumentKind(documentsFromReceiptData(downloadReceiptData)),
+    );
+  }, [receipt?.id, receipt?.paymentStatus, downloadReceiptData]);
+
   const copyReceiptLink = () => {
     if (!dynamicQrUrl) return;
     void navigator.clipboard.writeText(dynamicQrUrl).then(() => {
@@ -213,7 +266,11 @@ export function ReceiptDetailsSheet({
       await downloadReceiptPdf(downloadReceiptData, {
         qrDataUrl,
         showQr: !!dynamicQrUrl,
-        filename: `SafeReceipt-${receipt.receiptNumber}.pdf`,
+        documentKind: selectedDocumentKind,
+        filename: receiptDocumentFilename(
+          receipt.receiptNumber,
+          selectedDocumentKind,
+        ),
       });
     } catch (e) {
       console.error("Failed to generate PDF", e);
@@ -234,7 +291,10 @@ export function ReceiptDetailsSheet({
         useCORS: true,
       });
       const link = document.createElement("a");
-      link.download = `SafeReceipt-${receipt.receiptNumber}.png`;
+      link.download = receiptDocumentImageFilename(
+        receipt.receiptNumber,
+        selectedDocumentKind,
+      );
       link.href = canvas.toDataURL("image/png");
       link.click();
     } catch (e) {
@@ -353,6 +413,131 @@ export function ReceiptDetailsSheet({
                 </div>
               ) : null}
 
+              {installment ? (
+                <div className="flex w-full max-w-[380px] min-w-[320px] flex-col gap-4">
+                  <ReceiptDocumentsSwitcher
+                    documents={documents}
+                    value={selectedDocumentKind}
+                    onChange={setDocumentKind}
+                  />
+
+                  {outstanding > 0 &&
+                  selectedDocumentKind === "original" &&
+                  receipt.paymentStatus !== "paid_in_full" ? (
+                    <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                      <p className="font-semibold">Outstanding Balance</p>
+                      <p className="mt-1 text-amber-800/90">
+                        The Original receipt stays as issued. Final receipt appears
+                        after the balance is cleared.
+                      </p>
+                    </div>
+                  ) : null}
+
+                  {downloadCardModel ? (
+                    <div className="filter drop-shadow-[0_20px_25px_rgba(0,0,0,0.15)]">
+                      <ReceiptCard
+                        model={downloadCardModel}
+                        footerSlot={
+                          dynamicQrUrl ? (
+                            <div className="flex w-full flex-col items-end gap-2">
+                              <p className="text-[10px] font-medium text-slate-500">
+                                Scan to view receipt or start a return
+                              </p>
+                              <div className="shrink-0 rounded-lg border border-slate-200 bg-white p-2">
+                                <QRCodeSVG
+                                  value={dynamicQrUrl}
+                                  size={80}
+                                  level="M"
+                                  fgColor="#18181b"
+                                />
+                              </div>
+                            </div>
+                          ) : null
+                        }
+                      />
+                    </div>
+                  ) : null}
+
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="mb-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Account / payments
+                    </div>
+                    <div className="mb-3 space-y-1.5 text-sm">
+                      <div className="flex justify-between gap-3">
+                        <span className="text-slate-500">Live balance due</span>
+                        <span className="font-semibold text-amber-700">
+                          {formatCurrency(outstanding, receipt.currency)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between gap-3">
+                        <span className="text-slate-500">Payment status</span>
+                        <span className="font-semibold">
+                          {formatReceiptPaymentStatusLabel(
+                            receipt.paymentStatus ?? "paid_in_full",
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    {receipt.payments && receipt.payments.length > 0 ? (
+                      <div className="mb-4 space-y-2">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                          Payment history
+                        </div>
+                        <div className="space-y-2">
+                          {receipt.payments.map((payment) => (
+                            <div
+                              key={payment.id}
+                              className="flex justify-between gap-3 rounded-md border border-zinc-100 px-3 py-2 text-xs"
+                            >
+                              <div>
+                                <div className="font-medium text-zinc-800">
+                                  {formatPrice(payment.amount)}{" "}
+                                  {receipt.currency}
+                                </div>
+                                <div className="text-zinc-500">
+                                  {formatPaymentLedgerDetails(payment)}
+                                </div>
+                              </div>
+                              <div className="shrink-0 text-right text-zinc-400">
+                                <div>
+                                  {format(
+                                    new Date(payment.createdAt),
+                                    "MMM d, yyyy",
+                                  )}
+                                </div>
+                                <div>
+                                  {format(
+                                    new Date(payment.createdAt),
+                                    "h:mm a",
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {canCollectPayment ? (
+                      <div className="flex flex-col gap-2">
+                        <Button type="button" onClick={openRecordDialog}>
+                          Record payment
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={openSettleDialog}
+                        >
+                          Mark as paid in full
+                        </Button>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+
+              {!installment ? (
               <div className="w-full max-w-[380px] min-w-[320px] flex flex-col filter drop-shadow-[0_20px_25px_rgba(0,0,0,0.15)] transition-all duration-300">
                 <div
                   className="bg-white text-zinc-900 w-full rounded-t-[20px] p-8 pb-6 relative transition-all"
@@ -618,6 +803,7 @@ export function ReceiptDetailsSheet({
                   </div>
                 </div>
               </div>
+              ) : null}
               {downloadCardModel ? (
                 <div
                   className="pointer-events-none fixed left-[-10000px] top-0"
