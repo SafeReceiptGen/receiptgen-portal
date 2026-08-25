@@ -4,11 +4,18 @@ import { fetchReceiptLogoForPdf } from "@/lib/receipt-logo-pdf";
 import type { Retailer, SingleReceipt } from "@/lib/api";
 import type { DiscountReason } from "@/lib/discount";
 import type { ReceiptData } from "@/types";
+import {
+  applyDocumentKindToReceiptData,
+  receiptDocumentFilename,
+  type ReceiptDocumentKind,
+} from "@/lib/receipt-documents";
 
 export type DownloadReceiptPdfOptions = {
   qrDataUrl?: string;
   showQr: boolean;
-  filename: string;
+  filename?: string;
+  /** Document presentation for installment receipts. Defaults to standard/live. */
+  documentKind?: ReceiptDocumentKind;
 };
 
 /**
@@ -19,10 +26,13 @@ export async function downloadReceiptPdf(
   data: ReceiptData,
   opts: DownloadReceiptPdfOptions,
 ): Promise<void> {
+  const documentKind = opts.documentKind ?? "standard";
+  const pdfData = applyDocumentKindToReceiptData(data, documentKind);
+
   let logoDataUrl: string | undefined;
   let logoWidthPt: number | undefined;
   let logoHeightPt: number | undefined;
-  const logoTrim = data.logoUrl?.trim();
+  const logoTrim = pdfData.logoUrl?.trim();
   if (logoTrim) {
     const logoAsset = await fetchReceiptLogoForPdf(logoTrim);
     if (logoAsset) {
@@ -34,7 +44,7 @@ export async function downloadReceiptPdf(
 
   const blob = await pdf(
     <ReceiptPDF
-      data={data}
+      data={pdfData}
       showQr={opts.showQr}
       qrDataUrl={opts.qrDataUrl}
       logoDataUrl={logoDataUrl}
@@ -46,7 +56,9 @@ export async function downloadReceiptPdf(
   const objectUrl = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = objectUrl;
-  link.download = opts.filename;
+  link.download =
+    opts.filename ??
+    receiptDocumentFilename(pdfData.receiptNumber || "receipt", documentKind);
   link.click();
   URL.revokeObjectURL(objectUrl);
 }
