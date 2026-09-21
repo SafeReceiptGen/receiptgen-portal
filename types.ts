@@ -3,6 +3,8 @@ import type { DiscountReason } from "@/lib/discount";
 export interface LineItem {
   id: string;
   name: string;
+  sku?: string | null;
+  category?: string | null;
   detail: string;
   quantity: number;
   /** Amount charged to the customer (sale price when discounted). */

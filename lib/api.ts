@@ -131,6 +131,8 @@ export const dashboardApi = {
 
 export interface ReceiptLineItem {
   name: string;
+  sku?: string | null;
+  category?: string | null;
   detail?: string;
   quantity: number;
   /** Charged / sale price. */
@@ -232,6 +234,8 @@ export interface ListReceiptsResponse {
 export interface SingleReceiptItem {
   id: string;
   name: string;
+  sku?: string | null;
+  category?: string | null;
   detail: string | null;
   quantity: number;
   originalPrice?: string;
@@ -417,7 +421,10 @@ export const storesApi = {
 
   addToCatalog: (
     storeId: string,
-    products: Pick<SavedProduct, "name" | "description" | "defaultPrice">[],
+    products: Pick<
+      SavedProduct,
+      "name" | "description" | "defaultPrice" | "sku" | "category"
+    >[],
   ) =>
     request<{ products: SavedProduct[] }>(`/stores/${storeId}/catalog`, {
       method: "POST",
@@ -438,6 +445,8 @@ export interface SavedProduct {
   createdAt: Date;
   updatedAt: Date;
   storeId: string;
+  sku?: string | null;
+  category?: string | null;
   description: string | null;
   defaultPrice: string | null;
 }
@@ -775,6 +784,73 @@ export interface VerifiedReceipt {
 export const verifyApi = {
   getByToken: (token: string) =>
     request<{ receipt: VerifiedReceipt }>(`/verify/${token}`),
+};
+
+// ─── Reports ─────────────────────────────────────────────────────────────────
+
+export interface ReportTotals {
+  totalSales: number;
+  transactionCount: number;
+  avgTransactionValue: number;
+  unitsSold: number;
+  otherCurrencyCount: number;
+}
+
+export interface ReportTopProduct {
+  name: string;
+  sku: string | null;
+  units: number;
+  sales: number;
+}
+
+export interface ReportTopCategory {
+  category: string;
+  units: number;
+  sales: number;
+}
+
+export interface ReportReturns {
+  count: number;
+  value: number;
+  exchanges: number;
+  completed: number;
+}
+
+export interface ReportCustomers {
+  unique: number;
+  new: number;
+  returning: number;
+}
+
+export interface ReportTimeseriesPoint {
+  date: string;
+  sales: number;
+}
+
+export interface ReportSummary {
+  range: { from: string; to: string };
+  totals: ReportTotals;
+  previousPeriod: ReportTotals | null;
+  topProducts: ReportTopProduct[];
+  topCategories: ReportTopCategory[];
+  hasUncategorized: boolean;
+  returns: ReportReturns;
+  customers: ReportCustomers;
+  timeseries: ReportTimeseriesPoint[];
+}
+
+export const reportsApi = {
+  getSummary: (params?: { from?: string; to?: string; storeId?: string }) => {
+    const qs = new URLSearchParams();
+    if (params) {
+      for (const [key, value] of Object.entries(params)) {
+        if (value === undefined || value === null || value === "") continue;
+        qs.set(key, value);
+      }
+    }
+    const query = qs.toString();
+    return request<ReportSummary>(`/reports/summary${query ? `?${query}` : ""}`);
+  },
 };
 
 export { ApiRequestError };

@@ -9,14 +9,21 @@ import { toast } from "sonner";
 import { Loader2, Plus, Trash2, Tag, Info } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { CategoryCombobox } from "@/components/form/category-combobox";
+import { uniqueCategories } from "@/lib/catalog-categories";
 
 export function StoreCatalogManager({ store }: { store: Store }) {
   const queryClient = useQueryClient();
   const catalog = store.storeCatalog || [];
+  const catalogCategories = uniqueCategories(
+    catalog.map((item) => item.category),
+  );
 
   const [newItemName, setNewItemName] = useState("");
   const [newItemDesc, setNewItemDesc] = useState("");
   const [newItemPrice, setNewItemPrice] = useState("");
+  const [newItemSku, setNewItemSku] = useState("");
+  const [newItemCategory, setNewItemCategory] = useState("");
 
   const { mutate: addItem, isPending: isAdding } = useMutation({
     mutationFn: () => {
@@ -24,8 +31,9 @@ export function StoreCatalogManager({ store }: { store: Store }) {
         name: newItemName.trim(),
         description: newItemDesc.trim() || null,
         defaultPrice: newItemPrice.trim() || null,
+        sku: newItemSku.trim() || null,
+        category: newItemCategory.trim() || null,
       };
-      // @ts-ignore - The API expects an array of products
       return storesApi.addToCatalog(store.id, [payload]);
     },
     onSuccess: () => {
@@ -35,6 +43,8 @@ export function StoreCatalogManager({ store }: { store: Store }) {
       setNewItemName("");
       setNewItemDesc("");
       setNewItemPrice("");
+      setNewItemSku("");
+      setNewItemCategory("");
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to add item.");
@@ -90,6 +100,10 @@ export function StoreCatalogManager({ store }: { store: Store }) {
                       <div>
                         <p className="font-medium">{item.name}</p>
                         <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                          {item.sku && (
+                            <span className="font-mono text-xs">{item.sku}</span>
+                          )}
+                          {item.category && <span>{item.category}</span>}
                           {item.defaultPrice && (
                             <span className="font-medium text-foreground/70">₵{item.defaultPrice}</span>
                           )}
@@ -134,6 +148,26 @@ export function StoreCatalogManager({ store }: { store: Store }) {
                 />
               </div>
               
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">SKU (Optional)</label>
+                  <Input
+                    placeholder="e.g. TSH-001"
+                    value={newItemSku}
+                    onChange={(e) => setNewItemSku(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Category (Optional)</label>
+                  <CategoryCombobox
+                    value={newItemCategory || null}
+                    categories={catalogCategories}
+                    onChange={(next) => setNewItemCategory(next ?? "")}
+                    placeholder="e.g. Apparel"
+                  />
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">Default Price (Optional)</label>
                 <div className="relative">

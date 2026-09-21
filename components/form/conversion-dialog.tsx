@@ -88,7 +88,7 @@ export default function ConversionDialog({
     mutationFn: (
       productsToSave: Pick<
         SavedProduct,
-        "name" | "description" | "defaultPrice"
+        "name" | "description" | "defaultPrice" | "sku" | "category"
       >[],
     ) => {
       if (!receiptData?.storeId) throw new Error("Missing storeId");
@@ -107,6 +107,8 @@ export default function ConversionDialog({
               name: p.name,
               description: p.description,
               defaultPrice: p.defaultPrice,
+              sku: p.sku,
+              category: p.category,
               createdAt: new Date(),
               updatedAt: new Date(),
               storeId: store.id,
@@ -222,6 +224,8 @@ export default function ConversionDialog({
         name: item.name,
         description: item.detail || null,
         defaultPrice: String(item.price),
+        sku: item.sku ?? null,
+        category: item.category ?? null,
       }));
 
     saveItemsMutation.mutate(itemsToSave);

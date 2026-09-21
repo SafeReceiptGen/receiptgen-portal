@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Plus,
   Trash2,
@@ -44,6 +44,8 @@ import Link from "next/link";
 import { Store } from "@/lib/api";
 import { PAYMENT_METHOD_OPTIONS } from "@/lib/payment-methods";
 import { CatalogProductPicker } from "./catalog-product-picker";
+import { CategoryCombobox } from "./category-combobox";
+import { uniqueCategories } from "@/lib/catalog-categories";
 import { DISCOUNT_REASONS, type DiscountReason } from "@/lib/discount";
 import {
   balanceDueFrom,
@@ -112,6 +114,14 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
   const selectedStore = userStores.find(s => s.id === data.storeId);
   const savedProducts = selectedStore?.storeCatalog || [];
   const productsLoading = storesLoading;
+  const categoryOptions = useMemo(
+    () =>
+      uniqueCategories([
+        ...savedProducts.map((product) => product.category),
+        ...data.items.map((item) => item.category),
+      ]),
+    [savedProducts, data.items],
+  );
 
   const dataRef = useRef(data);
   dataRef.current = data;
@@ -221,11 +231,14 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
     detail = "",
     price = 0,
     priceFixed = false,
+    extras?: { sku?: string | null; category?: string | null },
   ) => {
     const newItem: LineItem = {
       id: Math.random().toString(36).substr(2, 9),
       name,
       detail,
+      sku: extras?.sku ?? null,
+      category: extras?.category ?? null,
       quantity: 1,
       price,
       originalPrice: price,
@@ -719,6 +732,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                       p.description ?? "",
                       p.defaultPrice ? parseFloat(p.defaultPrice) : 0,
                       !!p.defaultPrice,
+                      { sku: p.sku, category: p.category },
                     )
                   }
                 />
@@ -772,6 +786,19 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                       className="w-full border-b border-slate-200 bg-transparent pb-1 text-xs text-slate-500 outline-none placeholder-slate-400 focus:border-blue-400 dark:border-white/10 dark:text-white/60 dark:placeholder-white/25"
                       placeholder="Details (e.g. 200g, Medium Roast)"
                     />
+                    <div>
+                      <label className="text-[10px] uppercase text-slate-400 dark:text-white/45">
+                        Category
+                      </label>
+                      <CategoryCombobox
+                        value={item.category ?? null}
+                        categories={categoryOptions}
+                        onChange={(next) =>
+                          handleItemChange(item.id, "category", next)
+                        }
+                        className="mt-1 h-8 rounded-lg border-slate-200 bg-white text-slate-900 shadow-none focus-visible:border-blue-400 focus-visible:ring-blue-400/20 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                      />
+                    </div>
                     <div className="mt-1 grid grid-cols-2 gap-4">
                       <div>
                         <label className="text-[10px] uppercase text-slate-400 dark:text-white/45">
