@@ -27,6 +27,8 @@ const lineItemSchema = z
   .object({
     id: z.string(),
     name: z.string().min(1, "Item name is required"),
+    sku: z.string().max(64).optional().nullable(),
+    category: z.string().max(120).optional().nullable(),
     detail: z.string().optional().default(""),
     quantity: z
       .number()
@@ -81,6 +83,8 @@ const lineItemSchema = z
     return {
       id: item.id,
       name: item.name,
+      sku: item.sku?.trim() ? item.sku.trim() : null,
+      category: item.category?.trim() ? item.category.trim() : null,
       detail: item.detail,
       quantity: item.quantity,
       price: salePrice,
@@ -228,6 +232,8 @@ export async function generateReceipt(
         marketingText: result.data.marketingText,
         items: result.data.items.map((item) => ({
           name: item.name,
+          sku: item.sku,
+          category: item.category,
           detail: item.detail,
           quantity: item.quantity,
           price: item.price,

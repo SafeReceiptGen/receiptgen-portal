@@ -88,7 +88,12 @@ function CatalogProductCommand({
             const price = product.defaultPrice
               ? parseFloat(product.defaultPrice)
               : null;
-            const searchValue = [product.name, product.description ?? ""]
+            const searchValue = [
+              product.name,
+              product.sku ?? "",
+              product.category ?? "",
+              product.description ?? "",
+            ]
               .filter(Boolean)
               .join(" ");
 
@@ -108,12 +113,16 @@ function CatalogProductCommand({
                     {product.name}
                   </p>
                   <p className="truncate text-xs text-slate-500 dark:text-white/45">
-                    {product.description?.trim()
-                      ? product.description
-                      : "No description"}
-                    {price !== null && !Number.isNaN(price)
-                      ? ` · ${formatCurrency(price, currency)}`
-                      : ""}
+                    {[
+                      product.sku,
+                      product.category,
+                      product.description?.trim() || "No description",
+                      price !== null && !Number.isNaN(price)
+                        ? formatCurrency(price, currency)
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </p>
                 </div>
               </CommandItem>

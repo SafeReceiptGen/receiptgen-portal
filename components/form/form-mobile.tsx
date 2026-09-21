@@ -1,4 +1,4 @@
-import React, { RefObject, useState, useEffect, useRef } from "react";
+import React, { RefObject, useState, useEffect, useMemo, useRef } from "react";
 import {
   ChevronRight,
   ChevronLeft,
@@ -39,6 +39,8 @@ import Link from "next/link";
 import { Store } from "@/lib/api";
 import { PAYMENT_METHOD_OPTIONS } from "@/lib/payment-methods";
 import { CatalogProductPicker } from "./catalog-product-picker";
+import { CategoryCombobox } from "./category-combobox";
+import { uniqueCategories } from "@/lib/catalog-categories";
 import { returnWindowEnum } from "@/types/enums";
 import { trackCtaClick } from "@/lib/analytics";
 import { DISCOUNT_REASONS, type DiscountReason } from "@/lib/discount";
@@ -115,6 +117,14 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
   const selectedStore = userStores.find((s) => s.id === data.storeId);
   const savedProducts = selectedStore?.storeCatalog || [];
   const productsLoading = storesLoading;
+  const categoryOptions = useMemo(
+    () =>
+      uniqueCategories([
+        ...savedProducts.map((product) => product.category),
+        ...data.items.map((item) => item.category),
+      ]),
+    [savedProducts, data.items],
+  );
 
   const dataRef = useRef(data);
   dataRef.current = data;
@@ -225,11 +235,14 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
     detail = "",
     price = 0,
     priceFixed = false,
+    extras?: { sku?: string | null; category?: string | null },
   ) => {
     const newItem: LineItem = {
       id: Math.random().toString(36).substr(2, 9),
       name,
       detail,
+      sku: extras?.sku ?? null,
+      category: extras?.category ?? null,
       quantity: 1,
       price,
       originalPrice: price,
@@ -698,6 +711,7 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                       p.description ?? "",
                       p.defaultPrice ? parseFloat(p.defaultPrice) : 0,
                       !!p.defaultPrice,
+                      { sku: p.sku, category: p.category },
                     )
                   }
                 />
@@ -737,6 +751,19 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                     }
                     className="w-full border-b border-slate-200 bg-transparent pb-2 text-sm text-slate-600 placeholder:text-slate-400 focus-visible:border-blue-400 border-0 rounded-none px-0 focus-visible:ring-0 dark:border-white/10 dark:text-white/60 dark:placeholder:text-white/25"
                   />
+                  <div>
+                    <Label className="text-xs text-slate-400 uppercase dark:text-white/50">
+                      Category
+                    </Label>
+                    <CategoryCombobox
+                      value={item.category ?? null}
+                      categories={categoryOptions}
+                      onChange={(next) =>
+                        handleItemChange(item.id, "category", next)
+                      }
+                      className="mt-1 rounded-lg border-slate-200 bg-slate-50 text-slate-900 shadow-none focus-visible:border-blue-400 focus-visible:ring-blue-400/20 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                    />
+                  </div>
                   <div className="flex gap-4">
                     <div className="flex-1">
                       <Label className="text-xs text-slate-400 uppercase dark:text-white/50">
