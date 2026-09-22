@@ -48,7 +48,27 @@ export type ReceiptCardModel = {
   returnCondition: string;
   refundType: string;
   marketingText?: string;
+  loyalty?: {
+    pointsEarned: number;
+    pointsBalance: number;
+    rewardThreshold: number;
+    rewardAmount: string;
+    pointsToGo: number;
+  } | null;
 };
+
+export function formatLoyaltyPoints(count: number): string {
+  return `${count} ${count === 1 ? "Point" : "Points"}`;
+}
+
+export function formatNextReward(
+  rewardThreshold: number,
+  rewardAmount: string,
+): string {
+  const amount = Number(rewardAmount);
+  const formatted = Number.isFinite(amount) ? amount.toFixed(2) : rewardAmount;
+  return `${formatLoyaltyPoints(rewardThreshold)} = GHS ${formatted} Discount`;
+}
 
 /**
  * Parses return window labels like "7 days" / "14 days".
@@ -148,6 +168,7 @@ export function receiptForReturnToCardModel(
     returnDeadline: receipt.returnDeadline,
     returnCondition: receipt.returnCondition,
     refundType: receipt.refundType,
+    loyalty: receipt.loyalty ?? null,
   };
 }
 
@@ -208,5 +229,6 @@ export function receiptDataToCardModel(data: ReceiptData): ReceiptCardModel {
     returnCondition: data.returnCondition,
     refundType: data.refundType,
     marketingText: data.marketingText,
+    loyalty: data.loyalty ?? null,
   };
 }

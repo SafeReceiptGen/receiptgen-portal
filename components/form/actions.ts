@@ -160,6 +160,13 @@ type CreateReceiptApiEnvelope = {
       qrCodeToken: string;
       receiptNumber: string;
       total?: string;
+      loyalty?: {
+        pointsEarned: number;
+        pointsBalance: number;
+        rewardThreshold: number;
+        rewardAmount: string;
+        pointsToGo: number;
+      } | null;
     };
     qrUrl?: string;
   };
@@ -317,6 +324,7 @@ export async function generateReceipt(
       refundType: formData.refundType,
       isReturnable: formData.returnWindow !== "No returns",
       qrUrl,
+      loyalty: receipt?.loyalty ?? null,
     };
 
     addMockReceipt(newReceipt);

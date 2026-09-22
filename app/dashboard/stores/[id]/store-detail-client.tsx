@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { storeQueryOptions } from "@/lib/queries/stores";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StoreGeneralForm } from "./store-general-form";
+import { StoreLoyaltyForm } from "./store-loyalty-form";
 import { StorePolicyForm } from "./store-policy-form";
 import { StoreCatalogManager } from "./store-catalog-manager";
 import { Button } from "@/components/ui/button";
@@ -48,7 +49,7 @@ export function StoreDetailClient({ storeId }: { storeId: string }) {
             <div>
               <h2 className="text-3xl font-bold tracking-tight">{store.name}</h2>
               <p className="text-muted-foreground mt-1 text-sm">
-                Manage details, return policies, and reusable receipt items.
+                Manage details, return policies, loyalty rewards, and reusable receipt items.
               </p>
             </div>
           </div>
@@ -69,6 +70,12 @@ export function StoreDetailClient({ storeId }: { storeId: string }) {
           >
             Return Policy
           </TabsTrigger>
+          <TabsTrigger
+            value="loyalty"
+            className="py-3 px-4 text-sm transition-all"
+          >
+            Loyalty
+          </TabsTrigger>
           <TabsTrigger 
             value="catalog" 
             className="py-3 px-4 text-sm transition-all"
@@ -83,6 +90,9 @@ export function StoreDetailClient({ storeId }: { storeId: string }) {
           </TabsContent>
           <TabsContent value="policy" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
             <StorePolicyForm store={store} />
+          </TabsContent>
+          <TabsContent value="loyalty" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+            <StoreLoyaltyForm />
           </TabsContent>
           <TabsContent value="catalog" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
             <StoreCatalogManager store={store} />

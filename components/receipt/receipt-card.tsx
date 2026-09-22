@@ -8,7 +8,11 @@ import {
   isLineItemDiscounted,
 } from "@/lib/discount";
 import { formatPaymentLedgerDetails } from "@/lib/payment-ledger-display";
-import type { ReceiptCardModel } from "@/lib/receipt-card-model";
+import {
+  formatLoyaltyPoints,
+  formatNextReward,
+  type ReceiptCardModel,
+} from "@/lib/receipt-card-model";
 import {
   formatPaymentMethodLabel,
   formatReceiptPaymentStatusLabel,
@@ -268,6 +272,36 @@ export function ReceiptCard({ model, footerSlot, className }: ReceiptCardProps) 
             </span>
           </div>
         </div>
+
+        {model.loyalty ? (
+          <div className="mb-8 space-y-3 rounded-3xl bg-slate-50 px-6 py-6 ring-1 ring-slate-100/80">
+            <p className="text-base font-bold tracking-tight text-slate-900">
+              You earned {formatLoyaltyPoints(model.loyalty.pointsEarned)}
+            </p>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-slate-500">Current Balance</span>
+              <span className="font-semibold text-slate-700">
+                {formatLoyaltyPoints(model.loyalty.pointsBalance)}
+              </span>
+            </div>
+            <div className="space-y-1">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                Next Reward
+              </div>
+              <p className="text-sm font-semibold text-slate-800">
+                {formatNextReward(
+                  model.loyalty.rewardThreshold,
+                  model.loyalty.rewardAmount,
+                )}
+              </p>
+            </div>
+            <p className="text-sm font-medium text-slate-600">
+              {model.loyalty.pointsToGo === 0
+                ? "Reward reached"
+                : `${model.loyalty.pointsToGo} ${model.loyalty.pointsToGo === 1 ? "point" : "points"} to go`}
+            </p>
+          </div>
+        ) : null}
 
         {model.payments.length > 0 ? (
           <div className="mb-8 space-y-3">

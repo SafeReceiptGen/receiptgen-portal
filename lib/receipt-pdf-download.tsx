@@ -213,5 +213,6 @@ export function mapSingleReceiptToReceiptData(
     refundType: policy.refundType,
     status: receipt.status,
     returnDeadline: receipt.returnDeadline,
+    loyalty: receipt.loyalty ?? null,
   };
 }

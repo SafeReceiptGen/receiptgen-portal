@@ -142,6 +142,13 @@ export interface ReceiptForReturn {
   /** Receipt lifecycle from API (e.g. issued, voided); optional for locally built previews */
   status?: string;
   purchasedAt: string; // ISO string
+  loyalty?: {
+    pointsEarned: number;
+    pointsBalance: number;
+    rewardThreshold: number;
+    rewardAmount: string;
+    pointsToGo: number;
+  } | null;
   returnWindow: string;
   /** ISO deadline from API; purchase date + policy window days */
   returnDeadline?: string | null;

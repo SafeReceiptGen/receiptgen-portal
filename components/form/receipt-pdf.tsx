@@ -26,6 +26,8 @@ import {
 import { formatPaymentLedgerDetails } from "@/lib/payment-ledger-display";
 import {
   computeReturnDeadline,
+  formatLoyaltyPoints,
+  formatNextReward,
   receiptDataToCardModel,
 } from "@/lib/receipt-card-model";
 import type { ReceiptPaymentStatus } from "@/lib/receipt-payment";
@@ -213,6 +215,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "bold",
     color: "#475569",
+  },
+  loyaltyEarned: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#0f172a",
+    marginBottom: 10,
+  },
+  loyaltyRemaining: {
+    fontSize: 10,
+    color: "#475569",
+    marginTop: 8,
   },
   totalValue: {
     fontSize: 20,
@@ -692,6 +705,32 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
             </Text>
           </View>
         </View>
+
+        {model.loyalty ? (
+          <View style={styles.totalsBox} wrap={false}>
+            <Text style={styles.loyaltyEarned}>
+              You earned {formatLoyaltyPoints(model.loyalty.pointsEarned)}
+            </Text>
+            <View style={styles.metaRow}>
+              <Text style={styles.metaLabel}>Current Balance</Text>
+              <Text style={styles.metaValue}>
+                {formatLoyaltyPoints(model.loyalty.pointsBalance)}
+              </Text>
+            </View>
+            <Text style={styles.ledgerTitle}>Next Reward</Text>
+            <Text style={styles.metaValue}>
+              {formatNextReward(
+                model.loyalty.rewardThreshold,
+                model.loyalty.rewardAmount,
+              )}
+            </Text>
+            <Text style={styles.loyaltyRemaining}>
+              {model.loyalty.pointsToGo === 0
+                ? "Reward reached"
+                : `${model.loyalty.pointsToGo} ${model.loyalty.pointsToGo === 1 ? "point" : "points"} to go`}
+            </Text>
+          </View>
+        ) : null}
 
         {model.payments.length > 0 ? (
           <View style={styles.ledgerSection} wrap={false}>
