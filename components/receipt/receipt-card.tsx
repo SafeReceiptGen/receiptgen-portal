@@ -38,6 +38,8 @@ export function ReceiptCard({ model, footerSlot, className }: ReceiptCardProps) 
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
+  const loyaltyDiscount = model.loyaltyDiscount ?? 0;
+  const total = Math.max(0, subtotal - loyaltyDiscount);
   const hasPolicy = model.returnWindow !== "No returns";
   const returnDeadlineLabel = formatReturnDeadline(model.returnDeadline);
   const brandName = model.retailerName.trim() || "Store";
@@ -243,10 +245,26 @@ export function ReceiptCard({ model, footerSlot, className }: ReceiptCardProps) 
         </div>
 
         <div className="mb-8 space-y-3 rounded-3xl bg-slate-50 px-6 py-6 ring-1 ring-slate-100/80">
+          {loyaltyDiscount > 0 ? (
+            <>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-500">Subtotal</span>
+                <span className="font-semibold text-slate-700">
+                  {formatCurrency(subtotal, model.currency)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-500">Loyalty discount</span>
+                <span className="font-semibold text-emerald-700">
+                  −{formatCurrency(loyaltyDiscount, model.currency)}
+                </span>
+              </div>
+            </>
+          ) : null}
           <div className="flex items-baseline justify-between">
             <span className="text-base font-bold text-slate-600">Total</span>
             <span className="text-2xl font-bold tracking-tight text-slate-900">
-              {formatCurrency(subtotal, model.currency)}
+              {formatCurrency(total, model.currency)}
             </span>
           </div>
           {paymentStatus !== "paid_in_full" ? (
@@ -275,6 +293,22 @@ export function ReceiptCard({ model, footerSlot, className }: ReceiptCardProps) 
 
         {model.loyalty ? (
           <div className="mb-8 space-y-3 rounded-3xl bg-slate-50 px-6 py-6 ring-1 ring-slate-100/80">
+            {(model.loyalty.pointsRedeemed ?? 0) > 0 ? (
+              <>
+                <p className="text-base font-bold tracking-tight text-slate-900">
+                  You redeemed {formatLoyaltyPoints(model.loyalty.pointsRedeemed)}
+                </p>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500">Discount applied</span>
+                  <span className="font-semibold text-emerald-700">
+                    {formatCurrency(
+                      Number(model.loyalty.discountApplied ?? 0),
+                      model.currency,
+                    )}
+                  </span>
+                </div>
+              </>
+            ) : null}
             <p className="text-base font-bold tracking-tight text-slate-900">
               You earned {formatLoyaltyPoints(model.loyalty.pointsEarned)}
             </p>

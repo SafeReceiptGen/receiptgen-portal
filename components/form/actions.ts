@@ -120,6 +120,8 @@ const receiptSchema = z
     customReturnWindow: z.string().optional().default(""),
     returnCondition: z.string().optional().default(""),
     refundType: z.string().optional().default(""),
+    redeemRewards: z.boolean().optional(),
+    loyaltyDiscount: z.number().min(0).optional(),
   })
   .superRefine((data, ctx) => {
     if (data.amountPaid === undefined) return;
@@ -160,12 +162,15 @@ type CreateReceiptApiEnvelope = {
       qrCodeToken: string;
       receiptNumber: string;
       total?: string;
+      loyaltyDiscount?: string;
       loyalty?: {
         pointsEarned: number;
+        pointsRedeemed: number;
         pointsBalance: number;
         rewardThreshold: number;
         rewardAmount: string;
         pointsToGo: number;
+        discountApplied: string;
       } | null;
     };
     qrUrl?: string;
@@ -237,6 +242,7 @@ export async function generateReceipt(
         customerName: result.data.customerName,
         customerPhone: result.data.customerPhone,
         marketingText: result.data.marketingText,
+        redeemRewards: result.data.redeemRewards === true,
         items: result.data.items.map((item) => ({
           name: item.name,
           sku: item.sku,
@@ -283,10 +289,20 @@ export async function generateReceipt(
 
     const formData = result.data;
     const orderId = formData.orderId || `REC-${Date.now()}`;
-    const computedTotal = formData.items.reduce(
+    const itemsTotal = formData.items.reduce(
       (acc, item) => acc + item.price * item.quantity,
       0,
     );
+    const computedTotal = Number.isFinite(parseFloat(receipt?.total ?? ""))
+      ? parseFloat(receipt?.total ?? "")
+      : itemsTotal;
+    const loyaltyDiscount = Number.isFinite(
+      parseFloat(receipt?.loyaltyDiscount ?? ""),
+    )
+      ? parseFloat(receipt?.loyaltyDiscount ?? "")
+      : formData.redeemRewards
+        ? (formData.loyaltyDiscount ?? 0)
+        : 0;
     const amountPaid =
       formData.amountPaid === undefined ? computedTotal : formData.amountPaid;
 
@@ -310,8 +326,9 @@ export async function generateReceipt(
         selected: false,
       })),
       currency: formData.currency,
-      subtotal: computedTotal,
+      subtotal: itemsTotal,
       total: computedTotal,
+      loyaltyDiscount,
       amountPaid,
       balanceDue: balanceDueFrom(computedTotal, amountPaid),
       paymentStatus: deriveReceiptPaymentStatus(computedTotal, amountPaid),

@@ -213,6 +213,7 @@ export function mapSingleReceiptToReceiptData(
     refundType: policy.refundType,
     status: receipt.status,
     returnDeadline: receipt.returnDeadline,
+    loyaltyDiscount: parseFloat(receipt.loyaltyDiscount ?? "0") || 0,
     loyalty: receipt.loyalty ?? null,
   };
 }

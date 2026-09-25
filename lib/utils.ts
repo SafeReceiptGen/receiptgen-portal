@@ -80,6 +80,7 @@ export function mapToReceiptForReturn(
     refundType: "See store policy",
     isReturnable,
     qrUrl: `${portalPublicOrigin()}/receipt/${token}`,
+    loyaltyDiscount: parseFloat(receipt.loyaltyDiscount ?? "0") || 0,
     loyalty: receipt.loyalty ?? null,
   };
 }

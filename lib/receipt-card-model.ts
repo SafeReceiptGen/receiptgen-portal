@@ -3,6 +3,11 @@ import type { ReceiptData } from "@/types";
 import type { ReceiptForReturn } from "@/types/returns";
 import type { ReceiptPaymentStatus } from "@/lib/receipt-payment";
 import {
+  draftLoyaltyDiscount,
+  itemsSubtotal,
+  payableTotal,
+} from "@/lib/loyalty-redeem";
+import {
   balanceDueFrom,
   deriveReceiptPaymentStatus,
   liveAmountPaid,
@@ -48,12 +53,15 @@ export type ReceiptCardModel = {
   returnCondition: string;
   refundType: string;
   marketingText?: string;
+  loyaltyDiscount?: number;
   loyalty?: {
     pointsEarned: number;
+    pointsRedeemed: number;
     pointsBalance: number;
     rewardThreshold: number;
     rewardAmount: string;
     pointsToGo: number;
+    discountApplied: string;
   } | null;
 };
 
@@ -168,6 +176,7 @@ export function receiptForReturnToCardModel(
     returnDeadline: receipt.returnDeadline,
     returnCondition: receipt.returnCondition,
     refundType: receipt.refundType,
+    loyaltyDiscount: receipt.loyaltyDiscount ?? 0,
     loyalty: receipt.loyalty ?? null,
   };
 }
@@ -178,17 +187,19 @@ export function receiptDataToCardModel(data: ReceiptData): ReceiptCardModel {
       ? data.customReturnWindow || data.returnWindow
       : data.returnWindow;
 
-  const subtotal = data.items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0,
+  const itemsTotal = itemsSubtotal(data.items);
+  const loyaltyDiscount = draftLoyaltyDiscount(
+    data.redeemRewards ?? (data.loyaltyDiscount ?? 0) > 0,
+    data.loyaltyDiscount,
   );
-  const amountPaid = liveAmountPaid(subtotal, data.amountPaid, data.payments);
+  const total = payableTotal(itemsTotal, loyaltyDiscount);
+  const amountPaid = liveAmountPaid(total, data.amountPaid, data.payments);
   const paymentStatus =
-    data.paymentStatus ?? deriveReceiptPaymentStatus(subtotal, amountPaid);
+    data.paymentStatus ?? deriveReceiptPaymentStatus(total, amountPaid);
   const balanceDue =
     data.balanceDue !== undefined
       ? roundMoney(Math.max(0, data.balanceDue))
-      : balanceDueFrom(subtotal, amountPaid);
+      : balanceDueFrom(total, amountPaid);
 
   return {
     retailerName: data.storeName,
@@ -229,6 +240,7 @@ export function receiptDataToCardModel(data: ReceiptData): ReceiptCardModel {
     returnCondition: data.returnCondition,
     refundType: data.refundType,
     marketingText: data.marketingText,
+    loyaltyDiscount,
     loyalty: data.loyalty ?? null,
   };
 }
