@@ -1,10 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { format } from "date-fns";
 import type { ReceiptForReturn } from "@/types/returns";
 import { ReceiptCard } from "@/components/receipt/receipt-card";
 import { ReceiptDocumentsSwitcher } from "@/components/receipt/receipt-documents-switcher";
 import { formatCurrency } from "@/lib/currency";
+import { formatPaymentLedgerDetails } from "@/lib/payment-ledger-display";
+import { formatReceiptPaymentStatusLabel } from "@/lib/receipt-display-labels";
 import {
   defaultReceiptDocumentKind,
   documentsFromReceiptForReturn,
@@ -41,11 +44,13 @@ export function PublicReceiptView({ receipt }: PublicReceiptViewProps) {
     receipt.amountPaid ?? 0,
   );
   const outstanding = liveOutstandingBalance(receipt);
+  const showOriginalAccount =
+    installment && selectedKind === "original";
   const showOutstandingCallout =
-    installment &&
-    selectedKind === "original" &&
+    showOriginalAccount &&
     outstanding > 0 &&
     receipt.paymentStatus !== "paid_in_full";
+  const payments = receipt.payments ?? [];
 
   return (
     <div className="space-y-4">
@@ -65,6 +70,67 @@ export function PublicReceiptView({ receipt }: PublicReceiptViewProps) {
       ) : null}
 
       <ReceiptCard model={cardModel} />
+
+      {showOriginalAccount ? (
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/5">
+          <div className="mb-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
+            Account / payments
+          </div>
+          <div className="mb-3 space-y-1.5 text-sm">
+            <div className="flex justify-between gap-3">
+              <span className="text-slate-500 dark:text-white/50">
+                Live balance due
+              </span>
+              <span className="font-semibold text-amber-700 dark:text-amber-300">
+                {formatCurrency(outstanding, receipt.currency)}
+              </span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-slate-500 dark:text-white/50">
+                Payment status
+              </span>
+              <span className="font-semibold text-slate-900 dark:text-white">
+                {formatReceiptPaymentStatusLabel(
+                  receipt.paymentStatus ?? "paid_in_full",
+                )}
+              </span>
+            </div>
+          </div>
+
+          {payments.length > 0 ? (
+            <div className="space-y-2">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
+                Payment history
+              </div>
+              <div className="space-y-2">
+                {payments.map((payment) => (
+                  <div
+                    key={payment.id}
+                    className="flex justify-between gap-3 rounded-md border border-slate-100 px-3 py-2 text-xs dark:border-white/10"
+                  >
+                    <div className="min-w-0">
+                      <div className="font-medium text-slate-800 dark:text-white">
+                        {formatCurrency(payment.amount, receipt.currency)}
+                      </div>
+                      <div className="text-slate-500 dark:text-white/50">
+                        {formatPaymentLedgerDetails(payment)}
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-right text-slate-400 dark:text-white/40">
+                      <div>
+                        {format(new Date(payment.createdAt), "MMM d, yyyy")}
+                      </div>
+                      <div>
+                        {format(new Date(payment.createdAt), "h:mm a")}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
