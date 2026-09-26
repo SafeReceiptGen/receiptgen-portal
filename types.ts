@@ -73,6 +73,20 @@ export interface ReceiptData {
   status?: string;
   /** ISO return deadline; computed from window when absent (builder preview). */
   returnDeadline?: string | null;
+  /** Snapshot after this purchase; absent on builder preview. */
+  loyalty?: {
+    pointsEarned: number;
+    pointsRedeemed: number;
+    pointsBalance: number;
+    rewardThreshold: number;
+    rewardAmount: string;
+    pointsToGo: number;
+    discountApplied: string;
+  } | null;
+  /** Checkout flag sent to createReceipt. */
+  redeemRewards?: boolean;
+  /** Applied loyalty discount on the draft or issued receipt. */
+  loyaltyDiscount?: number;
 }
 
 export const INITIAL_RECEIPT_DATA: ReceiptData = {

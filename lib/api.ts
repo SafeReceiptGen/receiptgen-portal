@@ -87,6 +87,24 @@ export interface Retailer {
   logoUrl?: string | null;
 }
 
+export interface LoyaltyProgram {
+  id: string | null;
+  retailerId: string;
+  enabled: boolean;
+  spendAmount: string;
+  pointsAwarded: number;
+  rewardThreshold: number;
+  rewardAmount: string;
+}
+
+export interface LoyaltyProgramInput {
+  enabled: boolean;
+  spendAmount: number | string;
+  pointsAwarded: number;
+  rewardThreshold: number;
+  rewardAmount: number | string;
+}
+
 export const retailerApi = {
   onboard: (payload: OnboardPayload) =>
     request<{ retailer: Retailer }>("/retailer/onboard", {
@@ -106,6 +124,20 @@ export const retailerApi = {
   ) =>
     request<{ retailer: Retailer }>("/retailer", {
       method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+
+  getLoyalty: () =>
+    request<{ loyaltyProgram: LoyaltyProgram }>("/retailer/loyalty"),
+
+  getRedeemOffer: (phone: string, subtotal: number) =>
+    request<{ offer: RedeemOffer | null }>(
+      `/retailer/loyalty/redeem-offer?phone=${encodeURIComponent(phone)}&subtotal=${encodeURIComponent(String(subtotal))}`,
+    ),
+
+  upsertLoyalty: (payload: LoyaltyProgramInput) =>
+    request<{ loyaltyProgram: LoyaltyProgram }>("/retailer/loyalty", {
+      method: "PUT",
       body: JSON.stringify(payload),
     }),
 };
@@ -162,6 +194,27 @@ export interface CreateReceiptPayload {
   customerName: string;
   customerPhone: string;
   marketingText?: string;
+  redeemRewards?: boolean;
+}
+
+export interface RedeemOffer {
+  pointsBalance: number;
+  rewardThreshold: number;
+  rewardAmount: string;
+  count: number;
+  pointsDeducted: number;
+  discount: string;
+  pointsBalanceAfter: number;
+}
+
+export interface LoyaltySnapshot {
+  pointsEarned: number;
+  pointsRedeemed: number;
+  pointsBalance: number;
+  rewardThreshold: number;
+  rewardAmount: string;
+  pointsToGo: number;
+  discountApplied: string;
 }
 
 export interface CreatedReceipt {
@@ -169,6 +222,8 @@ export interface CreatedReceipt {
   receiptNumber: string;
   qrCodeToken: string;
   total: string;
+  loyaltyDiscount?: string;
+  loyalty?: LoyaltySnapshot | null;
 }
 
 export type ReceiptPaymentStatus =
@@ -270,6 +325,7 @@ export interface SingleReceipt {
   vatRate: string;
   vatAmount: string;
   total: string;
+  loyaltyDiscount?: string;
   amountPaid: string;
   balanceDue: string;
   paymentStatus: ReceiptPaymentStatus;
@@ -292,6 +348,7 @@ export interface SingleReceipt {
     email: string | null;
   } | null;
   returnPolicy: Record<string, unknown> | null;
+  loyalty?: LoyaltySnapshot | null;
 }
 
 export const receiptsApi = {
@@ -761,6 +818,7 @@ export interface VerifiedReceipt {
   id: string;
   date: string;
   total: string;
+  loyaltyDiscount?: string;
   amountPaid: string;
   balanceDue: string;
   paymentStatus: ReceiptPaymentStatus;
@@ -779,6 +837,7 @@ export interface VerifiedReceipt {
   items: VerifiedReceiptItem[];
   /** Append-only payment ledger (newest first). */
   payments?: ReceiptPaymentLedgerEntry[];
+  loyalty?: LoyaltySnapshot | null;
 }
 
 export const verifyApi = {

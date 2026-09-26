@@ -53,6 +53,8 @@ import {
   roundMoney,
 } from "@/lib/receipt-payment";
 import { formatReceiptPaymentStatusLabel } from "@/lib/receipt-display-labels";
+import { RedeemRewardControl } from "./redeem-reward-control";
+import { draftPayableTotal } from "@/lib/loyalty-redeem";
 
 interface ReceiptFormProps {
   data: ReceiptData;
@@ -506,6 +508,12 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                 />
               </div>
 
+              <RedeemRewardControl
+                data={data}
+                onChange={onChange}
+                isAuthenticated={isAuthenticated}
+              />
+
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-slate-600 dark:text-white/60">
                   Date
@@ -613,16 +621,11 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                   </Select>
                 </div>
                 {(() => {
-                  const itemsTotal = roundMoney(
-                    data.items.reduce(
-                      (sum, item) => sum + item.price * item.quantity,
-                      0,
-                    ),
-                  );
+                  const payable = draftPayableTotal(data);
                   const amountPaid = roundMoney(data.amountPaid);
-                  const balanceDue = balanceDueFrom(itemsTotal, amountPaid);
+                  const balanceDue = balanceDueFrom(payable, amountPaid);
                   const paymentStatus = deriveReceiptPaymentStatus(
-                    itemsTotal,
+                    payable,
                     amountPaid,
                   );
                   return (
@@ -635,7 +638,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                           type="number"
                           min={0}
                           step="0.01"
-                          max={itemsTotal}
+                          max={payable}
                           value={moneyInputValue(
                             "amountPaid",
                             Number.isFinite(amountPaid) ? amountPaid : 0,
@@ -695,7 +698,7 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                           onClick={() =>
                             onChange({
                               ...data,
-                              amountPaid: itemsTotal,
+                              amountPaid: payable,
                               amountPaidTouched: false,
                             })
                           }

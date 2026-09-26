@@ -17,6 +17,7 @@ import { MobileWizard } from "./form-mobile";
 import Image from "next/image";
 import Link from "next/link";
 import { generateReceipt, ActionState } from "./actions";
+import { draftPayableTotal } from "@/lib/loyalty-redeem";
 import { useStores } from "@/hooks/use-stores";
 import { trackCtaClick } from "@/lib/analytics";
 
@@ -83,17 +84,19 @@ export default function ReceiptFormScreen({
     }));
   }, [isAuthenticated, retailer]);
 
-  // Keep amount paid synced to line-item total until the retailer edits it.
+  // Keep amount paid synced to the payable total until the retailer edits it.
   useEffect(() => {
     if (data.amountPaidTouched) return;
-    const total = data.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0,
-    );
-    const rounded = Math.round(total * 100) / 100;
+    const rounded = draftPayableTotal(data);
     if (Math.round(data.amountPaid * 100) === Math.round(rounded * 100)) return;
     setData((prev) => ({ ...prev, amountPaid: rounded }));
-  }, [data.items, data.amountPaidTouched, data.amountPaid]);
+  }, [
+    data.items,
+    data.redeemRewards,
+    data.loyaltyDiscount,
+    data.amountPaidTouched,
+    data.amountPaid,
+  ]);
 
   // ── Server action (authenticated only) ──────────────────────────────────
   const boundAction = generateReceipt.bind(null, data);

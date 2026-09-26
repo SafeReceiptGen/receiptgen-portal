@@ -26,6 +26,8 @@ import {
 import { formatPaymentLedgerDetails } from "@/lib/payment-ledger-display";
 import {
   computeReturnDeadline,
+  formatLoyaltyPoints,
+  formatNextReward,
   receiptDataToCardModel,
 } from "@/lib/receipt-card-model";
 import type { ReceiptPaymentStatus } from "@/lib/receipt-payment";
@@ -213,6 +215,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "bold",
     color: "#475569",
+  },
+  loyaltyEarned: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#0f172a",
+    marginBottom: 10,
+  },
+  loyaltyRemaining: {
+    fontSize: 10,
+    color: "#475569",
+    marginTop: 8,
   },
   totalValue: {
     fontSize: 20,
@@ -496,6 +509,8 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
+  const loyaltyDiscount = model.loyaltyDiscount ?? 0;
+  const total = Math.max(0, subtotal - loyaltyDiscount);
   const hasPolicy = model.returnWindow !== "No returns";
   const returnDeadlineLabel = formatReturnDeadline(model.returnDeadline);
   const brandName = model.retailerName.trim() || "Store";
@@ -663,10 +678,26 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
         </View>
 
         <View style={styles.totalsBox} wrap={false}>
+          {loyaltyDiscount > 0 ? (
+            <>
+              <View style={styles.metaRow}>
+                <Text style={styles.metaLabel}>Subtotal</Text>
+                <Text style={styles.metaValue}>
+                  {formatCurrencyForPdf(subtotal, model.currency)}
+                </Text>
+              </View>
+              <View style={styles.metaRow}>
+                <Text style={styles.metaLabel}>Loyalty discount</Text>
+                <Text style={styles.discountSaved}>
+                  -{formatCurrencyForPdf(loyaltyDiscount, model.currency)}
+                </Text>
+              </View>
+            </>
+          ) : null}
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Total</Text>
             <Text style={styles.totalValue}>
-              {formatCurrencyForPdf(subtotal, model.currency)}
+              {formatCurrencyForPdf(total, model.currency)}
             </Text>
           </View>
           {model.paymentStatus !== "paid_in_full" ? (
@@ -692,6 +723,48 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
             </Text>
           </View>
         </View>
+
+        {model.loyalty ? (
+          <View style={styles.totalsBox} wrap={false}>
+            {(model.loyalty.pointsRedeemed ?? 0) > 0 ? (
+              <>
+                <Text style={styles.loyaltyEarned}>
+                  You redeemed {formatLoyaltyPoints(model.loyalty.pointsRedeemed)}
+                </Text>
+                <View style={styles.metaRow}>
+                  <Text style={styles.metaLabel}>Discount applied</Text>
+                  <Text style={styles.discountSaved}>
+                    {formatCurrencyForPdf(
+                      Number(model.loyalty.discountApplied ?? 0),
+                      model.currency,
+                    )}
+                  </Text>
+                </View>
+              </>
+            ) : null}
+            <Text style={styles.loyaltyEarned}>
+              You earned {formatLoyaltyPoints(model.loyalty.pointsEarned)}
+            </Text>
+            <View style={styles.metaRow}>
+              <Text style={styles.metaLabel}>Current Balance</Text>
+              <Text style={styles.metaValue}>
+                {formatLoyaltyPoints(model.loyalty.pointsBalance)}
+              </Text>
+            </View>
+            <Text style={styles.ledgerTitle}>Next Reward</Text>
+            <Text style={styles.metaValue}>
+              {formatNextReward(
+                model.loyalty.rewardThreshold,
+                model.loyalty.rewardAmount,
+              )}
+            </Text>
+            <Text style={styles.loyaltyRemaining}>
+              {model.loyalty.pointsToGo === 0
+                ? "Reward reached"
+                : `${model.loyalty.pointsToGo} ${model.loyalty.pointsToGo === 1 ? "point" : "points"} to go`}
+            </Text>
+          </View>
+        ) : null}
 
         {model.payments.length > 0 ? (
           <View style={styles.ledgerSection} wrap={false}>

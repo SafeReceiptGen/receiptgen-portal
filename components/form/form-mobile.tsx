@@ -50,6 +50,8 @@ import {
   roundMoney,
 } from "@/lib/receipt-payment";
 import { formatReceiptPaymentStatusLabel } from "@/lib/receipt-display-labels";
+import { RedeemRewardControl } from "./redeem-reward-control";
+import { draftPayableTotal } from "@/lib/loyalty-redeem";
 
 interface MobileWizardProps {
   data: ReceiptData;
@@ -518,6 +520,12 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                 className="w-full rounded-xl bg-slate-50 border-slate-200 p-4 text-lg text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/35"
               />
             </div>
+            <RedeemRewardControl
+              data={data}
+              onChange={onChange}
+              isAuthenticated={isAuthenticated}
+              compact
+            />
             <div className="space-y-2">
               <Label className="text-sm text-slate-600 dark:text-white/70">
                 Date
@@ -592,16 +600,11 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
               </Select>
             </div>
             {(() => {
-              const itemsTotal = roundMoney(
-                data.items.reduce(
-                  (sum, item) => sum + item.price * item.quantity,
-                  0,
-                ),
-              );
+              const payable = draftPayableTotal(data);
               const amountPaid = roundMoney(data.amountPaid);
-              const balanceDue = balanceDueFrom(itemsTotal, amountPaid);
+              const balanceDue = balanceDueFrom(payable, amountPaid);
               const paymentStatus = deriveReceiptPaymentStatus(
-                itemsTotal,
+                payable,
                 amountPaid,
               );
               return (
@@ -614,7 +617,7 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                       type="number"
                       min={0}
                       step="0.01"
-                      max={itemsTotal}
+                      max={payable}
                       value={moneyInputValue(
                         "amountPaid",
                         Number.isFinite(amountPaid) ? amountPaid : 0,
@@ -674,7 +677,7 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                       onClick={() =>
                         onChange({
                           ...data,
-                          amountPaid: itemsTotal,
+                          amountPaid: payable,
                           amountPaidTouched: false,
                         })
                       }

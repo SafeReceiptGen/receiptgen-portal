@@ -5,6 +5,7 @@ import {
   receiptDataToCardModel,
   receiptForReturnToCardModel,
 } from "@/lib/receipt-card-model";
+import { draftPayableTotal } from "@/lib/loyalty-redeem";
 import type { ReceiptPaymentStatus } from "@/lib/receipt-payment";
 import {
   balanceDueFrom,
@@ -97,10 +98,8 @@ export function receiptDocumentImageFilename(
   }
 }
 
-function receiptDataSubtotal(data: ReceiptData): number {
-  return roundMoney(
-    data.items.reduce((sum, item) => sum + item.price * item.quantity, 0),
-  );
+function receiptDataPayableTotal(data: ReceiptData): number {
+  return draftPayableTotal(data);
 }
 
 /**
@@ -111,7 +110,7 @@ export function applyDocumentKindToReceiptData(
   data: ReceiptData,
   kind: ReceiptDocumentKind,
 ): ReceiptData {
-  const total = receiptDataSubtotal(data);
+  const total = receiptDataPayableTotal(data);
   const issuePaid = roundMoney(data.amountPaid);
 
   switch (kind) {
@@ -198,7 +197,7 @@ export function documentsFromReceiptForReturn(
 export function documentsFromReceiptData(
   data: ReceiptData,
 ): ReceiptDocumentDescriptor[] {
-  const total = receiptDataSubtotal(data);
+  const total = receiptDataPayableTotal(data);
   return listReceiptDocuments({
     total,
     amountPaidAtIssue: data.amountPaid,
