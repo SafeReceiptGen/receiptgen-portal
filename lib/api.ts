@@ -159,6 +159,74 @@ export const dashboardApi = {
     ),
 };
 
+// ─── Customers ───────────────────────────────────────────────────────────────
+
+export interface RetailerCustomer {
+  id: string;
+  retailerId: string;
+  name: string | null;
+  phone: string | null;
+  email: string | null;
+  pointsBalance: number;
+  lifetimePointsEarned: number;
+  lifetimePointsRedeemed: number;
+  createdAt: string;
+}
+
+export interface CustomerLoyaltySummary {
+  pointsBalance: number;
+  lifetimePointsEarned: number;
+  lifetimePointsRedeemed: number;
+  rewardThreshold?: number;
+  rewardAmount?: string;
+  pointsToGo?: number;
+}
+
+export interface CustomerReceiptSummary {
+  id: string;
+  receiptNumber: string;
+  date: string;
+  total: string;
+  currency: string;
+  status: string;
+}
+
+export interface RetailerCustomerProfile extends RetailerCustomer {
+  receipts: CustomerReceiptSummary[];
+  loyalty: CustomerLoyaltySummary;
+}
+
+export interface ListCustomersResponse {
+  customers: RetailerCustomer[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export const customersApi = {
+  list: (params?: { search?: string; page?: number; limit?: number }) => {
+    const qs = new URLSearchParams();
+    if (params) {
+      for (const [key, value] of Object.entries(params)) {
+        if (value === undefined || value === null || value === "") continue;
+        qs.set(key, String(value));
+      }
+    }
+    const query = qs.toString();
+    return request<ListCustomersResponse>(
+      `/customers${query ? `?${query}` : ""}`,
+    );
+  },
+
+  get: (id: string) =>
+    request<{ customer: RetailerCustomerProfile }>(`/customers/${id}`).then(
+      (r) => r.customer,
+    ),
+};
+
 // ─── Receipts ────────────────────────────────────────────────────────────────
 
 export interface ReceiptLineItem {
