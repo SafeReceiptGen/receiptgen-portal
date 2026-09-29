@@ -60,7 +60,7 @@ const data = {
     },
     {
       title: "Customers",
-      url: "#",
+      url: "/dashboard/customers",
       icon: IconUsers,
     },
     // {
