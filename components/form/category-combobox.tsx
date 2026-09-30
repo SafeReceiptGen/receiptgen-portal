@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, type ComponentProps } from "react";
-import { Check, ChevronsUpDown, Plus, X } from "lucide-react";
+import { Check, ChevronsUpDown, X } from "lucide-react";
 import {
   MAX_CATEGORY_LENGTH,
+  normalizeCategory,
   resolveCategory,
   uniqueCategories,
 } from "@/lib/catalog-categories";
@@ -35,6 +36,10 @@ interface CategoryComboboxProps {
   onChange: (value: string | null) => void;
   placeholder?: string;
   className?: string;
+  popoverClassName?: string;
+  popoverAlign?: "start" | "center" | "end";
+  popoverContainer?: HTMLElement | null;
+  popoverModal?: boolean;
   id?: string;
   disabled?: boolean;
 }
@@ -104,6 +109,11 @@ function CategoryCommand({
   search,
   onSearchChange,
   onSelect,
+  naming,
+  customName,
+  onCustomNameChange,
+  onStartNaming,
+  onCancelNaming,
   className,
   listClassName,
 }: {
@@ -112,18 +122,33 @@ function CategoryCommand({
   search: string;
   onSearchChange: (value: string) => void;
   onSelect: (value: string | null) => void;
+  naming: boolean;
+  customName: string;
+  onCustomNameChange: (value: string) => void;
+  onStartNaming: () => void;
+  onCancelNaming: () => void;
   className?: string;
   listClassName?: string;
 }) {
-  const query = search.trim();
+  const query = normalizeCategory(search) ?? "";
   const queryKey = query.toLowerCase();
   const filtered = queryKey
     ? options.filter((category) => category.toLowerCase().includes(queryKey))
     : options;
-  const exactMatch = options.some(
-    (category) => category.toLowerCase() === queryKey,
-  );
-  const canCreate = query.length > 0 && !exactMatch;
+
+  const assignCustom = (raw: string) => {
+    const resolved = resolveCategory(raw, options);
+    if (!resolved) return;
+    onSelect(resolved);
+  };
+
+  const handleAddOwn = () => {
+    if (query) {
+      assignCustom(query);
+      return;
+    }
+    onStartNaming();
+  };
 
   return (
     <Command
@@ -134,19 +159,15 @@ function CategoryCommand({
       }}
     >
       <CommandInput
-        placeholder="Search or create…"
+        placeholder="Search categories…"
         value={search}
         onValueChange={(next) =>
           onSearchChange(next.slice(0, MAX_CATEGORY_LENGTH))
         }
       />
       <CommandList className={listClassName}>
-        {!canCreate && filtered.length === 0 ? (
-          <CommandEmpty>
-            {options.length === 0
-              ? "Type to create a category"
-              : "No categories found."}
-          </CommandEmpty>
+        {filtered.length === 0 ? (
+          <CommandEmpty>No categories found.</CommandEmpty>
         ) : null}
         <CommandGroup>
           {filtered.map((category) => {
@@ -168,17 +189,46 @@ function CategoryCommand({
               </CommandItem>
             );
           })}
-          {canCreate ? (
-            <CommandItem
-              value={`create:${query}`}
-              onSelect={() => onSelect(resolveCategory(query, options))}
-            >
-              <Plus className="size-4" />
-              Create “{query}”
-            </CommandItem>
-          ) : null}
         </CommandGroup>
       </CommandList>
+      <div className="shrink-0 border-t p-1">
+        {naming ? (
+          <input
+            autoFocus
+            value={customName}
+            maxLength={MAX_CATEGORY_LENGTH}
+            placeholder="Category name"
+            aria-label="Custom category name"
+            className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full rounded-md border bg-transparent px-2 text-sm outline-none focus-visible:ring-[3px]"
+            onChange={(event) =>
+              onCustomNameChange(
+                event.target.value.slice(0, MAX_CATEGORY_LENGTH),
+              )
+            }
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                event.preventDefault();
+                event.stopPropagation();
+                onCancelNaming();
+                return;
+              }
+              if (event.key === "Enter") {
+                event.preventDefault();
+                event.stopPropagation();
+                assignCustom(customName);
+              }
+            }}
+          />
+        ) : (
+          <button
+            type="button"
+            className="hover:bg-accent hover:text-accent-foreground flex w-full items-center rounded-sm px-2 py-1.5 text-left text-sm"
+            onClick={handleAddOwn}
+          >
+            + Add your own category
+          </button>
+        )}
+      </div>
     </Command>
   );
 }
@@ -189,17 +239,32 @@ export function CategoryCombobox({
   onChange,
   placeholder = "Select or create category",
   className,
+  popoverClassName,
+  popoverAlign = "start",
+  popoverContainer,
+  popoverModal = false,
   id,
   disabled = false,
 }: CategoryComboboxProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [naming, setNaming] = useState(false);
+  const [customName, setCustomName] = useState("");
   const isMobile = useIsMobile();
   const options = uniqueCategories([...categories, value]);
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
-    if (!next) setSearch("");
+    if (!next) {
+      setSearch("");
+      setNaming(false);
+      setCustomName("");
+    }
+  };
+
+  const handleSearchChange = (next: string) => {
+    setSearch(next);
+    if (next.trim()) setNaming(false);
   };
 
   const handleSelect = (next: string | null) => {
@@ -220,7 +285,7 @@ export function CategoryCombobox({
     />
   );
 
-  if (isMobile) {
+  if (isMobile && !popoverContainer && !popoverModal) {
     return (
       <>
         {trigger}
@@ -234,8 +299,16 @@ export function CategoryCombobox({
                 options={options}
                 value={value}
                 search={search}
-                onSearchChange={setSearch}
+                onSearchChange={handleSearchChange}
                 onSelect={handleSelect}
+                naming={naming}
+                customName={customName}
+                onCustomNameChange={setCustomName}
+                onStartNaming={() => setNaming(true)}
+                onCancelNaming={() => {
+                  setNaming(false);
+                  setCustomName("");
+                }}
                 className="min-h-0 flex-1"
                 listClassName="max-h-none min-h-0 flex-1 overflow-y-auto overscroll-contain"
               />
@@ -247,18 +320,31 @@ export function CategoryCombobox({
   }
 
   return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
+    <Popover open={open} onOpenChange={handleOpenChange} modal={popoverModal}>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent
-        className="w-[var(--radix-popover-trigger-width)] p-0"
-        align="start"
+        className={cn(
+          "w-[var(--radix-popover-trigger-width)] p-0",
+          popoverClassName,
+        )}
+        align={popoverAlign}
+        collisionPadding={12}
+        container={popoverContainer}
       >
         <CategoryCommand
           options={options}
           value={value}
           search={search}
-          onSearchChange={setSearch}
+          onSearchChange={handleSearchChange}
           onSelect={handleSelect}
+          naming={naming}
+          customName={customName}
+          onCustomNameChange={setCustomName}
+          onStartNaming={() => setNaming(true)}
+          onCancelNaming={() => {
+            setNaming(false);
+            setCustomName("");
+          }}
         />
       </PopoverContent>
     </Popover>

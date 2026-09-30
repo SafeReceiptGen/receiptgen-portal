@@ -40,7 +40,7 @@ import { Store } from "@/lib/api";
 import { PAYMENT_METHOD_OPTIONS } from "@/lib/payment-methods";
 import { CatalogProductPicker } from "./catalog-product-picker";
 import { CategoryCombobox } from "./category-combobox";
-import { uniqueCategories } from "@/lib/catalog-categories";
+import { categoryOptions as mergeCategoryOptions } from "@/lib/catalog-categories";
 import { returnWindowEnum } from "@/types/enums";
 import { trackCtaClick } from "@/lib/analytics";
 import { DISCOUNT_REASONS, type DiscountReason } from "@/lib/discount";
@@ -121,7 +121,7 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
   const productsLoading = storesLoading;
   const categoryOptions = useMemo(
     () =>
-      uniqueCategories([
+      mergeCategoryOptions([
         ...savedProducts.map((product) => product.category),
         ...data.items.map((item) => item.category),
       ]),

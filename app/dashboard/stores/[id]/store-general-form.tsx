@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import {
   retailerApi,
   storesApi,
@@ -48,9 +48,7 @@ export function StoreGeneralForm({ store }: { store: Store }) {
   const queryClient = useQueryClient();
   const logoInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: retailer, isLoading: retailerLoading } = useQuery({
-    ...retailerQueryOptions,
-  });
+  const { data: retailer } = useSuspenseQuery(retailerQueryOptions);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -140,9 +138,7 @@ export function StoreGeneralForm({ store }: { store: Store }) {
 
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg border border-dashed border-muted-foreground/30 bg-muted/30">
-            {retailerLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            ) : logoUrl ? (
+            {logoUrl ? (
               <BrandLogoImage
                 url={logoUrl}
                 alt="Brand logo"
@@ -157,7 +153,7 @@ export function StoreGeneralForm({ store }: { store: Store }) {
             <Button
               type="button"
               variant="secondary"
-              disabled={logoBusy || retailerLoading}
+              disabled={logoBusy}
               onClick={() => logoInputRef.current?.click()}
             >
               {uploadPending ? (

@@ -1,5 +1,6 @@
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import { getQueryClient } from "@/lib/query-client";
+import { retailerQueryOptions } from "@/lib/queries/retailer";
 import { storeQueryOptions } from "@/lib/queries/stores";
 import { StoreDetailClient } from "./store-detail-client";
 
@@ -15,8 +16,10 @@ export default async function StoreDetailPage({ params }: { params: Promise<{ id
   const { id } = await params;
   const queryClient = getQueryClient();
 
-  // Prefetch the query on the server
-  await queryClient.prefetchQuery(storeQueryOptions(id));
+  await Promise.all([
+    queryClient.prefetchQuery(storeQueryOptions(id)),
+    queryClient.prefetchQuery(retailerQueryOptions),
+  ]);
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
