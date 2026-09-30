@@ -556,6 +556,21 @@ export const storesApi = {
       body: JSON.stringify([...products]),
     }),
 
+  updateCatalogItem: (
+    storeId: string,
+    productId: string,
+    payload: {
+      name: string;
+      defaultPrice: string | null;
+      description: string | null;
+      category: string | null;
+    },
+  ) =>
+    request<{ item: SavedProduct }>(`/stores/${storeId}/catalog/${productId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+
   removeFromCatalog: (storeId: string, productId: string) =>
     request<{ message: string }>(`/stores/${storeId}/catalog/${productId}`, {
       method: "DELETE",

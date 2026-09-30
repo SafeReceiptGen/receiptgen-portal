@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { storeQueryOptions } from "@/lib/queries/stores";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,7 +9,7 @@ import { StoreLoyaltyForm } from "./store-loyalty-form";
 import { StorePolicyForm } from "./store-policy-form";
 import { StoreCatalogManager } from "./store-catalog-manager";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Store as StoreIcon } from "lucide-react";
+import { ChevronLeft, Loader2, Store as StoreIcon } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Loading from "./loading";
@@ -86,7 +87,16 @@ export function StoreDetailClient({ storeId }: { storeId: string }) {
         
         <div className="pt-2">
           <TabsContent value="general" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-            <StoreGeneralForm store={store} />
+            <Suspense
+              fallback={
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading store details…
+                </div>
+              }
+            >
+              <StoreGeneralForm store={store} />
+            </Suspense>
           </TabsContent>
           <TabsContent value="policy" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
             <StorePolicyForm store={store} />

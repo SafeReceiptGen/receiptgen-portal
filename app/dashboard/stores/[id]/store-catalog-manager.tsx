@@ -5,17 +5,24 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { storesApi, Store, SavedProduct } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, Tag, Info } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2, Tag, Info } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { CategoryCombobox } from "@/components/form/category-combobox";
-import { uniqueCategories } from "@/lib/catalog-categories";
+import { categoryOptions } from "@/lib/catalog-categories";
 
 export function StoreCatalogManager({ store }: { store: Store }) {
   const queryClient = useQueryClient();
   const catalog = store.storeCatalog || [];
-  const catalogCategories = uniqueCategories(
+  const catalogCategories = categoryOptions(
     catalog.map((item) => item.category),
   );
 
@@ -24,6 +31,7 @@ export function StoreCatalogManager({ store }: { store: Store }) {
   const [newItemPrice, setNewItemPrice] = useState("");
   const [newItemSku, setNewItemSku] = useState("");
   const [newItemCategory, setNewItemCategory] = useState("");
+  const [editing, setEditing] = useState<SavedProduct | null>(null);
 
   const { mutate: addItem, isPending: isAdding } = useMutation({
     mutationFn: () => {
@@ -48,6 +56,28 @@ export function StoreCatalogManager({ store }: { store: Store }) {
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to add item.");
+    },
+  });
+
+  const { mutate: updateItem, isPending: isUpdating } = useMutation({
+    mutationFn: (payload: {
+      productId: string;
+      name: string;
+      defaultPrice: string | null;
+      description: string | null;
+      category: string | null;
+    }) => {
+      const { productId, ...fields } = payload;
+      return storesApi.updateCatalogItem(store.id, productId, fields);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["stores"] });
+      queryClient.invalidateQueries({ queryKey: ["stores", store.id] });
+      toast.success("Item updated.");
+      setEditing(null);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to update item.");
     },
   });
 
@@ -112,15 +142,27 @@ export function StoreCatalogManager({ store }: { store: Store }) {
                           )}
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => removeItem(item.id)}
-                        disabled={isRemoving}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex items-center">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-muted-foreground hover:text-foreground"
+                          onClick={() => setEditing(item)}
+                          aria-label={`Edit ${item.name}`}
+                        >
+                          <Pencil className="size-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => removeItem(item.id)}
+                          disabled={isRemoving}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -164,6 +206,8 @@ export function StoreCatalogManager({ store }: { store: Store }) {
                     categories={catalogCategories}
                     onChange={(next) => setNewItemCategory(next ?? "")}
                     placeholder="e.g. Apparel"
+                    popoverAlign="end"
+                    popoverClassName="w-80"
                   />
                 </div>
               </div>
@@ -201,6 +245,142 @@ export function StoreCatalogManager({ store }: { store: Store }) {
           </form>
         </div>
       </div>
+
+      <Dialog
+        open={editing !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditing(null);
+        }}
+      >
+        <DialogContent
+          onInteractOutside={(event) => {
+            const target = event.target;
+            if (
+              target instanceof Element &&
+              target.closest("[data-slot=popover-content]")
+            ) {
+              event.preventDefault();
+            }
+          }}
+        >
+          {editing ? (
+            <EditCatalogItemForm
+              key={editing.id}
+              item={editing}
+              categories={catalogCategories}
+              isSaving={isUpdating}
+              onCancel={() => setEditing(null)}
+              onSave={(fields) =>
+                updateItem({ productId: editing.id, ...fields })
+              }
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+function EditCatalogItemForm({
+  item,
+  categories,
+  isSaving,
+  onCancel,
+  onSave,
+}: {
+  item: SavedProduct;
+  categories: string[];
+  isSaving: boolean;
+  onCancel: () => void;
+  onSave: (fields: {
+    name: string;
+    defaultPrice: string | null;
+    description: string | null;
+    category: string | null;
+  }) => void;
+}) {
+  const [name, setName] = useState(item.name);
+  const [price, setPrice] = useState(item.defaultPrice ?? "");
+  const [description, setDescription] = useState(item.description ?? "");
+  const [category, setCategory] = useState<string | null>(item.category ?? null);
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!name.trim()) return;
+    onSave({
+      name: name.trim(),
+      defaultPrice: price.trim() || null,
+      description: description.trim() || null,
+      category,
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <DialogHeader>
+        <DialogTitle>Edit item</DialogTitle>
+      </DialogHeader>
+      <div className="space-y-3">
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground" htmlFor="edit-item-name">
+            Item Name *
+          </label>
+          <Input
+            id="edit-item-name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            required
+          />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground" htmlFor="edit-item-price">
+            Default Price (Optional)
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₵</span>
+            <Input
+              id="edit-item-price"
+              placeholder="29.99"
+              className="pl-7"
+              value={price}
+              onChange={(event) => setPrice(event.target.value)}
+            />
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground">
+            Category (Optional)
+          </label>
+          <CategoryCombobox
+            value={category}
+            categories={categories}
+            onChange={setCategory}
+            placeholder="e.g. Apparel"
+            popoverAlign="start"
+            popoverClassName="z-[60] w-80"
+            popoverModal
+          />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground" htmlFor="edit-item-description">
+            Description (Optional)
+          </label>
+          <Input
+            id="edit-item-description"
+            placeholder="e.g. Black, Size L"
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+          />
+        </div>
+      </div>
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={!name.trim() || isSaving}>
+          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Save"}
+        </Button>
+      </DialogFooter>
+    </form>
   );
 }
