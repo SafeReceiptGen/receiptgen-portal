@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
 import { Loader2, Pencil, Plus, Trash2, Tag, Info } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -37,8 +37,8 @@ export function StoreCatalogManager({ store }: { store: Store }) {
     mutationFn: () => {
       const payload = {
         name: newItemName.trim(),
-        description: newItemDesc.trim() || null,
-        defaultPrice: newItemPrice.trim() || null,
+        description: newItemDesc.trim(),
+        defaultPrice: newItemPrice.trim(),
         sku: newItemSku.trim() || null,
         category: newItemCategory.trim() || null,
       };

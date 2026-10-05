@@ -152,11 +152,28 @@ export interface DashboardStats {
   timeseries: { date: string; receipts: number; returns: number }[];
 }
 
+export interface LoyaltyReturningCustomer {
+  id: string;
+  name: string | null;
+  phone: string | null;
+  receiptCount: number;
+  pointsBalance: number;
+}
+
+export interface LoyaltyDashboardSummary {
+  members: number;
+  totalPointsIssued: number;
+  totalPointsRedeemed: number;
+  topReturningCustomers: LoyaltyReturningCustomer[];
+}
+
 export const dashboardApi = {
   getStats: (range: "7d" | "30d" = "30d") =>
     request<DashboardStats>(
       `/dashboard/stats?range=${encodeURIComponent(range)}`,
     ),
+  getLoyaltySummary: () =>
+    request<LoyaltyDashboardSummary>("/dashboard/loyalty"),
 };
 
 // ─── Customers ───────────────────────────────────────────────────────────────
@@ -191,9 +208,20 @@ export interface CustomerReceiptSummary {
   status: string;
 }
 
+export interface CustomerLoyaltyActivity {
+  id: string;
+  type: "earn" | "redeem" | "adjust";
+  points: number;
+  balanceAfter: number;
+  createdAt: string;
+  receiptId: string | null;
+  receiptNumber: string | null;
+}
+
 export interface RetailerCustomerProfile extends RetailerCustomer {
   receipts: CustomerReceiptSummary[];
   loyalty: CustomerLoyaltySummary;
+  loyaltyActivity: CustomerLoyaltyActivity[];
 }
 
 export interface ListCustomersResponse {
@@ -225,6 +253,18 @@ export const customersApi = {
     request<{ customer: RetailerCustomerProfile }>(`/customers/${id}`).then(
       (r) => r.customer,
     ),
+
+  create: (body: { name: string; phone: string }) =>
+    request<{ customer: RetailerCustomer }>("/customers", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((r) => r.customer),
+
+  update: (id: string, body: { name: string; phone: string }) =>
+    request<{ customer: RetailerCustomer }>(`/customers/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }).then((r) => r.customer),
 };
 
 // ─── Receipts ────────────────────────────────────────────────────────────────
@@ -259,6 +299,7 @@ export interface CreateReceiptPayload {
   /** Amount received at issuance. Omitted → paid in full. */
   amountPaid?: number;
   items: ReceiptLineItem[];
+  customerId?: string;
   customerName: string;
   customerPhone: string;
   marketingText?: string;
@@ -914,6 +955,7 @@ export interface VerifiedReceipt {
   storeName: string;
   storePhone?: string | null;
   customerName?: string | null;
+  customerPhone?: string | null;
   /** Brand / trading name (`retailers.name`) — primary identity on receipts. */
   retailerName?: string | null;
   retailerLogoUrl?: string | null;

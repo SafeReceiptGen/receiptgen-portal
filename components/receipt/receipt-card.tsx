@@ -20,6 +20,7 @@ import {
   formatReturnDeadline,
 } from "@/lib/receipt-display-labels";
 import { RECEIPT_LOGO_SLOT_PX } from "@/lib/receipt-logo-display";
+import { shouldShowPaymentHistory } from "@/lib/receipt-payment";
 import { cn } from "@/lib/utils";
 
 export type ReceiptCardProps = {
@@ -46,6 +47,10 @@ export function ReceiptCard({ model, footerSlot, className }: ReceiptCardProps) 
   const location = model.storeLocation?.trim();
   const showLocation = !!location && location !== brandName;
   const paymentStatus = model.paymentStatus;
+  const showPaymentHistory = shouldShowPaymentHistory({
+    paymentStatus,
+    payments: model.payments,
+  });
 
   return (
     <div className={className}>
@@ -141,6 +146,11 @@ export function ReceiptCard({ model, footerSlot, className }: ReceiptCardProps) 
             Thank you for your purchase!
             {model.customerName ? `, ${model.customerName}` : ""}!
           </h2>
+          {model.customerPhone ? (
+            <p className="mt-1 text-sm font-medium text-slate-500">
+              {model.customerPhone}
+            </p>
+          ) : null}
         </div>
 
         <div className="absolute bottom-0 left-3 right-3 border-b-2 border-dashed border-slate-200/80" />
@@ -337,7 +347,7 @@ export function ReceiptCard({ model, footerSlot, className }: ReceiptCardProps) 
           </div>
         ) : null}
 
-        {model.payments.length > 0 ? (
+        {showPaymentHistory ? (
           <div className="mb-8 space-y-3">
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
               Payment history

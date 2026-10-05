@@ -62,6 +62,8 @@ export interface ReceiptData {
   logoUrl: string;
   qrCodeToken: string;
   qrUrl: string;
+  /** Set when a saved customer is selected. Issuing the receipt updates that row. */
+  customerId?: string;
   customerName: string;
   customerPhone: string;
   // Return Policy Fields

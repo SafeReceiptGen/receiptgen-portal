@@ -30,7 +30,10 @@ import {
   formatNextReward,
   receiptDataToCardModel,
 } from "@/lib/receipt-card-model";
-import type { ReceiptPaymentStatus } from "@/lib/receipt-payment";
+import {
+  shouldShowPaymentHistory,
+  type ReceiptPaymentStatus,
+} from "@/lib/receipt-payment";
 
 // QR and retailer logo are embedded as raster data URLs from the receipt builder.
 
@@ -124,6 +127,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
     color: "#0f172a",
+  },
+  customerPhone: {
+    fontSize: 11,
+    textAlign: "center",
+    color: "#64748b",
+    marginTop: 4,
   },
   dashedLine: {
     borderBottomWidth: 1.5,
@@ -517,6 +526,10 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
   const location = model.storeLocation?.trim();
   const showLocation = !!location && location !== brandName;
   const pill = PAYMENT_PILL[model.paymentStatus];
+  const showPaymentHistory = shouldShowPaymentHistory({
+    paymentStatus: model.paymentStatus,
+    payments: model.payments,
+  });
   const purchasedAt = new Date(model.purchasedAt);
 
   const logoDimensions =
@@ -584,6 +597,9 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
             Thank you for your purchase!
             {model.customerName ? `, ${model.customerName}` : ""}!
           </Text>
+          {model.customerPhone ? (
+            <Text style={styles.customerPhone}>{model.customerPhone}</Text>
+          ) : null}
         </View>
 
         <View style={styles.dashedLine} />
@@ -766,7 +782,7 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
           </View>
         ) : null}
 
-        {model.payments.length > 0 ? (
+        {showPaymentHistory ? (
           <View style={styles.ledgerSection} wrap={false}>
             <Text style={styles.ledgerTitle}>Payment history</Text>
             {model.payments.map((payment) => (

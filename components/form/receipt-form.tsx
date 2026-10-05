@@ -53,6 +53,7 @@ import {
   roundMoney,
 } from "@/lib/receipt-payment";
 import { formatReceiptPaymentStatusLabel } from "@/lib/receipt-display-labels";
+import { CustomerPicker } from "./customer-picker";
 import { RedeemRewardControl } from "./redeem-reward-control";
 import { draftPayableTotal } from "@/lib/loyalty-redeem";
 
@@ -479,6 +480,35 @@ export const ReceiptForm: React.FC<ReceiptFormProps> = ({
                   />
                 </div>
               </div>
+
+              {isAuthenticated ? (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-slate-600 dark:text-white/60">
+                    Select customer
+                  </Label>
+                  <CustomerPicker
+                    selectedCustomerId={data.customerId}
+                    customerName={data.customerName}
+                    customerPhone={data.customerPhone}
+                    onSelect={(customer) =>
+                      onChange({
+                        ...data,
+                        customerId: customer.id,
+                        customerName: customer.name?.trim() ?? "",
+                        customerPhone: customer.phone?.trim() ?? "",
+                      })
+                    }
+                    onClear={() =>
+                      onChange({
+                        ...data,
+                        customerId: undefined,
+                        customerName: "",
+                        customerPhone: "",
+                      })
+                    }
+                  />
+                </div>
+              ) : null}
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-slate-600 dark:text-white/60">

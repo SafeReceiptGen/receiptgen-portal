@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
 import { Loader2, Store, RefreshCcw } from "lucide-react";
 
 const formSchema = z.object({

@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
 import { Building2, Loader2 } from "lucide-react";
 import { BrandLogoImage } from "@/components/receipt/brand-logo-image";
 

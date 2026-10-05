@@ -6,3 +6,9 @@ export const dashboardStatsQueryOptions = (range: "7d" | "30d") =>
     queryKey: ["dashboard", "stats", range] as const,
     queryFn: () => dashboardApi.getStats(range),
   });
+
+export const loyaltySummaryQueryOptions = () =>
+  queryOptions({
+    queryKey: ["dashboard", "loyalty"] as const,
+    queryFn: () => dashboardApi.getLoyaltySummary(),
+  });

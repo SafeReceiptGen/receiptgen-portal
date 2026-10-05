@@ -32,6 +32,19 @@ export function balanceDueFrom(total: number, amountPaid: number): number {
  * Live amount received. After issuance, `amountPaid` is frozen at the first
  * payment — later settlements live on the ledger (and balanceDue/paymentStatus).
  */
+/**
+ * A single payment that settles the receipt is not a history.
+ * Show the ledger while a balance remains, or after more than one payment.
+ */
+export function shouldShowPaymentHistory(input: {
+  paymentStatus: ReceiptPaymentStatus;
+  payments: readonly unknown[];
+}): boolean {
+  if (input.payments.length === 0) return false;
+  if (input.paymentStatus !== "paid_in_full") return true;
+  return input.payments.length > 1;
+}
+
 export function liveAmountPaid(
   total: number,
   amountPaid: number | undefined,
