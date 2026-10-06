@@ -50,6 +50,7 @@ import {
   roundMoney,
 } from "@/lib/receipt-payment";
 import { formatReceiptPaymentStatusLabel } from "@/lib/receipt-display-labels";
+import { CustomerPicker } from "./customer-picker";
 import { RedeemRewardControl } from "./redeem-reward-control";
 import { draftPayableTotal } from "@/lib/loyalty-redeem";
 
@@ -494,6 +495,35 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
                 className="w-full rounded-xl bg-slate-50 border-slate-200 p-4 text-lg text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-400 focus-visible:ring-offset-0 focus-visible:border-blue-400 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/35"
               />
             </div>
+            {isAuthenticated ? (
+              <div className="space-y-2">
+                <Label className="text-sm text-slate-600 dark:text-white/70">
+                  Select customer
+                </Label>
+                <CustomerPicker
+                  selectedCustomerId={data.customerId}
+                  customerName={data.customerName}
+                  customerPhone={data.customerPhone}
+                  className="rounded-xl px-4 py-4 text-lg"
+                  onSelect={(customer) =>
+                    onChange({
+                      ...data,
+                      customerId: customer.id,
+                      customerName: customer.name?.trim() ?? "",
+                      customerPhone: customer.phone?.trim() ?? "",
+                    })
+                  }
+                  onClear={() =>
+                    onChange({
+                      ...data,
+                      customerId: undefined,
+                      customerName: "",
+                      customerPhone: "",
+                    })
+                  }
+                />
+              </div>
+            ) : null}
             <div className="space-y-2">
               <Label className="text-sm text-slate-600 dark:text-white/70">
                 Customer Name <span className="text-destructive">*</span>

@@ -696,7 +696,9 @@ export function ReceiptDetailsSheet({
                     </div>
                   </div>
 
-                  {receipt.payments && receipt.payments.length > 0 ? (
+                  {installment &&
+                  receipt.payments &&
+                  receipt.payments.length > 0 ? (
                     <div className="mb-6 space-y-2">
                       <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
                         Payment history

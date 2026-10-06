@@ -1,13 +1,22 @@
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
+import { LoyaltySummary } from "@/components/dashboard/loyalty-summary";
 import { SectionCards } from "@/components/section-cards";
 import { getQueryClient } from "@/lib/query-client";
-import { dashboardStatsQueryOptions } from "@/lib/queries/dashboard";
+import {
+  dashboardStatsQueryOptions,
+  loyaltySummaryQueryOptions,
+} from "@/lib/queries/dashboard";
+import { loyaltyQueryOptions } from "@/lib/queries/retailer";
 import { DashboardViewTracker } from "./dashboard-view-tracker";
 
 export default async function Page() {
   const queryClient = getQueryClient();
-  await queryClient.prefetchQuery(dashboardStatsQueryOptions("30d"));
+  await Promise.all([
+    queryClient.prefetchQuery(dashboardStatsQueryOptions("30d")),
+    queryClient.prefetchQuery(loyaltyQueryOptions),
+    queryClient.prefetchQuery(loyaltySummaryQueryOptions()),
+  ]);
 
   return (
     <>
@@ -20,6 +29,7 @@ export default async function Page() {
               <div className="px-4 lg:px-6">
                 <ChartAreaInteractive />
               </div>
+              <LoyaltySummary />
             </div>
           </div>
         </div>

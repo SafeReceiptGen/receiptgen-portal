@@ -1,22 +1,41 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, History, UserRound } from "lucide-react";
+import { ChevronLeft, UserRound } from "lucide-react";
+import { toast } from "@/components/ui/sonner";
+import { customersApi, type CustomerLoyaltyActivity } from "@/lib/api";
 import { customerDetailQueryOptions } from "@/lib/queries/customers";
 import { formatCurrency } from "@/lib/currency";
 import {
   formatLoyaltyPoints,
   formatNextReward,
 } from "@/lib/receipt-card-model";
+import { CustomerFormDialog } from "@/components/dashboard/customers/customer-form-dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function CustomerDetailClient({ customerId }: { customerId: string }) {
+  const queryClient = useQueryClient();
+  const [editOpen, setEditOpen] = useState(false);
   const { data: customer, isPending, isError, isFetching } = useQuery(
     customerDetailQueryOptions(customerId),
   );
+
+  const updateCustomer = useMutation({
+    mutationFn: (values: { name: string; phone: string }) =>
+      customersApi.update(customerId, values),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["customers"] });
+      setEditOpen(false);
+      toast.success("Customer updated");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Could not update customer");
+    },
+  });
 
   if (isPending) {
     return (
@@ -56,18 +75,23 @@ export function CustomerDetailClient({ customerId }: { customerId: string }) {
             Back to Customers
           </Link>
         </Button>
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <UserRound className="h-5 w-5" />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <UserRound className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight">
+                {customer.name?.trim() || "Unnamed customer"}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {customer.phone || "No phone on file"}
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">
-              {customer.name?.trim() || "Unnamed customer"}
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {customer.phone || "No phone on file"}
-            </p>
-          </div>
+          <Button variant="outline" onClick={() => setEditOpen(true)}>
+            Edit customer
+          </Button>
         </div>
       </div>
 
@@ -147,21 +171,117 @@ export function CustomerDetailClient({ customerId }: { customerId: string }) {
         )}
       </section>
 
-      <section className="rounded-3xl border border-dashed border-slate-200 px-6 py-8 dark:border-white/15">
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 dark:bg-white/10">
-            <History className="h-4 w-4" />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold">Loyalty activity</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Earn and redeem history for this customer will appear here.
-            </p>
-          </div>
-        </div>
+      <section className="space-y-3">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+          Loyalty activity
+        </h3>
+        {(customer.loyaltyActivity ?? []).length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No loyalty activity yet.
+          </p>
+        ) : (
+          <ul className="divide-y divide-slate-100 rounded-2xl border border-slate-200 dark:divide-white/10 dark:border-white/10">
+            {(customer.loyaltyActivity ?? []).map((activity) => (
+              <li
+                key={activity.id}
+                className="flex items-center justify-between gap-4 px-4 py-3 text-sm"
+              >
+                <div className="min-w-0">
+                  <p className="font-medium">
+                    {loyaltyActivityLabel(activity.type)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatActivityDate(activity.createdAt)}
+                    {activity.receiptNumber
+                      ? ` · ${activity.receiptNumber}`
+                      : ""}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p
+                    className={`tabular-nums font-semibold ${loyaltyActivityTone(activity.type)}`}
+                  >
+                    {formatActivityPoints(activity.type, activity.points)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Balance {formatLoyaltyPoints(activity.balanceAfter)}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
+
+      <CustomerFormDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        title="Edit customer"
+        description="Update the name and phone saved for this customer."
+        submitLabel="Save changes"
+        initialName={customer.name ?? ""}
+        initialPhone={customer.phone ?? ""}
+        isPending={updateCustomer.isPending}
+        onSubmit={(values) => updateCustomer.mutate(values)}
+      />
     </div>
   );
+}
+
+function loyaltyActivityLabel(type: CustomerLoyaltyActivity["type"]): string {
+  switch (type) {
+    case "earn":
+      return "Earned";
+    case "redeem":
+      return "Redeemed";
+    case "adjust":
+      return "Adjusted";
+    default: {
+      const unreachable: never = type;
+      return unreachable;
+    }
+  }
+}
+
+function formatActivityPoints(
+  type: CustomerLoyaltyActivity["type"],
+  points: number,
+): string {
+  switch (type) {
+    case "earn":
+      return `+${points}`;
+    case "redeem":
+      return `−${points}`;
+    case "adjust":
+      return points > 0 ? `+${points}` : String(points);
+    default: {
+      const unreachable: never = type;
+      return unreachable;
+    }
+  }
+}
+
+function loyaltyActivityTone(type: CustomerLoyaltyActivity["type"]): string {
+  switch (type) {
+    case "earn":
+      return "text-emerald-700 dark:text-emerald-400";
+    case "redeem":
+      return "text-amber-800 dark:text-amber-300";
+    case "adjust":
+      return "text-slate-700 dark:text-white";
+    default: {
+      const unreachable: never = type;
+      return unreachable;
+    }
+  }
+}
+
+function formatActivityDate(value: string): string {
+  return new Date(value).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function LoyaltyStat({ label, value }: { label: string; value: string }) {

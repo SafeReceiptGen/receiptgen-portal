@@ -114,6 +114,7 @@ const receiptSchema = z
     tin: z.string().optional().default(""),
     website: z.string().optional().default(""),
     qrUrl: z.string().optional().default(""),
+    customerId: z.string().uuid().optional(),
     customerName: z.string().trim().min(1, "Customer name is required"),
     customerPhone: z.string().trim().min(7, "Customer phone is required"),
     returnWindow: z.string().optional().default(""),
@@ -239,6 +240,9 @@ export async function generateReceipt(
         vatRate: 0,
         paymentMethod: result.data.paymentMethod,
         amountPaid: result.data.amountPaid,
+        ...(result.data.customerId
+          ? { customerId: result.data.customerId }
+          : {}),
         customerName: result.data.customerName,
         customerPhone: result.data.customerPhone,
         marketingText: result.data.marketingText,

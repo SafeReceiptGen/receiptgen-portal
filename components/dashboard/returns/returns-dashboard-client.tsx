@@ -48,7 +48,7 @@ import { formatPickupAddressDisplay } from "@/lib/format-pickup-address";
 import { MOCK_PUDO_POINTS } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { format, formatDistanceToNow } from "date-fns";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
 import {
   Loader2,
   Package,

@@ -1,6 +1,8 @@
 "use client";
 
 import type { Icon } from "@tabler/icons-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import {
   SidebarGroup,
@@ -10,7 +12,20 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import ReceiptFormScreen from "./form/form-screen";
-import Link from "next/link";
+
+function activeNavHref(pathname: string, hrefs: string[]) {
+  let match: string | null = null;
+
+  for (const href of hrefs) {
+    const isMatch = pathname === href || pathname.startsWith(`${href}/`);
+    if (!isMatch) continue;
+    if (match === null || href.length > match.length) {
+      match = href;
+    }
+  }
+
+  return match;
+}
 
 export function NavMain({
   items,
@@ -23,6 +38,12 @@ export function NavMain({
   }[];
   isAuthenticated?: boolean;
 }) {
+  const pathname = usePathname();
+  const activeHref = activeNavHref(
+    pathname,
+    items.map((item) => item.url),
+  );
+
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
@@ -32,16 +53,24 @@ export function NavMain({
           </SidebarMenuItem>
         </SidebarMenu>
         <SidebarMenu>
-          {items.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild>
-                <Link href={item.url}>
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {items.map((item) => {
+            const isActive = item.url === activeHref;
+
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  <Link href={item.url}>
+                    {item.icon && <item.icon />}
+                    <span>{item.title}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

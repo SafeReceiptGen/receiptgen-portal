@@ -50,7 +50,7 @@ import { IconChartBar } from "@tabler/icons-react";
 import { ReportMetricCards, ReportMetricCardsSkeleton } from "./report-metric-cards";
 import { ReportBreakdowns } from "./report-tables";
 import { ReportTrendChart } from "./report-trend-chart";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 
 const monthOptions = lastNMonthOptions(12);

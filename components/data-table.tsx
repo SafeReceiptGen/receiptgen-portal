@@ -50,7 +50,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table"
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
-import { toast } from "sonner"
+import { toast } from "@/components/ui/sonner"
 import { z } from "zod"
 
 import { useIsMobile } from "@/hooks/use-mobile"

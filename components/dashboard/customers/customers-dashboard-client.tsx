@@ -1,11 +1,14 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Search, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Search, Users } from "lucide-react";
+import { toast } from "@/components/ui/sonner";
+import { customersApi } from "@/lib/api";
 import { customersListQueryOptions } from "@/lib/queries/customers";
+import { CustomerFormDialog } from "@/components/dashboard/customers/customer-form-dialog";
 import { formatLoyaltyPoints } from "@/lib/receipt-card-model";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +38,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function CustomersDashboardClient() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const [createOpen, setCreateOpen] = useState(false);
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
   const [searchParam, setSearchParam] = useQueryState("search", parseAsString);
   const [draft, setDraft] = useState(searchParam ?? "");
@@ -84,18 +89,35 @@ export function CustomersDashboardClient() {
     customersListQueryOptions(listParams),
   );
 
+  const createCustomer = useMutation({
+    mutationFn: customersApi.create,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["customers"] });
+      setCreateOpen(false);
+      toast.success("Customer saved");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Could not save customer");
+    },
+  });
+
   const customers = data?.customers ?? [];
   const meta = data?.meta;
   const hasSearch = Boolean(listParams.search);
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
-      <div>
-        <h1 className="text-lg font-semibold md:text-2xl">Customers</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          People saved from issued receipts, with their current loyalty
-          balances.
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-lg font-semibold md:text-2xl">Customers</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Saved customers for this business, with their loyalty balances.
+          </p>
+        </div>
+        <Button onClick={() => setCreateOpen(true)} className="shrink-0">
+          <Plus className="mr-2 h-4 w-4" />
+          Add customer
+        </Button>
       </div>
 
       <Card className="border-none shadow-none">
@@ -158,7 +180,7 @@ export function CustomersDashboardClient() {
                 <EmptyDescription>
                   {hasSearch
                     ? "Try a different name or phone number."
-                    : "Customers appear here after you issue their first receipt."}
+                    : "Add a customer here, or they'll be saved when you issue their first receipt."}
                 </EmptyDescription>
               </EmptyContent>
             </Empty>
@@ -237,6 +259,16 @@ export function CustomersDashboardClient() {
           )}
         </CardContent>
       </Card>
+
+      <CustomerFormDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        title="Add customer"
+        description="Save a name and phone so you can select them on the next receipt."
+        submitLabel="Save customer"
+        isPending={createCustomer.isPending}
+        onSubmit={(values) => createCustomer.mutate(values)}
+      />
     </div>
   );
 }
