@@ -1,6 +1,6 @@
 "use client";
 
-import { ReturnItem } from "@/types/returns";
+import { ReturnItem, returnableUnits } from "@/types/returns";
 import { cn } from "@/lib/utils";
 import { Check, Minus, Plus } from "lucide-react";
 
@@ -15,14 +15,15 @@ interface ItemSelectorProps {
 
 function unitsReturning(item: ReturnItem): number {
   if (!item.selected) return 0;
-  if (item.quantity === 1) return 1;
+  const available = returnableUnits(item);
+  if (available <= 1) return available;
   return item.returnQuantity ?? 1;
 }
 
-/** Clamp return qty to the valid range [0, purchased]. */
-function clampReturnQuantity(qty: number, purchased: number): number {
+/** Clamp return qty to the valid range [0, still returnable]. */
+function clampReturnQuantity(qty: number, available: number): number {
   if (!Number.isFinite(qty)) return 0;
-  const max = Math.max(0, Math.trunc(purchased));
+  const max = Math.max(0, Math.trunc(available));
   return Math.min(max, Math.max(0, Math.trunc(qty)));
 }
 
@@ -37,6 +38,7 @@ export function ItemSelector({
     onChange(
       items.map((item) => {
         if (item.id !== id) return item;
+        if (returnableUnits(item) < 1) return item;
         const nextSelected = !item.selected;
         return {
           ...item,
@@ -51,7 +53,9 @@ export function ItemSelector({
     onChange(
       items.map((item) => {
         if (item.id !== id) return item;
-        const clamped = clampReturnQuantity(qty, item.quantity);
+        const available = returnableUnits(item);
+        if (available < 1) return item;
+        const clamped = clampReturnQuantity(qty, available);
         return {
           ...item,
           selected: true,
@@ -72,6 +76,8 @@ export function ItemSelector({
   return (
     <div className={cn("space-y-3", className)}>
       {items.map((item) => {
+        const available = returnableUnits(item);
+        const alreadyReturned = available < 1;
         const purchasedLine = item.price * item.quantity;
         const returning = unitsReturning(item);
         const returnSubtotal = item.selected
@@ -84,15 +90,21 @@ export function ItemSelector({
             key={item.id}
             className={cn(
               "overflow-hidden rounded-xl border text-left transition-all",
-              item.selected
-                ? "border-primary bg-primary/5 ring-1 ring-primary/20 dark:border-blue-400/50 dark:bg-blue-400/5 dark:ring-blue-400/10"
-                : "border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/4",
+              alreadyReturned &&
+                "border-slate-100 bg-slate-50/50 opacity-60 dark:border-white/5 dark:bg-white/2",
+              !alreadyReturned &&
+                item.selected &&
+                "border-primary bg-primary/5 ring-1 ring-primary/20 dark:border-blue-400/50 dark:bg-blue-400/5 dark:ring-blue-400/10",
+              !alreadyReturned &&
+                !item.selected &&
+                "border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/4",
             )}
           >
             <button
               type="button"
+              disabled={alreadyReturned}
               onClick={() => toggleItem(item.id)}
-              className="flex w-full items-center gap-4 p-4 hover:bg-slate-100/80 dark:hover:bg-white/6"
+              className="flex w-full items-center gap-4 p-4 hover:bg-slate-100/80 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:hover:bg-white/6"
             >
               <div
                 className={cn(
@@ -106,8 +118,20 @@ export function ItemSelector({
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
+                <p
+                  className={cn(
+                    "truncate text-sm font-semibold",
+                    alreadyReturned
+                      ? "text-slate-500 line-through dark:text-white/50"
+                      : "text-slate-900 dark:text-white",
+                  )}
+                >
                   {item.name}
+                  {alreadyReturned ? (
+                    <span className="ml-2 inline-flex rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold uppercase text-slate-600 no-underline dark:bg-white/20 dark:text-white/70">
+                      Returned
+                    </span>
+                  ) : null}
                 </p>
                 <p className="truncate text-xs text-slate-500 dark:text-white/50">
                   {item.detail}
@@ -116,6 +140,9 @@ export function ItemSelector({
                   {currency} {formatPrice(item.price)} each
                   {item.quantity > 1
                     ? ` · Purchased: ${item.quantity}`
+                    : null}
+                  {!alreadyReturned && available < item.quantity
+                    ? ` · ${available} can still be returned`
                     : null}
                 </p>
               </div>
@@ -130,7 +157,7 @@ export function ItemSelector({
                       Line total
                     </p>
                   </>
-                ) : item.quantity === 1 ? (
+                ) : available <= 1 ? (
                   <>
                     <span className="text-sm font-bold text-slate-900 dark:text-white">
                       {currency} {formatPrice(returnSubtotal)}
@@ -152,7 +179,7 @@ export function ItemSelector({
               </div>
             </button>
 
-            {item.selected && item.quantity > 1 && (
+            {item.selected && available > 1 && (
               <div
                 className="border-t border-slate-200/80 px-4 pb-4 pt-3 dark:border-white/10"
                 onClick={(e) => e.stopPropagation()}
@@ -164,10 +191,10 @@ export function ItemSelector({
                 {(() => {
                   const rq = clampReturnQuantity(
                     item.returnQuantity ?? 1,
-                    item.quantity,
+                    available,
                   );
                   const canDec = rq > 0;
-                  const canInc = rq < item.quantity;
+                  const canInc = rq < available;
                   return (
                     <div className="mt-3 space-y-2">
                       <div className="flex items-center gap-2">
@@ -192,7 +219,7 @@ export function ItemSelector({
                           type="number"
                           inputMode="numeric"
                           min={0}
-                          max={item.quantity}
+                          max={available}
                           step={1}
                           value={rq}
                           aria-label="Return quantity"
@@ -235,7 +262,7 @@ export function ItemSelector({
                           <Plus className="h-4 w-4" strokeWidth={2.5} />
                         </button>
                         <span className="ml-1 text-xs text-slate-500 dark:text-white/45">
-                          max {item.quantity}
+                          max {available}
                         </span>
                       </div>
                       {quantityError && (

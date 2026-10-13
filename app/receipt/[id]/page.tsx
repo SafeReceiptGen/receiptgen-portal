@@ -103,7 +103,7 @@ export default async function DigitalReceiptPage({
               {isAdjustment
                 ? "Adjustment receipts cannot be returned"
                 : returnLocked
-                  ? "Please wait until the current request is reviewed or completed."
+                  ? "Please wait until the retailer reviews the current request."
                   : "Subject to store policy"}
             </p>
           </div>

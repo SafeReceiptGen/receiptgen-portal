@@ -15,6 +15,7 @@ import {
   logisticsServiceFee,
   TIME_SLOTS,
   ReceiptForReturn,
+  returnableUnits,
   type ReturnItem,
 } from "@/types/returns";
 import { ItemSelector } from "@/components/returns/item-selector";
@@ -63,48 +64,66 @@ const STEPS = [
 ];
 
 function effectiveReturnQuantity(item: ReturnItem): number {
-  if (item.quantity === 1) return 1;
+  const available = returnableUnits(item);
+  if (available <= 1) return available;
   return item.returnQuantity ?? 1;
 }
 
-function initItemsFromReceipt(receipt: ReceiptForReturn): ReturnItem[] {
-  return receipt.items.map((item) => ({
-    ...item,
-    selected: false,
-    returnQuantity: item.quantity === 1 ? 1 : undefined,
-  }));
+function withAvailability(
+  item: ReturnItem,
+  availableByLineId?: Record<string, number>,
+): ReturnItem {
+  if (!availableByLineId || !(item.id in availableByLineId)) return item;
+  return { ...item, availableQuantity: availableByLineId[item.id] };
+}
+
+function initItemsFromReceipt(
+  receipt: ReceiptForReturn,
+  availableByLineId?: Record<string, number>,
+): ReturnItem[] {
+  return receipt.items.map((item) => {
+    const line = withAvailability(item, availableByLineId);
+    const available = returnableUnits(line);
+    return {
+      ...line,
+      selected: false,
+      returnQuantity: available <= 1 ? available : undefined,
+    };
+  });
 }
 
 function normalizeDraftItems(
   draftItems: ReturnItem[],
   receipt: ReceiptForReturn,
+  availableByLineId?: Record<string, number>,
 ): ReturnItem[] {
   return draftItems.map((draft) => {
     const line = receipt.items.find((i) => i.id === draft.id);
     if (!line) return draft;
     const purchased = line.quantity;
+    const next = withAvailability(
+      {
+        ...draft,
+        quantity: purchased,
+        price: line.price,
+        name: line.name,
+        detail: line.detail,
+      },
+      availableByLineId,
+    );
+    const available = returnableUnits(next);
     let returnQuantity = draft.returnQuantity;
-    if (purchased === 1) {
+    let selected = draft.selected && available > 0;
+    if (!selected || available <= 1) {
+      returnQuantity = available <= 1 ? available : undefined;
+    } else if (returnQuantity == null || !Number.isFinite(returnQuantity)) {
       returnQuantity = 1;
-    } else if (draft.selected) {
-      if (returnQuantity == null || !Number.isFinite(returnQuantity)) {
-        returnQuantity = 1;
-      } else {
-        // Keep UI range [0, purchased]; submit validation still requires ≥ 1.
-        returnQuantity = Math.min(
-          purchased,
-          Math.max(0, Math.trunc(returnQuantity)),
-        );
-      }
     } else {
-      returnQuantity = undefined;
+      returnQuantity = Math.min(available, Math.max(0, Math.trunc(returnQuantity)));
     }
     return {
-      ...draft,
-      quantity: purchased,
-      price: line.price,
-      name: line.name,
-      detail: line.detail,
+      ...next,
+      selected,
       returnQuantity,
     };
   });
@@ -113,9 +132,12 @@ function normalizeDraftItems(
 export default function ReturnRequestClient({
   receipt,
   receiptId,
+  availableByLineId,
 }: {
   receipt: ReceiptForReturn | undefined;
   receiptId: string;
+  /** Remaining units per line. Omitted when eligibility could not be loaded. */
+  availableByLineId?: Record<string, number>;
 }) {
   const STORAGE_KEY = `return_flow_${receiptId}`;
 
@@ -195,11 +217,17 @@ export default function ReturnRequestClient({
         if (parsedData.items && parsedData.items.length > 0) {
           setValue(
             "items",
-            normalizeDraftItems(parsedData.items as ReturnItem[], receipt),
+            normalizeDraftItems(
+              parsedData.items as ReturnItem[],
+              receipt,
+              availableByLineId,
+            ),
             { shouldValidate: false },
           );
         } else {
-          setValue("items", initItemsFromReceipt(receipt), { shouldValidate: false });
+          setValue("items", initItemsFromReceipt(receipt, availableByLineId), {
+            shouldValidate: false,
+          });
         }
         setIsRestored(true);
         return;
@@ -209,9 +237,9 @@ export default function ReturnRequestClient({
     }
 
     // Default initialization if no save exists
-    setValue("items", initItemsFromReceipt(receipt));
+    setValue("items", initItemsFromReceipt(receipt, availableByLineId));
     setIsRestored(true);
-  }, [receiptId, receipt, setValue, STORAGE_KEY]);
+  }, [receiptId, receipt, setValue, STORAGE_KEY, availableByLineId]);
 
   // Persist form continuously as user types
   useEffect(() => {

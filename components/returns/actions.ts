@@ -90,9 +90,13 @@ export async function submitReturnRequest(
           "Return quantity must be at least 1 for each selected line.",
         );
       }
-      if (qty > item.quantity) {
+      const available = item.availableQuantity ?? item.quantity;
+      if (available < 1) {
+        throw new Error(`"${item.name}" has already been returned.`);
+      }
+      if (qty > available) {
         throw new Error(
-          `Return quantity cannot exceed the purchased amount (${item.quantity}).`,
+          `Return quantity cannot exceed the amount that can still be returned (${available}).`,
         );
       }
       return {
