@@ -174,6 +174,7 @@ export function ReceiptsDashboardClient() {
         onOpenChange={(open: boolean) => {
           if (!open) setReceiptId(null);
         }}
+        onOpenReceipt={setReceiptId}
       />
     </div>
   );

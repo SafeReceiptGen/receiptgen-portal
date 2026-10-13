@@ -8,6 +8,7 @@ import { ReceiptDocumentsSwitcher } from "@/components/receipt/receipt-documents
 import { formatCurrency } from "@/lib/currency";
 import { formatPaymentLedgerDetails } from "@/lib/payment-ledger-display";
 import { formatReceiptPaymentStatusLabel } from "@/lib/receipt-display-labels";
+import { AdjustmentSummary } from "@/components/receipts/adjustment-summary";
 import {
   defaultReceiptDocumentKind,
   documentsFromReceiptForReturn,
@@ -68,6 +69,19 @@ export function PublicReceiptView({ receipt }: PublicReceiptViewProps) {
           </p>
         </div>
       ) : null}
+
+      <AdjustmentSummary
+        adjustment={receipt.adjustment}
+        items={receipt.items.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          lineTotal: item.price * item.quantity,
+          role: item.role,
+        }))}
+        currency={receipt.currency}
+        total={receipt.total}
+        linkMode="token"
+      />
 
       <ReceiptCard model={cardModel} />
 

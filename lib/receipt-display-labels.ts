@@ -13,9 +13,12 @@ export function formatPaymentMethodLabel(value: string | undefined | null): stri
 }
 
 const RECEIPT_STATUS_LABELS: Record<string, string> = {
-  issued: "Issued",
+  issued: "Active",
   voided: "Voided",
-  returned: "Returned",
+  returned: "Return completed",
+  return_requested: "Return requested",
+  return_completed: "Completed — return processed",
+  adjustment: "Adjustment receipt",
 };
 
 export function formatReceiptStatusLabel(value: string | undefined | null): string {

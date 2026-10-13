@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 interface StatusTrackerProps {
   currentStatus: ReturnStatus;
   logisticsMethod?: LogisticsMethod;
+  refundTypeCode?: string | null;
   className?: string;
 }
 
@@ -53,10 +54,11 @@ function StepIcon({ state }: { state: AcStepState }) {
 export function StatusTracker({
   currentStatus,
   logisticsMethod,
+  refundTypeCode,
   className,
 }: StatusTrackerProps) {
   const method = logisticsMethod ?? "DROP_OFF";
-  const steps = getAcStepperSteps(currentStatus, method);
+  const steps = getAcStepperSteps(currentStatus, method, refundTypeCode);
 
   return (
     <div className={cn("w-full", className)}>
@@ -84,7 +86,7 @@ export function StatusTracker({
               </div>
               <span
                 className={cn(
-                  "max-w-[72px] text-center text-[10px] font-medium leading-tight sm:max-w-[80px] sm:text-[11px]",
+                  "max-w-[88px] text-center text-[10px] font-medium leading-tight sm:max-w-[104px] sm:text-[11px]",
                   step.state === "complete" &&
                     "text-green-600 dark:text-green-400",
                   step.state === "current" &&

@@ -17,9 +17,11 @@ import html2canvas from "html2canvas-pro";
 import {
   formatPaymentMethodLabel,
   formatReceiptPaymentStatusLabel,
+  formatReceiptStatusLabel,
 } from "@/lib/receipt-display-labels";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BrandLogoImage } from "@/components/receipt/brand-logo-image";
+import { AdjustmentSummary } from "@/components/receipts/adjustment-summary";
 import { ReceiptCard } from "@/components/receipt/receipt-card";
 import { ReceiptDocumentsSwitcher } from "@/components/receipt/receipt-documents-switcher";
 import { RECEIPT_LOGO_SLOT_PX } from "@/lib/receipt-logo-display";
@@ -76,11 +78,13 @@ import { format } from "date-fns";
 interface ReceiptDetailsSheetProps {
   receiptId: string | null;
   onOpenChange: (open: boolean) => void;
+  onOpenReceipt?: (receiptId: string) => void;
 }
 
 export function ReceiptDetailsSheet({
   receiptId,
   onOpenChange,
+  onOpenReceipt,
 }: ReceiptDetailsSheetProps) {
   const queryClient = useQueryClient();
   const { data: receipt, isLoading } = useQuery({
@@ -323,6 +327,19 @@ export function ReceiptDetailsSheet({
             </div>
           ) : (
             <div className="flex flex-col items-center w-full h-full sm:p-4 overflow-auto overscroll-contain gap-4 px-6 sm:px-0 pb-6">
+              <AdjustmentSummary
+                adjustment={receipt.adjustment}
+                items={receipt.items.map((item) => ({
+                  name: item.name,
+                  quantity: item.quantity,
+                  lineTotal: item.lineTotal,
+                  role: item.role,
+                }))}
+                currency={receipt.currency}
+                total={receipt.total}
+                linkMode="id"
+                onOpenReceipt={onOpenReceipt}
+              />
               {dynamicQrUrl ? (
                 <div className="w-full max-w-[380px] min-w-[320px] rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                   <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
@@ -793,14 +810,14 @@ export function ReceiptDetailsSheet({
                     </div>
                     <div
                       className={`text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wider ${
-                        receipt.status === "issued"
-                          ? "bg-zinc-100 text-zinc-900"
-                          : receipt.status === "returned"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-zinc-100 text-zinc-500"
+                        receipt.status === "voided"
+                          ? "bg-red-100 text-red-700"
+                          : receipt.status === "return_requested"
+                            ? "bg-amber-100 text-amber-800"
+                            : "bg-zinc-100 text-zinc-900"
                       }`}
                     >
-                      {receipt.status}
+                      {formatReceiptStatusLabel(receipt.status)}
                     </div>
                   </div>
                 </div>

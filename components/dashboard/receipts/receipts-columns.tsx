@@ -7,7 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { Store as StoreIcon, Calendar, Tag, Wallet } from "lucide-react";
-import { formatReceiptPaymentStatusLabel } from "@/lib/receipt-display-labels";
+import {
+  formatReceiptPaymentStatusLabel,
+  formatReceiptStatusLabel,
+} from "@/lib/receipt-display-labels";
 
 export const getReceiptsColumns = (
   onRowClick: (id: string) => void,
@@ -202,15 +205,18 @@ export const getReceiptsColumns = (
       return (
         <Badge
           variant={
-            status === "issued"
-              ? "default"
-              : status === "returned"
-                ? "destructive"
-                : "secondary"
+            status === "voided"
+              ? "destructive"
+              : status === "return_requested"
+                ? "secondary"
+                : status === "adjustment"
+                  ? "secondary"
+                : status === "return_completed" || status === "returned"
+                  ? "outline"
+                  : "default"
           }
-          className="capitalize"
         >
-          {status}
+          {formatReceiptStatusLabel(status)}
         </Badge>
       );
     },
@@ -219,8 +225,10 @@ export const getReceiptsColumns = (
       variant: "select",
       icon: Tag,
       options: [
-        { label: "Issued", value: "issued" },
-        { label: "Returned", value: "returned" },
+        { label: "Active", value: "issued" },
+        { label: "Return requested", value: "return_requested" },
+        { label: "Completed — return processed", value: "return_completed" },
+        { label: "Adjustment receipt", value: "adjustment" },
         { label: "Voided", value: "voided" },
       ],
     },

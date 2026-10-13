@@ -50,6 +50,7 @@ export default async function DigitalReceiptPage({
 
   const hasPolicy = receipt.returnWindow !== "No returns";
   const returnLocked = activeReturn != null;
+  const isAdjustment = receipt.status === "adjustment";
 
   return (
     <div className="min-h-screen bg-slate-50 selection:bg-blue-200 selection:text-blue-900 dark:bg-[#050B16] dark:selection:bg-blue-900 dark:selection:text-blue-200">
@@ -92,17 +93,21 @@ export default async function DigitalReceiptPage({
         <div className="mx-auto flex max-w-lg items-center justify-between gap-3 pb-4">
           <div className="mr-1 min-w-0 flex-1">
             <p className="text-xs font-medium text-slate-500 dark:text-white/60">
-              {returnLocked
-                ? "Return already in progress"
-                : "Need to return an item?"}
+              {isAdjustment
+                ? "This receipt records the purchase after the return"
+                : returnLocked
+                  ? "Return already in progress"
+                  : "Need to return an item?"}
             </p>
             <p className="mt-0.5 text-[10px] leading-snug text-slate-400 dark:text-white/40">
-              {returnLocked
-                ? "Please wait until the current request is reviewed or completed."
-                : "Subject to store policy"}
+              {isAdjustment
+                ? "Adjustment receipts cannot be returned"
+                : returnLocked
+                  ? "Please wait until the current request is reviewed or completed."
+                  : "Subject to store policy"}
             </p>
           </div>
-          {returnLocked && activeReturn ? (
+          {isAdjustment ? null : returnLocked && activeReturn ? (
             <Link
               href={`/return/${activeReturn.id}?token=${encodeURIComponent(token)}`}
               className="group relative flex shrink-0 items-center justify-center gap-2 overflow-hidden rounded-full bg-slate-900 px-5 py-3.5 pl-6 text-sm font-semibold text-white shadow-lg ring-1 ring-black/5 transition-all hover:bg-slate-800 active:scale-[0.98] dark:bg-white dark:text-slate-900 dark:ring-white/10 dark:hover:bg-white/90"

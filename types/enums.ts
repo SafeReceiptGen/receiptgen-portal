@@ -42,16 +42,26 @@ export enum refundTypeEnum {
 
 export enum returnStatusEnum {
   "pending",
+  "pickup_scheduled",
   "approved",
   "rejected",
   "completed",
   "cancelled",
+  "collected",
+  "in_transit",
+  "with_retailer",
+  "refunded",
+  "refund_completed",
+  "exchange_completed",
 }
 
 export enum receiptStatusEnum {
   "issued",
   "voided",
   "returned",
+  "return_requested",
+  "return_completed",
+  "adjustment",
 }
 
 export enum receiptPaymentStatusEnum {

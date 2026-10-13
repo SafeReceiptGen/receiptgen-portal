@@ -35,6 +35,10 @@ export function mapToReceiptForReturn(
     isReturnable = deadlineDate > new Date();
   }
 
+  if (receipt.status === "adjustment") {
+    isReturnable = false;
+  }
+
   return {
     id: receipt.id,
     receiptNumber: receipt.receiptNumber,
@@ -54,6 +58,7 @@ export function mapToReceiptForReturn(
       price: parseFloat(item.unitPrice),
       originalPrice: parseFloat(item.originalPrice ?? item.unitPrice),
       selected: false,
+      role: item.role ?? undefined,
     })),
     currency: receipt.currency,
     subtotal: receipt.items.reduce(
@@ -83,5 +88,6 @@ export function mapToReceiptForReturn(
     qrUrl: `${portalPublicOrigin()}/receipt/${token}`,
     loyaltyDiscount: parseFloat(receipt.loyaltyDiscount ?? "0") || 0,
     loyalty: receipt.loyalty ?? null,
+    adjustment: receipt.adjustment ?? null,
   };
 }
