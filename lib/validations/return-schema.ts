@@ -80,7 +80,7 @@ export const ReturnFlowSchema = z.object({
   // Step 5: Logistics
   logistics: z
     .object({
-      method: z.enum(["HOME_PICKUP", "DROP_OFF"]),
+      method: z.enum(["HOME_PICKUP", "DROP_OFF", "RETAILER_DROPOFF"]),
       pudoPointId: z.string().optional(),
       timeSlot: z.string().min(1, "Please select a time slot."),
       phoneCountry: z.string().min(2),

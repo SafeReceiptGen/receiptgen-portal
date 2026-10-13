@@ -8,6 +8,10 @@ import {
   type ReturnEligibilityResponse,
 } from "@/lib/api";
 import { returnReasonToApi } from "@/lib/return-mappers";
+import {
+  logisticsMethodToApi,
+  logisticsServiceFee,
+} from "@/types/returns";
 
 /**
  * Submits a return request to the backend with full wizard parity:
@@ -36,19 +40,18 @@ export async function submitReturnRequest(
   }
 
   const logistics = data.logistics;
-  const fee =
-    logistics.method === "HOME_PICKUP" ? 50 : 30;
+  const fee = logisticsServiceFee(logistics.method);
 
   if (!data.reason) {
     throw new Error("Return reason is required");
   }
 
-  const method =
-    logistics.method === "HOME_PICKUP" ? ("home_pickup" as const) : ("drop_off" as const);
+  const method = logisticsMethodToApi(logistics.method);
 
   const logisticsPayload = {
     method,
-    pudoPointId: logistics.pudoPointId?.trim() || undefined,
+    pudoPointId:
+      method === "drop_off" ? logistics.pudoPointId?.trim() || undefined : undefined,
     timeSlot: logistics.timeSlot,
     phoneNumber: logistics.phoneNumber,
     phoneCountry: logistics.phoneCountry,

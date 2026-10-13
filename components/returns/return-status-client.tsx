@@ -443,9 +443,19 @@ export default function ReturnStatusClient({
                 <MapPin size={14} className="text-primary dark:text-blue-400" />
                 <span className="font-medium">
                   {LOGISTICS_METHOD_LABELS[returnData.logistics.method]}
-                  {pudoPoint && ` — ${pudoPoint.name}`}
+                  {returnData.logistics.method === "DROP_OFF" &&
+                    pudoPoint &&
+                    ` — ${pudoPoint.name}`}
+                  {returnData.logistics.method === "RETAILER_DROPOFF"
+                    ? " — Free"
+                    : ""}
                 </span>
               </div>
+              {returnData.logistics.method === "RETAILER_DROPOFF" && (
+                <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-white/60">
+                  Drop the items at {returnData.retailerName}. Service fee: Free
+                </p>
+              )}
               {returnData.logistics.method === "HOME_PICKUP" &&
                 returnData.logistics.pickupAddress && (
                   <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-white/60">

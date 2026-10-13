@@ -76,6 +76,20 @@ export type AcStepperStep = {
   state: AcStepState;
 };
 
+function skipsPickupStep(logisticsMethod: LogisticsMethod): boolean {
+  switch (logisticsMethod) {
+    case "DROP_OFF":
+    case "RETAILER_DROPOFF":
+      return true;
+    case "HOME_PICKUP":
+      return false;
+    default: {
+      const _exhaustive: never = logisticsMethod;
+      return _exhaustive;
+    }
+  }
+}
+
 function isProcessedStatus(status: ReturnStatus): boolean {
   return (
     status === "REFUNDED" ||
@@ -98,7 +112,7 @@ export function getAcStepperSteps(
   logisticsMethod: LogisticsMethod,
   refundTypeCode?: string | null,
 ): AcStepperStep[] {
-  const dropOff = logisticsMethod === "DROP_OFF";
+  const dropOff = skipsPickupStep(logisticsMethod);
   const exchange = isExchangeRefundType(refundTypeCode);
   const closed = isClosedStatus(status);
   const processed = isProcessedStatus(status);
