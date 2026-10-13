@@ -94,6 +94,7 @@ export type PublicReturnBundle = {
     refundType: string;
     refundAmount: string | null;
     logisticsMethod: string | null;
+    logisticsPudoPointId?: string | null;
     logisticsTimeSlot: string | null;
     logisticsPhone: string | null;
     logisticsPhoneCountry: string | null;
@@ -118,7 +119,7 @@ export type PublicReturnBundle = {
     createdAt: Date | string;
   };
   receipt: { receiptNumber: string; currency: string };
-  store: { name: string };
+  store: { name: string; address?: string | null };
   retailer: { name: string; companyName: string | null; logoUrl: string | null };
   customer: { name: string | null; email: string | null } | null;
   items: Array<{
@@ -155,6 +156,8 @@ export function mapPublicReturnBundleToReturnRequest(
   const isHomePickup = method === "HOME_PICKUP";
   const logistics: ReturnLogistics = {
     method,
+    pudoPointId:
+      method === "DROP_OFF" ? rr.logisticsPudoPointId?.trim() || undefined : undefined,
     timeSlot: rr.logisticsTimeSlot ?? "",
     phoneNumber: rr.logisticsPhone ?? "",
     phoneCountry: rr.logisticsPhoneCountry ?? "",
@@ -328,6 +331,8 @@ export function mapPublicReturnBundleToReturnRequest(
     receiptQrToken,
     retailerName: retailer.companyName ?? retailer.name,
     retailerLogo: retailer.logoUrl ?? undefined,
+    storeName: payload.store.name,
+    storeAddress: payload.store.address?.trim() || undefined,
     customerName: customer?.name ?? "",
     customerEmail: customer?.email ?? undefined,
     items: mappedItems,

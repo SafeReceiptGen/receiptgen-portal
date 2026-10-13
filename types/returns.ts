@@ -87,6 +87,10 @@ export interface ReturnRequest {
   receiptQrToken?: string;
   retailerName: string;
   retailerLogo?: string;
+  /** Branch name for retailer drop-off. */
+  storeName?: string;
+  /** Branch address for retailer drop-off. */
+  storeAddress?: string;
   customerName: string;
   customerEmail?: string;
   customerPhone?: string;
