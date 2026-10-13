@@ -720,7 +720,7 @@ export interface SubmitReturnPayload {
   description?: string;
   photoUrls?: string[];
   logistics?: {
-    method: "home_pickup" | "drop_off";
+    method: "home_pickup" | "drop_off" | "retailer_dropoff";
     pudoPointId?: string;
     timeSlot: string;
     phoneNumber: string;

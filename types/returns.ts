@@ -19,7 +19,9 @@ export type ReturnReason = "DEFECTIVE" | "WRONG_ITEM" | "CHANGED_MIND" | "DAMAGE
 
 export type RefundMethod = "ORIGINAL_PAYMENT" | "STORE_CREDIT" | "BANK_TRANSFER" | "MOBILE_MONEY";
 
-export type LogisticsMethod = "HOME_PICKUP" | "DROP_OFF";
+export type LogisticsMethod = "HOME_PICKUP" | "DROP_OFF" | "RETAILER_DROPOFF";
+
+export type ApiLogisticsMethod = "home_pickup" | "drop_off" | "retailer_dropoff";
 
 export interface ReturnItem {
   id: string;
@@ -230,8 +232,39 @@ export const REFUND_METHOD_LABELS: Record<RefundMethod, string> = {
 
 export const LOGISTICS_METHOD_LABELS: Record<LogisticsMethod, string> = {
   HOME_PICKUP: "Home Pick-Up",
-  DROP_OFF: "Drop Off",
+  DROP_OFF: "PUDO",
+  RETAILER_DROPOFF: "Retailer Drop-Off",
 };
+
+export function logisticsServiceFee(method: LogisticsMethod): number {
+  switch (method) {
+    case "HOME_PICKUP":
+      return 50;
+    case "DROP_OFF":
+      return 30;
+    case "RETAILER_DROPOFF":
+      return 0;
+    default: {
+      const _exhaustive: never = method;
+      return _exhaustive;
+    }
+  }
+}
+
+export function logisticsMethodToApi(method: LogisticsMethod): ApiLogisticsMethod {
+  switch (method) {
+    case "HOME_PICKUP":
+      return "home_pickup";
+    case "DROP_OFF":
+      return "drop_off";
+    case "RETAILER_DROPOFF":
+      return "retailer_dropoff";
+    default: {
+      const _exhaustive: never = method;
+      return _exhaustive;
+    }
+  }
+}
 
 export const RETURN_STATUS_STEPS: ReturnStatus[] = [
   "PENDING",

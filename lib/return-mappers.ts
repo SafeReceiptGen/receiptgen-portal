@@ -1,4 +1,5 @@
 import type {
+  LogisticsMethod,
   ReturnLogistics,
   ReturnReason,
   ReturnRequest,
@@ -7,6 +8,19 @@ import type {
   ReturnActivityLog,
   RefundMethod,
 } from "@/types/returns";
+
+export function mapApiLogisticsMethod(method: string | null): LogisticsMethod {
+  switch (method) {
+    case "home_pickup":
+      return "HOME_PICKUP";
+    case "drop_off":
+      return "DROP_OFF";
+    case "retailer_dropoff":
+      return "RETAILER_DROPOFF";
+    default:
+      return "HOME_PICKUP";
+  }
+}
 
 /** Map backend snake_case reason to UI enum */
 export function mapApiReasonToReturnReason(
@@ -137,16 +151,17 @@ export function mapPublicReturnBundleToReturnRequest(
   const { returnRequest: rr, receipt, retailer, customer, items, photos } =
     payload;
 
-  const isDropOff = rr.logisticsMethod === "drop_off";
+  const method = mapApiLogisticsMethod(rr.logisticsMethod);
+  const isHomePickup = method === "HOME_PICKUP";
   const logistics: ReturnLogistics = {
-    method: isDropOff ? "DROP_OFF" : "HOME_PICKUP",
+    method,
     timeSlot: rr.logisticsTimeSlot ?? "",
     phoneNumber: rr.logisticsPhone ?? "",
     phoneCountry: rr.logisticsPhoneCountry ?? "",
     fee: rr.serviceFee ? parseFloat(rr.serviceFee) : 0,
   };
 
-  if (!isDropOff && rr.pickupAddressLine1) {
+  if (isHomePickup && rr.pickupAddressLine1) {
     const landmark =
       rr.pickupLandmark?.trim() ||
       rr.pickupAddressLine2?.trim() ||
@@ -183,7 +198,7 @@ export function mapPublicReturnBundleToReturnRequest(
       longitude: lng != null && !Number.isNaN(lng) ? lng : undefined,
     };
   }
-  if (!isDropOff && rr.parcelDescription != null) {
+  if (isHomePickup && rr.parcelDescription != null) {
     logistics.parcel = {
       description: rr.parcelDescription,
       ...(rr.parcelPackageCount != null

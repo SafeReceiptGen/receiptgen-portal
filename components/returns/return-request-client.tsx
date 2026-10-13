@@ -12,6 +12,7 @@ import {
   ReturnReason,
   LogisticsMethod,
   LOGISTICS_METHOD_LABELS,
+  logisticsServiceFee,
   TIME_SLOTS,
   ReceiptForReturn,
   type ReturnItem,
@@ -250,7 +251,9 @@ export default function ReturnRequestClient({
     0,
   );
   const logistics = watch("logistics") || defaultReturnFlowValues.logistics!;
-  const fee = logistics.method === "HOME_PICKUP" ? 50 : 30;
+  const fee = logisticsServiceFee(logistics.method);
+  const dropOffLocation =
+    receipt.storeLocation?.trim() || receipt.storeName;
   const isEligible = watch("isEligible");
 
   const checkEligibilityFromApi = async () => {
@@ -348,6 +351,7 @@ export default function ReturnRequestClient({
 
   if (isSubmitted) {
     const homePickup = submittedLogisticsMethod === "HOME_PICKUP";
+    const retailerDropoff = submittedLogisticsMethod === "RETAILER_DROPOFF";
     return (
       <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
         <div className="animate-in zoom-in-50 fade-in duration-500">
@@ -360,6 +364,10 @@ export default function ReturnRequestClient({
           {homePickup ? (
             <>
               Your home pickup <span className="font-semibold text-slate-700 dark:text-white/80">{returnNumber}</span> is scheduled. We&apos;ll use your chosen time window and contact you if anything changes.
+            </>
+          ) : retailerDropoff ? (
+            <>
+              Your return request <span className="font-semibold text-slate-700 dark:text-white/80">{returnNumber}</span> has been submitted. Drop the items at {dropOffLocation}. There is no service fee.
             </>
           ) : (
             <>
@@ -539,18 +547,23 @@ export default function ReturnRequestClient({
             <div className="space-y-6 animate-in slide-in-from-right-4 fade-in duration-300">
               <div>
                 <Label className="text-xs font-medium text-slate-600 dark:text-white/60">Return Method</Label>
-                <div className="mt-2 flex gap-2">
-                  {(["HOME_PICKUP", "DROP_OFF"] as LogisticsMethod[]).map((method) => (
+                <div className="mt-2 grid gap-2">
+                  {(["HOME_PICKUP", "DROP_OFF", "RETAILER_DROPOFF"] as LogisticsMethod[]).map((method) => (
                     <button
                       key={method}
                       type="button"
                       onClick={() => {
                         setValue("logistics.method", method, { shouldValidate: true });
-                        if (method === "HOME_PICKUP") setValue("logistics.pudoPointId", "");
+                        if (method !== "DROP_OFF") setValue("logistics.pudoPointId", "");
                       }}
-                      className={cn("flex-1 rounded-lg border px-4 py-3 text-sm font-medium transition-all", logistics.method === method ? "border-primary bg-primary/5 text-primary ring-1 ring-primary/20" : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 dark:border-white/10 dark:bg-white/4 dark:text-white/60")}
+                      className={cn("flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left text-sm font-medium transition-all", logistics.method === method ? "border-primary bg-primary/5 text-primary ring-1 ring-primary/20" : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 dark:border-white/10 dark:bg-white/4 dark:text-white/60")}
                     >
-                      {LOGISTICS_METHOD_LABELS[method]}
+                      <span>{LOGISTICS_METHOD_LABELS[method]}</span>
+                      {method === "RETAILER_DROPOFF" ? (
+                        <span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-700 dark:bg-green-500/15 dark:text-green-300">
+                          Free
+                        </span>
+                      ) : null}
                     </button>
                   ))}
                 </div>
@@ -651,9 +664,28 @@ export default function ReturnRequestClient({
                 </div>
               )}
 
+              {logistics.method === "RETAILER_DROPOFF" && (
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 animate-in slide-in-from-top-2 fade-in duration-200 dark:border-white/10 dark:bg-white/4 dark:text-white/60">
+                  <p>
+                    Bring the items to{" "}
+                    <span className="font-medium text-slate-900 dark:text-white">
+                      {dropOffLocation}
+                    </span>
+                    . There is no service fee.
+                  </p>
+                  {receipt.storePhone?.trim() ? (
+                    <p className="mt-1 text-xs">Store phone: {receipt.storePhone}</p>
+                  ) : null}
+                </div>
+              )}
+
               <div className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 dark:bg-white/4">
                 <span className="text-xs font-medium text-slate-600 dark:text-white/60">Service Fee</span>
-                <span className="text-sm font-bold text-slate-900 dark:text-white">{formatCurrency(fee, receipt.currency)}</span>
+                <span className="text-sm font-bold text-slate-900 dark:text-white">
+                  {logistics.method === "RETAILER_DROPOFF"
+                    ? "Free"
+                    : formatCurrency(fee, receipt.currency)}
+                </span>
               </div>
 
               <div className="space-y-2">
@@ -782,7 +814,14 @@ export default function ReturnRequestClient({
                 <p className="text-sm font-medium text-slate-700 dark:text-white/80">
                   {LOGISTICS_METHOD_LABELS[logistics.method]}
                   {logistics.method === "DROP_OFF" && logistics.pudoPointId && ` — ${MOCK_PUDO_POINTS.find((p) => p.id === logistics.pudoPointId)?.name}`}
+                  {logistics.method === "RETAILER_DROPOFF" ? " — Free" : ""}
                 </p>
+                {logistics.method === "RETAILER_DROPOFF" && (
+                  <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-white/55">
+                    Drop off at {dropOffLocation}
+                    {receipt.storePhone?.trim() ? ` · ${receipt.storePhone}` : ""}
+                  </p>
+                )}
                 {logistics.method === "HOME_PICKUP" && logistics.pickupAddress && (
                   <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-white/55">
                     {formatPickupAddressDisplay(logistics.pickupAddress)}
@@ -800,10 +839,20 @@ export default function ReturnRequestClient({
 
                <div className="rounded-lg bg-slate-50 p-4 dark:bg-white/4">
                 <div className="flex justify-between text-xs text-slate-600 mb-1 dark:text-white/60">
-                  <span>Service fee</span><span>{formatCurrency(fee, receipt.currency)}</span>
+                  <span>Service fee</span>
+                  <span>
+                    {logistics.method === "RETAILER_DROPOFF"
+                      ? "Free"
+                      : formatCurrency(fee, receipt.currency)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm font-bold text-slate-900 border-t border-slate-200 pt-2 mt-2 dark:border-white/10 dark:text-white">
-                  <span>Total to Pay</span><span>{formatCurrency(fee, receipt.currency)}</span>
+                  <span>Total to Pay</span>
+                  <span>
+                    {logistics.method === "RETAILER_DROPOFF"
+                      ? "Free"
+                      : formatCurrency(fee, receipt.currency)}
+                  </span>
                 </div>
               </div>
             </div>

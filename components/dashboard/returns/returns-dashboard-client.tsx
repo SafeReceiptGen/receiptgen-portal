@@ -261,7 +261,11 @@ function ReturnDetailBody({
     email?: string | null;
   } | null;
 
-  const method = rr.logisticsMethod as "home_pickup" | "drop_off" | null;
+  const method = rr.logisticsMethod as
+    | "home_pickup"
+    | "drop_off"
+    | "retailer_dropoff"
+    | null;
   const created = parseDate(rr.createdAt);
   const reasonCode = String(rr.reasonCode ?? "");
   const pickupPa = retailerPickupFromReturnRequest(rr);
@@ -446,7 +450,9 @@ function ReturnDetailBody({
           {method === "home_pickup" ? (
             <Badge variant="outline">Home pickup</Badge>
           ) : method === "drop_off" ? (
-            <Badge variant="outline">Drop-off</Badge>
+            <Badge variant="outline">PUDO</Badge>
+          ) : method === "retailer_dropoff" ? (
+            <Badge variant="outline">Retailer drop-off</Badge>
           ) : null}
         </div>
 
@@ -498,6 +504,10 @@ function ReturnDetailBody({
               </div>
             ) : null}
           </div>
+        ) : method === "retailer_dropoff" ? (
+          <p className="text-sm">
+            Customer drops the items at the store. Service fee is free.
+          </p>
         ) : method === "drop_off" ? (
           <div>
             <p className="text-xs text-muted-foreground">PUDO point</p>
