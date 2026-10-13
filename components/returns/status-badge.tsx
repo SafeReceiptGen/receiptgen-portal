@@ -14,6 +14,7 @@ import {
   Banknote,
   Store,
   Truck,
+  RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -31,46 +32,66 @@ const phaseConfig: Record<
       "bg-sky-50 text-sky-800 ring-sky-200 dark:bg-sky-500/10 dark:text-sky-300 dark:ring-sky-500/20",
     icon: <Package size={12} />,
   },
-  approved: {
+  collected: {
+    className:
+      "bg-sky-50 text-sky-800 ring-sky-200 dark:bg-sky-500/10 dark:text-sky-300 dark:ring-sky-500/20",
+    icon: <Package size={12} />,
+  },
+  in_transit: {
+    className:
+      "bg-sky-50 text-sky-800 ring-sky-200 dark:bg-sky-500/10 dark:text-sky-300 dark:ring-sky-500/20",
+    icon: <Truck size={12} />,
+  },
+  approved_refund_pending: {
     className:
       "bg-green-50 text-green-800 ring-green-200 dark:bg-green-500/10 dark:text-green-400 dark:ring-green-500/20",
     icon: <CheckCircle2 size={12} />,
+  },
+  exchange_pending: {
+    className:
+      "bg-green-50 text-green-800 ring-green-200 dark:bg-green-500/10 dark:text-green-400 dark:ring-green-500/20",
+    icon: <RefreshCw size={12} />,
+  },
+  item_received: {
+    className:
+      "bg-green-50 text-green-800 ring-green-200 dark:bg-green-500/10 dark:text-green-400 dark:ring-green-500/20",
+    icon: <Store size={12} />,
   },
   rejected: {
     className:
       "bg-red-50 text-red-800 ring-red-200 dark:bg-red-500/10 dark:text-red-400 dark:ring-red-500/20",
     icon: <XCircle size={12} />,
   },
-  refund_or_exchange_processed: {
+  cancelled: {
+    className:
+      "bg-red-50 text-red-800 ring-red-200 dark:bg-red-500/10 dark:text-red-400 dark:ring-red-500/20",
+    icon: <XCircle size={12} />,
+  },
+  refund_processed: {
     className:
       "bg-emerald-50 text-emerald-800 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20",
     icon: <Banknote size={12} />,
   },
+  exchange_processed: {
+    className:
+      "bg-emerald-50 text-emerald-800 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20",
+    icon: <RefreshCw size={12} />,
+  },
 };
-
-/** Operational statuses that roll up to "pending review" in the stepper — distinct icon hint. */
-function statusIconHint(status: ReturnStatus): React.ReactNode {
-  switch (status) {
-    case "COLLECTED":
-      return <Package size={12} />;
-    case "IN_TRANSIT":
-      return <Truck size={12} />;
-    case "WITH_RETAILER":
-      return <Store size={12} />;
-    default:
-      return null;
-  }
-}
 
 interface StatusBadgeProps {
   status: ReturnStatus;
+  refundTypeCode?: string | null;
   className?: string;
 }
 
-export function StatusBadge({ status, className }: StatusBadgeProps) {
-  const phase = resolveCustomerReturnPhase(status);
+export function StatusBadge({
+  status,
+  refundTypeCode,
+  className,
+}: StatusBadgeProps) {
+  const phase = resolveCustomerReturnPhase(status, refundTypeCode);
   const config = phaseConfig[phase];
-  const hint = phase === "pending_review" ? statusIconHint(status) : null;
 
   return (
     <span
@@ -80,7 +101,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
         className,
       )}
     >
-      {hint ?? config.icon}
+      {config.icon}
       {CUSTOMER_PHASE_LABELS[phase]}
     </span>
   );

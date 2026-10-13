@@ -48,12 +48,15 @@ export function mapApiStatusToReturnStatus(
     with_retailer: "WITH_RETAILER",
     approved: "APPROVED",
     rejected: "REJECTED",
+    cancelled: "CANCELLED",
     refunded: "REFUNDED",
-    // Backend `completed`: treat as payout done → same as refunded in customer UI.
-    completed: "REFUNDED",
-    cancelled: "REJECTED",
+    refund_completed: "REFUND_COMPLETED",
+    exchange_completed: "EXCHANGE_COMPLETED",
+    completed: "COMPLETED",
   };
-  return map[s] ?? "PENDING";
+  if (s === "pending") return "PENDING";
+  // Unrecognized values must not collapse back into pending review.
+  return map[s] ?? "WITH_RETAILER";
 }
 
 function mapRefundTypeToRefundMethod(
@@ -115,6 +118,12 @@ export type PublicReturnBundle = {
     };
   }>;
   photos: Array<{ url: string }>;
+  adjustmentReceipt?: {
+    id: string;
+    receiptNumber: string;
+    qrCodeToken: string;
+    adjustmentKind: "return" | "exchange";
+  } | null;
 };
 
 /**
@@ -214,9 +223,11 @@ export function mapPublicReturnBundleToReturnRequest(
       ? "Home pickup scheduled — we'll confirm your pickup window"
       : "Return request submitted";
 
+  const rawStatus = (rr.status ?? "pending").toLowerCase();
+  const exchange = (rr.refundType ?? "").toLowerCase() === "exchange_only";
   const activityLog: ReturnActivityLog[] = [
     {
-      id: "1",
+      id: "submitted",
       action: submittedAction,
       performedBy: retailer.name,
       createdAt: requestedAt,
@@ -224,13 +235,67 @@ export function mapPublicReturnBundleToReturnRequest(
   ];
   if (rr.reviewedAt) {
     activityLog.push({
-      id: "2",
+      id: "reviewed",
       action:
-        rr.status === "rejected"
+        rawStatus === "rejected"
           ? "Return reviewed — rejected"
-          : "Return reviewed — approved",
+          : rawStatus === "cancelled"
+            ? "Return cancelled"
+            : exchange
+              ? "Exchange pending"
+              : "Approved — refund pending",
       performedBy: retailer.name,
       createdAt: toIso(rr.reviewedAt) ?? requestedAt,
+    });
+  }
+  if (rr.collectedAt) {
+    activityLog.push({
+      id: "collected",
+      action: "Collected",
+      performedBy: retailer.name,
+      createdAt: toIso(rr.collectedAt) ?? requestedAt,
+    });
+  }
+  if (rr.inTransitAt) {
+    activityLog.push({
+      id: "in-transit",
+      action: "In transit",
+      performedBy: retailer.name,
+      createdAt: toIso(rr.inTransitAt) ?? requestedAt,
+    });
+  }
+  const returnFinished =
+    rawStatus === "refunded" ||
+    rawStatus === "refund_completed" ||
+    rawStatus === "exchange_completed" ||
+    rawStatus === "completed";
+  if (rr.withRetailerAt) {
+    const receivedAt = toIso(rr.withRetailerAt) ?? requestedAt;
+    activityLog.push({
+      id: "item-received",
+      action: "Item received",
+      performedBy: retailer.name,
+      createdAt: receivedAt,
+    });
+    if (returnFinished) {
+      activityLog.push({
+        id: "processing",
+        action: exchange ? "Exchange processing" : "Refund processing",
+        performedBy: retailer.name,
+        createdAt: receivedAt,
+      });
+    }
+  }
+  if (rr.resolvedAt && returnFinished) {
+    activityLog.push({
+      id: "processed",
+      action:
+        rawStatus === "exchange_completed" ||
+        (rawStatus === "completed" && exchange)
+          ? "Exchange processed"
+          : "Refund processed",
+      performedBy: retailer.name,
+      createdAt: toIso(rr.resolvedAt) ?? requestedAt,
     });
   }
 
@@ -269,5 +334,6 @@ export function mapPublicReturnBundleToReturnRequest(
     reviewedAt: toIso(rr.reviewedAt),
     resolvedAt: toIso(rr.resolvedAt),
     activityLog,
+    adjustmentReceipt: payload.adjustmentReceipt ?? null,
   };
 }

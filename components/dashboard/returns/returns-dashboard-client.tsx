@@ -9,6 +9,7 @@ import {
 } from "@/lib/queries/returns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -69,11 +70,35 @@ const REASON_LABELS: Record<string, string> = {
   other: "Other",
 };
 
-function formatStatusLabel(status: string): string {
-  return status
-    .split("_")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
+function formatStatusLabel(status: string, refundType?: string): string {
+  if (status === "approved") {
+    return refundType === "exchange_only"
+      ? "Exchange pending"
+      : "Approved — refund pending";
+  }
+  if (status === "completed" && refundType === "exchange_only") {
+    return "Exchange processed";
+  }
+  const labels: Record<string, string> = {
+    pending: "Pending review",
+    pickup_scheduled: "Pickup scheduled",
+    rejected: "Rejected",
+    cancelled: "Cancelled",
+    collected: "Collected",
+    in_transit: "In transit",
+    with_retailer: "Item received",
+    refunded: "Refund processed",
+    refund_completed: "Refund processed",
+    exchange_completed: "Exchange processed",
+    completed: "Refund processed",
+  };
+  return (
+    labels[status] ??
+    status
+      .split("_")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ")
+  );
 }
 
 const REFUND_TYPE_LABELS: Record<string, string> = {
@@ -136,6 +161,7 @@ function ReturnRowCells({
     status?: string;
     createdAt?: string;
     reasonCode?: string;
+    refundType?: string;
   };
   const store = row.store as { name?: string };
   const customer = row.customer as { name?: string; email?: string } | null;
@@ -149,7 +175,9 @@ function ReturnRowCells({
         {customer?.name ?? customer?.email ?? "—"}
       </TableCell>
       <TableCell>
-        <Badge variant="secondary">{formatStatusLabel(rr.status ?? "")}</Badge>
+        <Badge variant="secondary">
+          {formatStatusLabel(rr.status ?? "", rr.refundType)}
+        </Badge>
       </TableCell>
       <TableCell>
         {REASON_LABELS[rr.reasonCode ?? ""] ?? rr.reasonCode ?? "—"}
@@ -274,11 +302,48 @@ function ReturnDetailBody({
     const d = parseDate(v);
     if (d) timelineEntries.push({ label, at: d });
   };
+  const status = String(rr.status ?? "");
+  const isExchange = refundTypeKey === "exchange_only";
+  const returnFinished =
+    status === "refunded" ||
+    status === "refund_completed" ||
+    status === "exchange_completed" ||
+    status === "completed";
+  pushTimeline("Submitted", rr.createdAt);
+  if (rr.reviewedAt) {
+    pushTimeline(
+      status === "rejected"
+        ? "Rejected"
+        : status === "cancelled"
+          ? "Cancelled"
+          : isExchange
+            ? "Exchange pending"
+            : "Approved — refund pending",
+      rr.reviewedAt,
+    );
+  }
   pushTimeline("Collected", rr.collectedAt);
   pushTimeline("In transit", rr.inTransitAt);
-  pushTimeline("With retailer", rr.withRetailerAt);
-  pushTimeline("Reviewed", rr.reviewedAt);
-  pushTimeline("Resolved", rr.resolvedAt);
+  if (rr.withRetailerAt) {
+    pushTimeline("Item received", rr.withRetailerAt);
+    if (returnFinished) {
+      pushTimeline(
+        isExchange || status === "exchange_completed"
+          ? "Exchange processing"
+          : "Refund processing",
+        rr.withRetailerAt,
+      );
+    }
+  }
+  if (rr.resolvedAt && returnFinished) {
+    pushTimeline(
+      status === "exchange_completed" || (status === "completed" && isExchange)
+        ? "Exchange processed"
+        : "Refund processed",
+      rr.resolvedAt,
+    );
+  }
+  timelineEntries.sort((a, b) => a.at.getTime() - b.at.getTime());
 
   const phoneCountry = String(rr.logisticsPhoneCountry ?? "").trim();
   const phone = String(rr.logisticsPhone ?? "").trim();
@@ -293,7 +358,7 @@ function ReturnDetailBody({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="text-muted-foreground">Status</span>
           <Badge variant="secondary">
-            {formatStatusLabel(String(rr.status ?? ""))}
+            {formatStatusLabel(String(rr.status ?? ""), refundTypeKey)}
           </Badge>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
@@ -565,6 +630,10 @@ export function ReturnsDashboardClient() {
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [approveOpen, setApproveOpen] = useState(false);
+  const [exchangeOpen, setExchangeOpen] = useState(false);
+  const [replacementName, setReplacementName] = useState("");
+  const [replacementQty, setReplacementQty] = useState("1");
+  const [replacementPrice, setReplacementPrice] = useState("");
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchInput.trim()), 300);
@@ -630,12 +699,28 @@ export function ReturnsDashboardClient() {
   });
 
   const markReceivedMutation = useMutation({
-    mutationFn: (id: string) => returnsApi.markReceived(id),
-    onSuccess: () => {
-      toast.success("Marked as received at your location.");
+    mutationFn: (input: {
+      id: string;
+      replacementItems?: Array<{
+        name: string;
+        quantity: number;
+        unitPrice: number;
+      }>;
+    }) => returnsApi.markReceived(input.id, input.replacementItems),
+    onSuccess: (result) => {
+      const processed =
+        result.status === "exchange_completed" ? "Exchange" : "Refund";
+      toast.success(
+        `${processed} processed. Receipt ${result.receiptNumber} issued.`,
+      );
+      setExchangeOpen(false);
+      setReplacementName("");
+      setReplacementQty("1");
+      setReplacementPrice("");
       setSheetOpen(false);
       setSheetReturnId(null);
       invalidateReturns();
+      queryClient.invalidateQueries({ queryKey: ["receipts"] });
     },
     onError: (e: Error) =>
       toast.error(e.message || "Could not mark as received"),
@@ -645,7 +730,8 @@ export function ReturnsDashboardClient() {
     ?.status;
   const canApproveReject =
     rrStatus === "pending" || rrStatus === "pickup_scheduled";
-  const canMarkReceived = rrStatus === "approved";
+  const canMarkReceived =
+    rrStatus === "approved" || rrStatus === "with_retailer";
 
   const openReview = (id: string) => {
     setSheetReturnId(id);
@@ -660,14 +746,17 @@ export function ReturnsDashboardClient() {
   const statusOptions = useMemo(
     () => [
       { value: "all", label: "All statuses" },
-      { value: "pending", label: "Pending" },
+      { value: "pending", label: "Pending review" },
       { value: "pickup_scheduled", label: "Pickup scheduled" },
       { value: "approved", label: "Approved" },
       { value: "rejected", label: "Rejected" },
-      { value: "with_retailer", label: "With retailer" },
+      { value: "cancelled", label: "Cancelled" },
+      { value: "with_retailer", label: "Item received" },
       { value: "collected", label: "Collected" },
       { value: "in_transit", label: "In transit" },
-      { value: "refunded", label: "Refunded" },
+      { value: "refunded", label: "Refund processed" },
+      { value: "refund_completed", label: "Refund processed" },
+      { value: "exchange_completed", label: "Exchange processed" },
       { value: "completed", label: "Completed" },
     ],
     [],
@@ -837,7 +926,16 @@ export function ReturnsDashboardClient() {
                   <Button
                     variant="secondary"
                     className="w-full gap-2 sm:flex-1"
-                    onClick={() => markReceivedMutation.mutate(sheetReturnId)}
+                    onClick={() => {
+                      const refundType = (
+                        bundle?.returnRequest as { refundType?: string } | undefined
+                      )?.refundType;
+                      if (refundType === "exchange_only") {
+                        setExchangeOpen(true);
+                        return;
+                      }
+                      markReceivedMutation.mutate({ id: sheetReturnId });
+                    }}
                     disabled={markReceivedMutation.isPending}
                   >
                     {markReceivedMutation.isPending ? (
@@ -876,6 +974,96 @@ export function ReturnsDashboardClient() {
                 <Loader2 className="size-4 animate-spin" />
               ) : null}
               Confirm approve
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={exchangeOpen}
+        onOpenChange={(open) => {
+          setExchangeOpen(open);
+          if (!open) {
+            setReplacementName("");
+            setReplacementQty("1");
+            setReplacementPrice("");
+          }
+        }}
+      >
+        <DialogContent showCloseButton>
+          <DialogHeader>
+            <DialogTitle>Replacement item</DialogTitle>
+            <DialogDescription>
+              Enter the item the customer is taking instead. The exchange
+              receipt shows that item and any refund or additional payment.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <div className="grid gap-1.5">
+              <Label htmlFor="replacement-name">Item name</Label>
+              <Input
+                id="replacement-name"
+                value={replacementName}
+                onChange={(e) => setReplacementName(e.target.value)}
+                placeholder="Replacement item"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="replacement-qty">Quantity</Label>
+                <Input
+                  id="replacement-qty"
+                  inputMode="numeric"
+                  value={replacementQty}
+                  onChange={(e) => setReplacementQty(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="replacement-price">Unit price</Label>
+                <Input
+                  id="replacement-price"
+                  inputMode="decimal"
+                  value={replacementPrice}
+                  onChange={(e) => setReplacementPrice(e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setExchangeOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="gap-2"
+              disabled={!sheetReturnId || markReceivedMutation.isPending}
+              onClick={() => {
+                if (!sheetReturnId) return;
+                const name = replacementName.trim();
+                const quantity = Number.parseInt(replacementQty, 10);
+                const unitPrice = Number.parseFloat(replacementPrice);
+                if (!name) {
+                  toast.error("Enter the replacement item name.");
+                  return;
+                }
+                if (!Number.isInteger(quantity) || quantity < 1) {
+                  toast.error("Enter a quantity of at least 1.");
+                  return;
+                }
+                if (!Number.isFinite(unitPrice) || unitPrice < 0) {
+                  toast.error("Enter a unit price of 0 or more.");
+                  return;
+                }
+                markReceivedMutation.mutate({
+                  id: sheetReturnId,
+                  replacementItems: [{ name, quantity, unitPrice }],
+                });
+              }}
+            >
+              {markReceivedMutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : null}
+              Mark received
             </Button>
           </DialogFooter>
         </DialogContent>

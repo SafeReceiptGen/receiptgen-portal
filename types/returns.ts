@@ -9,7 +9,11 @@ export type ReturnStatus =
   | "WITH_RETAILER"
   | "APPROVED"
   | "REJECTED"
-  | "REFUNDED";
+  | "CANCELLED"
+  | "REFUNDED"
+  | "REFUND_COMPLETED"
+  | "EXCHANGE_COMPLETED"
+  | "COMPLETED";
 
 export type ReturnReason = "DEFECTIVE" | "WRONG_ITEM" | "CHANGED_MIND" | "DAMAGED_IN_DELIVERY" | "OTHER";
 
@@ -30,6 +34,7 @@ export interface ReturnItem {
   selected: boolean;
   /** Units the customer is returning; required when `quantity` > 1 and line is selected. */
   returnQuantity?: number;
+  role?: "sale" | "remaining" | "replacement";
 }
 
 export interface PudoPoint {
@@ -103,6 +108,12 @@ export interface ReturnRequest {
   reviewedAt?: string;
   resolvedAt?: string;
   activityLog: ReturnActivityLog[];
+  adjustmentReceipt?: {
+    id: string;
+    receiptNumber: string;
+    qrCodeToken: string;
+    adjustmentKind: "return" | "exchange";
+  } | null;
 }
 
 // Receipt type for the return flow (viewing a receipt before requesting a return)
@@ -152,6 +163,30 @@ export interface ReceiptForReturn {
     discountApplied: string;
   } | null;
   loyaltyDiscount?: number;
+  adjustment?: {
+    kind: "return" | "exchange" | null;
+    refundAmount: string;
+    additionalPayment: string;
+    originalReceipt: {
+      id: string;
+      receiptNumber: string;
+      qrCodeToken: string;
+    } | null;
+    adjustments: Array<{
+      id: string;
+      receiptNumber: string;
+      qrCodeToken: string;
+      adjustmentKind: "return" | "exchange";
+      refundAmount: string;
+      additionalPayment: string;
+      total: string;
+    }>;
+    returnedItems: Array<{
+      name: string;
+      quantity: number;
+      amount: string;
+    }>;
+  } | null;
   returnWindow: string;
   /** ISO deadline from API; purchase date + policy window days */
   returnDeadline?: string | null;
@@ -172,14 +207,18 @@ export const RETURN_REASON_LABELS: Record<ReturnReason, string> = {
 };
 
 export const RETURN_STATUS_LABELS: Record<ReturnStatus, string> = {
-  PICKUP_SCHEDULED: "Pickup Scheduled",
-  PENDING: "Pending",
+  PICKUP_SCHEDULED: "Pickup scheduled",
+  PENDING: "Pending review",
   COLLECTED: "Collected",
-  IN_TRANSIT: "In Transit",
-  WITH_RETAILER: "With Retailer",
-  APPROVED: "Approved",
+  IN_TRANSIT: "In transit",
+  WITH_RETAILER: "Item received",
+  APPROVED: "Approved — refund pending",
   REJECTED: "Rejected",
-  REFUNDED: "Refunded",
+  CANCELLED: "Cancelled",
+  REFUNDED: "Refund processed",
+  REFUND_COMPLETED: "Refund processed",
+  EXCHANGE_COMPLETED: "Exchange processed",
+  COMPLETED: "Refund processed",
 };
 
 export const REFUND_METHOD_LABELS: Record<RefundMethod, string> = {

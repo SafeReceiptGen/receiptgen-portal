@@ -340,6 +340,41 @@ export type ReceiptPaymentStatus =
   | "partially_paid"
   | "paid_in_full";
 
+export type ReceiptLifecycleStatus =
+  | "issued"
+  | "voided"
+  | "returned"
+  | "return_requested"
+  | "return_completed"
+  | "adjustment";
+
+export type LineItemRole = "sale" | "remaining" | "replacement";
+
+export type ReceiptAdjustmentView = {
+  kind: "return" | "exchange" | null;
+  refundAmount: string;
+  additionalPayment: string;
+  originalReceipt: {
+    id: string;
+    receiptNumber: string;
+    qrCodeToken: string;
+  } | null;
+  adjustments: Array<{
+    id: string;
+    receiptNumber: string;
+    qrCodeToken: string;
+    adjustmentKind: "return" | "exchange";
+    refundAmount: string;
+    additionalPayment: string;
+    total: string;
+  }>;
+  returnedItems: Array<{
+    name: string;
+    quantity: number;
+    amount: string;
+  }>;
+};
+
 export interface ReceiptPaymentLedgerEntry {
   id: string;
   amount: string;
@@ -366,7 +401,7 @@ export interface ListReceipt {
   balanceDue: string;
   paymentStatus: ReceiptPaymentStatus;
   currency: "GHS" | "USD" | "EUR" | "GBP" | "NGN" | "KES" | "ZAR";
-  status: "issued" | "voided" | "returned";
+  status: ReceiptLifecycleStatus;
   paymentMethod:
     | "check"
     | "cash"
@@ -412,6 +447,7 @@ export interface SingleReceiptItem {
     | "damaged_open_box"
     | "other"
     | null;
+  role?: LineItemRole | null;
 }
 
 export interface SingleReceipt {
@@ -440,7 +476,7 @@ export interface SingleReceipt {
   paymentStatus: ReceiptPaymentStatus;
   marketingText: string | null;
   qrCodeToken: string;
-  status: "issued" | "voided" | "returned";
+  status: ReceiptLifecycleStatus;
   returnDeadline: string | null;
   createdAt: string;
   payments?: ReceiptPaymentLedgerEntry[];
@@ -458,6 +494,7 @@ export interface SingleReceipt {
   } | null;
   returnPolicy: Record<string, unknown> | null;
   loyalty?: LoyaltySnapshot | null;
+  adjustment?: ReceiptAdjustmentView | null;
 }
 
 export const receiptsApi = {
@@ -911,9 +948,26 @@ export const returnsApi = {
       body: JSON.stringify({ reason }),
     }),
 
-  markReceived: (id: string) =>
-    request<void>(`/returns/${encodeURIComponent(id)}/mark-received`, {
+  markReceived: (
+    id: string,
+    replacementItems?: Array<{
+      name: string;
+      quantity: number;
+      unitPrice: number;
+    }>,
+  ) =>
+    request<{
+      status: string;
+      receiptId: string;
+      receiptNumber: string;
+      qrCodeToken: string;
+    }>(`/returns/${encodeURIComponent(id)}/mark-received`, {
       method: "PATCH",
+      body: JSON.stringify(
+        replacementItems && replacementItems.length > 0
+          ? { replacementItems }
+          : {},
+      ),
     }),
 };
 
@@ -935,6 +989,7 @@ export interface VerifiedReceiptItem {
     | "damaged_open_box"
     | "other"
     | null;
+  role?: LineItemRole | null;
   sortOrder: number;
 }
 
@@ -963,6 +1018,7 @@ export interface VerifiedReceipt {
   /** Append-only payment ledger (newest first). */
   payments?: ReceiptPaymentLedgerEntry[];
   loyalty?: LoyaltySnapshot | null;
+  adjustment?: ReceiptAdjustmentView | null;
 }
 
 export const verifyApi = {

@@ -8,7 +8,10 @@ import {
   LOGISTICS_METHOD_LABELS,
   ReturnRequest,
 } from "@/types/returns";
-import { processedOutcomeHeadline } from "@/lib/return-customer-status";
+import {
+  processedOutcomeHeadline,
+  resolveCustomerReturnPhase,
+} from "@/lib/return-customer-status";
 import { StatusTracker } from "@/components/returns/status-tracker";
 import { StatusBadge } from "@/components/returns/status-badge";
 import { QRCodeSVG } from "qrcode.react";
@@ -66,10 +69,19 @@ export default function ReturnStatusClient({
     );
   }
 
-  const isRefunded = returnData.status === "REFUNDED";
-  const isApprovedOnly = returnData.status === "APPROVED";
-  const isRejected = returnData.status === "REJECTED";
-  const isTerminal = isRefunded || isApprovedOnly || isRejected;
+  const phase = resolveCustomerReturnPhase(
+    returnData.status,
+    returnData.refundTypeCode,
+  );
+  const isRefunded =
+    phase === "refund_processed" || phase === "exchange_processed";
+  const isApprovedOnly =
+    phase === "approved_refund_pending" || phase === "exchange_pending";
+  const isRejected = phase === "rejected";
+  const isCancelled = phase === "cancelled";
+  const isItemReceived = phase === "item_received";
+  const isTerminal =
+    isRefunded || isApprovedOnly || isRejected || isCancelled || isItemReceived;
   const pudoPoint = MOCK_PUDO_POINTS.find(
     (p) => p.id === returnData.logistics.pudoPointId,
   );
@@ -118,7 +130,10 @@ export default function ReturnStatusClient({
                   {returnData.returnNumber}
                 </p>
               </div>
-              <StatusBadge status={returnData.status} />
+              <StatusBadge
+                status={returnData.status}
+                refundTypeCode={returnData.refundTypeCode}
+              />
             </div>
 
             {/* Status tracker */}
@@ -126,6 +141,7 @@ export default function ReturnStatusClient({
               <StatusTracker
                 currentStatus={returnData.status}
                 logisticsMethod={returnData.logistics.method}
+                refundTypeCode={returnData.refundTypeCode}
               />
             </div>
 
@@ -157,7 +173,7 @@ export default function ReturnStatusClient({
           <div
             className={cn(
               "overflow-hidden rounded-2xl shadow-sm ring-1",
-              isRejected
+              isRejected || isCancelled
                 ? "bg-white ring-red-200 dark:bg-[#111827] dark:ring-red-500/20"
                 : isRefunded
                   ? "bg-white ring-emerald-200 dark:bg-[#111827] dark:ring-emerald-500/20"
@@ -185,12 +201,37 @@ export default function ReturnStatusClient({
                     className="mx-auto text-green-500 dark:text-green-400"
                   />
                   <h2 className="mt-3 text-lg font-bold text-slate-900 font-display dark:text-white">
-                    Return approved
+                    {phase === "exchange_pending"
+                      ? "Exchange pending"
+                      : "Approved — refund pending"}
                   </h2>
                   <p className="mt-1 text-xs text-slate-500 dark:text-white/50">
-                    Refund or exchange will follow according to the store&apos;s
-                    timeline.
+                    Send the item back. It is processed once the store confirms
+                    it has arrived.
                   </p>
+                </>
+              ) : isItemReceived ? (
+                <>
+                  <CheckCircle2
+                    size={40}
+                    className="mx-auto text-green-500 dark:text-green-400"
+                  />
+                  <h2 className="mt-3 text-lg font-bold text-slate-900 font-display dark:text-white">
+                    Item received
+                  </h2>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-white/50">
+                    The store has the item. The return is still moving forward.
+                  </p>
+                </>
+              ) : isCancelled ? (
+                <>
+                  <XCircle
+                    size={40}
+                    className="mx-auto text-red-500 dark:text-red-400"
+                  />
+                  <h2 className="mt-3 text-lg font-bold text-slate-900 font-display dark:text-white">
+                    Return cancelled
+                  </h2>
                 </>
               ) : (
                 <>
@@ -227,7 +268,7 @@ export default function ReturnStatusClient({
               <p
                 className={cn(
                   "mt-4 text-3xl font-bold tracking-tight",
-                  isRejected
+                  isRejected || isCancelled
                     ? "text-red-500 dark:text-red-400"
                     : isRefunded
                       ? "text-emerald-500 dark:text-emerald-400"
@@ -241,7 +282,11 @@ export default function ReturnStatusClient({
                   ? `Processed with ${returnData.retailerName}`
                   : isApprovedOnly
                     ? `Approved by ${returnData.retailerName}`
-                    : `Refund was not approved by ${returnData.retailerName}`}
+                    : isItemReceived
+                      ? `Received by ${returnData.retailerName}`
+                      : isCancelled
+                        ? `Cancelled with ${returnData.retailerName}`
+                        : `Refund was not approved by ${returnData.retailerName}`}
               </p>
 
               {/* Refund method when known */}
@@ -259,6 +304,17 @@ export default function ReturnStatusClient({
               )}
 
               {/* Rejection reason */}
+              {isRefunded && returnData.adjustmentReceipt ? (
+                <div className="mt-4">
+                  <Link
+                    href={`/receipt/${returnData.adjustmentReceipt.qrCodeToken}`}
+                    className="text-sm font-semibold text-slate-900 underline underline-offset-2 dark:text-white"
+                  >
+                    View receipt {returnData.adjustmentReceipt.receiptNumber}
+                  </Link>
+                </div>
+              ) : null}
+
               {isRejected && returnData.rejectionReason && (
                 <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-left dark:border-red-500/20 dark:bg-red-500/10">
                   <p className="text-xs font-medium text-red-600 dark:text-red-400">
@@ -289,8 +345,8 @@ export default function ReturnStatusClient({
                 </div>
               )}
 
-              {/* Close button for approved / processed */}
-              {(isApprovedOnly || isRefunded) && (
+              {/* Close button for approved / received / processed / cancelled */}
+              {(isApprovedOnly || isRefunded || isItemReceived || isCancelled) && (
                 <div className="mt-6">
                   <Link
                     href={`/receipt/${returnData.receiptQrToken ?? returnData.receiptId}`}
