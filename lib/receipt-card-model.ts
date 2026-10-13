@@ -7,6 +7,7 @@ import {
   itemsSubtotal,
   payableTotal,
 } from "@/lib/loyalty-redeem";
+import { formatReceiptStatusLabel } from "@/lib/receipt-display-labels";
 import {
   balanceDueFrom,
   deriveReceiptPaymentStatus,
@@ -21,7 +22,74 @@ export type ReceiptCardItem = {
   quantity: number;
   price: number;
   originalPrice: number;
+  role?: "sale" | "remaining" | "replacement" | null;
 };
+
+export type ReceiptCardAdjustmentLine = {
+  name: string;
+  quantity: number;
+  amount: number;
+};
+
+/** Set only on the adjustment receipt, not on the original sale. */
+export type ReceiptCardAdjustment = {
+  kind: "return" | "exchange";
+  originalReceiptNumber: string;
+  returned: ReceiptCardAdjustmentLine[];
+  refundAmount: number;
+  additionalPayment: number;
+};
+
+type AdjustmentSource = {
+  kind: "return" | "exchange" | null;
+  refundAmount: string;
+  additionalPayment: string;
+  originalReceipt: { receiptNumber: string } | null;
+  adjustments?: Array<{ adjustmentKind: "return" | "exchange" }>;
+  returnedItems: Array<{ name: string; quantity: number; amount: string }>;
+} | null | undefined;
+
+function moneyAmount(value: string): number {
+  const amount = Number.parseFloat(value);
+  return Number.isFinite(amount) ? amount : 0;
+}
+
+export function buildReceiptCardAdjustment(
+  adjustment: AdjustmentSource,
+): ReceiptCardAdjustment | null {
+  if (!adjustment?.kind || !adjustment.originalReceipt) return null;
+  return {
+    kind: adjustment.kind,
+    originalReceiptNumber: adjustment.originalReceipt.receiptNumber,
+    returned: adjustment.returnedItems.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+      amount: moneyAmount(item.amount),
+    })),
+    refundAmount: moneyAmount(adjustment.refundAmount),
+    additionalPayment: moneyAmount(adjustment.additionalPayment),
+  };
+}
+
+export function receiptCardStatusLabel(
+  status: string | null | undefined,
+  adjustment: AdjustmentSource,
+): string | null {
+  if (!status || status === "issued") return null;
+  if (status === "adjustment" && adjustment?.kind === "return") {
+    return "Return receipt";
+  }
+  if (status === "adjustment" && adjustment?.kind === "exchange") {
+    return "Exchange receipt";
+  }
+  if (
+    status === "return_completed" &&
+    adjustment?.adjustments?.[0]?.adjustmentKind === "exchange"
+  ) {
+    return "Completed — exchange processed";
+  }
+  return formatReceiptStatusLabel(status);
+}
 
 export type ReceiptCardPayment = {
   id: string;
@@ -64,6 +132,10 @@ export type ReceiptCardModel = {
     pointsToGo: number;
     discountApplied: string;
   } | null;
+  /** Null on a normal issued sale. */
+  statusLabel: string | null;
+  /** Set when this document is the return or exchange receipt. */
+  adjustment: ReceiptCardAdjustment | null;
 };
 
 export function formatLoyaltyPoints(count: number): string {
@@ -161,6 +233,7 @@ export function receiptForReturnToCardModel(
       quantity: item.quantity,
       price: item.price,
       originalPrice: item.originalPrice ?? item.price,
+      role: item.role ?? null,
     })),
     currency: receipt.currency,
     paymentMethod: receipt.paymentMethod,
@@ -180,6 +253,8 @@ export function receiptForReturnToCardModel(
     refundType: receipt.refundType,
     loyaltyDiscount: receipt.loyaltyDiscount ?? 0,
     loyalty: receipt.loyalty ?? null,
+    statusLabel: receiptCardStatusLabel(receipt.status, receipt.adjustment),
+    adjustment: buildReceiptCardAdjustment(receipt.adjustment),
   };
 }
 
@@ -219,6 +294,7 @@ export function receiptDataToCardModel(data: ReceiptData): ReceiptCardModel {
       quantity: item.quantity,
       price: item.price,
       originalPrice: item.originalPrice ?? item.price,
+      role: item.role ?? null,
     })),
     currency: data.currency,
     paymentMethod: data.paymentMethod,
@@ -245,5 +321,7 @@ export function receiptDataToCardModel(data: ReceiptData): ReceiptCardModel {
     marketingText: data.marketingText,
     loyaltyDiscount,
     loyalty: data.loyalty ?? null,
+    statusLabel: receiptCardStatusLabel(data.status, data.adjustment),
+    adjustment: buildReceiptCardAdjustment(data.adjustment),
   };
 }

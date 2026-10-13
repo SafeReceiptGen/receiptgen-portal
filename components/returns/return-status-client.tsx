@@ -329,12 +329,20 @@ export default function ReturnStatusClient({
 
               {/* Rejection reason */}
               {isRefunded && returnData.adjustmentReceipt ? (
-                <div className="mt-4">
+                <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-left dark:border-white/10 dark:bg-white/5">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                    Your updated receipt is ready
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-white/50">
+                    {returnData.adjustmentReceipt.adjustmentKind === "exchange"
+                      ? "This exchange receipt is the final record of the purchase."
+                      : "This return receipt is the final record of the purchase."}
+                  </p>
                   <Link
                     href={`/receipt/${returnData.adjustmentReceipt.qrCodeToken}`}
-                    className="text-sm font-semibold text-slate-900 underline underline-offset-2 dark:text-white"
+                    className="mt-3 inline-flex text-sm font-semibold text-slate-900 underline underline-offset-2 dark:text-white"
                   >
-                    View receipt {returnData.adjustmentReceipt.receiptNumber}
+                    Open {returnData.adjustmentReceipt.receiptNumber}
                   </Link>
                 </div>
               ) : null}

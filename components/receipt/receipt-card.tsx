@@ -11,12 +11,12 @@ import { formatPaymentLedgerDetails } from "@/lib/payment-ledger-display";
 import {
   formatLoyaltyPoints,
   formatNextReward,
+  type ReceiptCardItem,
   type ReceiptCardModel,
 } from "@/lib/receipt-card-model";
 import {
   formatPaymentMethodLabel,
   formatReceiptPaymentStatusLabel,
-  formatReceiptStatusLabel,
   formatReturnDeadline,
 } from "@/lib/receipt-display-labels";
 import { RECEIPT_LOGO_SLOT_PX } from "@/lib/receipt-logo-display";
@@ -29,6 +29,107 @@ export type ReceiptCardProps = {
   footerSlot?: ReactNode;
   className?: string;
 };
+
+function ReceiptLineList({
+  items,
+  currency,
+}: {
+  items: ReceiptCardItem[];
+  currency: string;
+}) {
+  return (
+    <>
+      {items.map((item, idx) => {
+        const originalPrice = item.originalPrice ?? item.price;
+        const discounted = isLineItemDiscounted(originalPrice, item.price);
+        const {
+          originalUnit,
+          saleUnit,
+          savedUnit,
+          originalTotal,
+          paidTotal,
+          savedTotal,
+        } = getLineItemDiscountTotals(
+          originalPrice,
+          item.price,
+          item.quantity,
+        );
+
+        return (
+          <div key={item.id} className="flex items-start py-1 text-sm">
+            <span className="w-6 shrink-0 pt-0.5 font-medium text-slate-400">
+              {idx + 1}.
+            </span>
+            <div className="flex-1 space-y-1">
+              <div className="flex items-start justify-between gap-4">
+                <span className="pr-4 font-bold leading-snug text-slate-900">
+                  {item.name}
+                </span>
+                <span className="whitespace-nowrap font-bold text-slate-900">
+                  {formatCurrency(item.price * item.quantity, currency)}
+                </span>
+              </div>
+              {item.detail ? (
+                <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                  {item.detail}
+                </p>
+              ) : null}
+              {discounted ? (
+                <div className="mt-2 space-y-2 text-xs text-slate-500">
+                  <div>
+                    <div className="flex justify-between gap-3">
+                      <span>Original Price</span>
+                      <span className="whitespace-nowrap">
+                        {formatCurrency(originalTotal, currency)}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 font-medium text-slate-400">
+                      {item.quantity} × {formatCurrency(originalUnit, currency)}
+                    </p>
+                  </div>
+                  <div>
+                    <div className="flex justify-between gap-3">
+                      <span>You Paid</span>
+                      <span className="whitespace-nowrap">
+                        {formatCurrency(paidTotal, currency)}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 font-medium text-slate-400">
+                      {item.quantity} × {formatCurrency(saleUnit, currency)}
+                    </p>
+                  </div>
+                  <div>
+                    <div className="flex justify-between gap-3 text-emerald-600">
+                      <span>You Saved</span>
+                      <span className="whitespace-nowrap">
+                        {formatCurrency(savedTotal, currency)}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 font-medium text-emerald-600/70">
+                      {item.quantity} × {formatCurrency(savedUnit, currency)}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-2 text-xs font-medium text-slate-400">
+                  {item.quantity} × {formatCurrency(item.price, currency)}
+                </p>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+function sectionTitle(label: string) {
+  return (
+    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+      {label}
+    </p>
+  );
+}
 
 /**
  * Shared torn-receipt card used by the public receipt page and the builder
@@ -106,9 +207,14 @@ export function ReceiptCard({ model, footerSlot, className }: ReceiptCardProps) 
         </div>
 
         <div className="mb-4 text-center">
-          {model.status && model.status !== "issued" ? (
+          {model.statusLabel ? (
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-700">
-              {formatReceiptStatusLabel(model.status)}
+              {model.statusLabel}
+            </p>
+          ) : null}
+          {model.adjustment ? (
+            <p className="mb-2 text-xs text-slate-500">
+              Original receipt {model.adjustment.originalReceiptNumber}
             </p>
           ) : null}
 
@@ -165,93 +271,53 @@ export function ReceiptCard({ model, footerSlot, className }: ReceiptCardProps) 
         }}
       >
         <div className="mb-10 space-y-8">
-          {model.items.map((item, idx) => {
-            const originalPrice = item.originalPrice ?? item.price;
-            const discounted = isLineItemDiscounted(originalPrice, item.price);
-            const {
-              originalUnit,
-              saleUnit,
-              savedUnit,
-              originalTotal,
-              paidTotal,
-              savedTotal,
-            } = getLineItemDiscountTotals(
-              originalPrice,
-              item.price,
-              item.quantity,
-            );
-
-            return (
-              <div key={item.id} className="flex items-start py-1 text-sm">
-                <span className="w-6 shrink-0 pt-0.5 font-medium text-slate-400">
-                  {idx + 1}.
-                </span>
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-start justify-between gap-4">
-                    <span className="pr-4 font-bold leading-snug text-slate-900">
-                      {item.name}
-                    </span>
-                    <span className="whitespace-nowrap font-bold text-slate-900">
-                      {formatCurrency(
-                        item.price * item.quantity,
-                        model.currency,
-                      )}
-                    </span>
-                  </div>
-                  {item.detail ? (
-                    <p className="mt-2 text-xs leading-relaxed text-slate-500">
-                      {item.detail}
-                    </p>
-                  ) : null}
-                  {discounted ? (
-                    <div className="mt-2 space-y-2 text-xs text-slate-500">
-                      <div>
-                        <div className="flex justify-between gap-3">
-                          <span>Original Price</span>
-                          <span className="whitespace-nowrap">
-                            {formatCurrency(originalTotal, model.currency)}
+          {model.adjustment ? (
+            <>
+              {model.adjustment.returned.length > 0 ? (
+                <div className="space-y-2">
+                  {sectionTitle("Returned")}
+                  <ul className="space-y-2">
+                    {model.adjustment.returned.map((item) => (
+                      <li
+                        key={`${item.name}-${item.quantity}`}
+                        className="flex items-start justify-between gap-4 text-sm"
+                      >
+                        <span className="font-bold text-slate-900">
+                          {item.name}
+                          <span className="ml-1 font-medium text-slate-400">
+                            × {item.quantity}
                           </span>
-                        </div>
-                        <p className="mt-0.5 font-medium text-slate-400">
-                          {item.quantity} ×{" "}
-                          {formatCurrency(originalUnit, model.currency)}
-                        </p>
-                      </div>
-                      <div>
-                        <div className="flex justify-between gap-3">
-                          <span>You Paid</span>
-                          <span className="whitespace-nowrap">
-                            {formatCurrency(paidTotal, model.currency)}
-                          </span>
-                        </div>
-                        <p className="mt-0.5 font-medium text-slate-400">
-                          {item.quantity} ×{" "}
-                          {formatCurrency(saleUnit, model.currency)}
-                        </p>
-                      </div>
-                      <div>
-                        <div className="flex justify-between gap-3 text-emerald-600">
-                          <span>You Saved</span>
-                          <span className="whitespace-nowrap">
-                            {formatCurrency(savedTotal, model.currency)}
-                          </span>
-                        </div>
-                        <p className="mt-0.5 font-medium text-emerald-600/70">
-                          {item.quantity} ×{" "}
-                          {formatCurrency(savedUnit, model.currency)}
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="mt-2 text-xs font-medium text-slate-400">
-                      {item.quantity} ×{" "}
-                      {formatCurrency(item.price, model.currency)}
-                    </p>
-                  )}
+                        </span>
+                        <span className="whitespace-nowrap font-bold text-slate-900">
+                          {formatCurrency(item.amount, model.currency)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              </div>
-            );
-          })}
+              ) : null}
+              {model.items.some((item) => item.role !== "replacement") ? (
+                <div className="space-y-2">
+                  {sectionTitle("Remaining")}
+                  <ReceiptLineList
+                    items={model.items.filter((item) => item.role !== "replacement")}
+                    currency={model.currency}
+                  />
+                </div>
+              ) : null}
+              {model.items.some((item) => item.role === "replacement") ? (
+                <div className="space-y-2">
+                  {sectionTitle("Replacement")}
+                  <ReceiptLineList
+                    items={model.items.filter((item) => item.role === "replacement")}
+                    currency={model.currency}
+                  />
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <ReceiptLineList items={model.items} currency={model.currency} />
+          )}
         </div>
 
         <div className="mb-8 space-y-3 rounded-3xl bg-slate-50 px-6 py-6 ring-1 ring-slate-100/80">
@@ -271,8 +337,29 @@ export function ReceiptCard({ model, footerSlot, className }: ReceiptCardProps) 
               </div>
             </>
           ) : null}
+          {model.adjustment && model.adjustment.refundAmount > 0 ? (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-slate-500">Refund</span>
+              <span className="font-semibold text-slate-700">
+                {formatCurrency(model.adjustment.refundAmount, model.currency)}
+              </span>
+            </div>
+          ) : null}
+          {model.adjustment && model.adjustment.additionalPayment > 0 ? (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-slate-500">Additional payment</span>
+              <span className="font-semibold text-slate-700">
+                {formatCurrency(
+                  model.adjustment.additionalPayment,
+                  model.currency,
+                )}
+              </span>
+            </div>
+          ) : null}
           <div className="flex items-baseline justify-between">
-            <span className="text-base font-bold text-slate-600">Total</span>
+            <span className="text-base font-bold text-slate-600">
+              {model.adjustment ? "Final total" : "Total"}
+            </span>
             <span className="text-2xl font-bold tracking-tight text-slate-900">
               {formatCurrency(total, model.currency)}
             </span>

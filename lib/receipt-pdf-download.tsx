@@ -182,6 +182,7 @@ export function mapSingleReceiptToReceiptData(
         price: Number.isFinite(unit) ? unit : 0,
         originalPrice: Number.isFinite(original) ? original : unit || 0,
         discountReason: (item.discountReason ?? null) as DiscountReason | null,
+        role: item.role ?? null,
       };
     }),
     currency: receipt.currency,
@@ -215,5 +216,6 @@ export function mapSingleReceiptToReceiptData(
     returnDeadline: receipt.returnDeadline,
     loyaltyDiscount: parseFloat(receipt.loyaltyDiscount ?? "0") || 0,
     loyalty: receipt.loyalty ?? null,
+    adjustment: receipt.adjustment ?? null,
   };
 }
