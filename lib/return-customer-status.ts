@@ -32,6 +32,30 @@ export function isExchangeRefundType(refundTypeCode?: string | null): boolean {
   return (refundTypeCode ?? "").toLowerCase() === "exchange_only";
 }
 
+/** Processed, rejected, and cancelled returns do not need another status refresh. */
+export function isCustomerReturnClosed(status: ReturnStatus): boolean {
+  switch (status) {
+    case "REFUNDED":
+    case "REFUND_COMPLETED":
+    case "EXCHANGE_COMPLETED":
+    case "COMPLETED":
+    case "REJECTED":
+    case "CANCELLED":
+      return true;
+    case "PENDING":
+    case "PICKUP_SCHEDULED":
+    case "COLLECTED":
+    case "IN_TRANSIT":
+    case "APPROVED":
+    case "WITH_RETAILER":
+      return false;
+    default: {
+      const _exhaustive: never = status;
+      return _exhaustive;
+    }
+  }
+}
+
 export function resolveCustomerReturnPhase(
   status: ReturnStatus,
   refundTypeCode?: string | null,

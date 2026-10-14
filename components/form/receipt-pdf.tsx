@@ -20,7 +20,6 @@ import { fitReceiptLogoPdfDimensions } from "@/lib/receipt-logo-display";
 import {
   formatPaymentMethodLabel,
   formatReceiptPaymentStatusLabel,
-  formatReceiptStatusLabel,
   formatReturnDeadline,
 } from "@/lib/receipt-display-labels";
 import { formatPaymentLedgerDetails } from "@/lib/payment-ledger-display";
@@ -101,6 +100,20 @@ const styles = StyleSheet.create({
     color: "#b45309",
     marginBottom: 8,
     letterSpacing: 0.6,
+  },
+  referenceLine: {
+    fontSize: 9,
+    color: "#64748b",
+    marginBottom: 8,
+  },
+  sectionLabel: {
+    fontSize: 8,
+    fontWeight: "bold",
+    color: "#94a3b8",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+    marginTop: 8,
+    marginBottom: 4,
   },
   paidPill: {
     flexDirection: "row",
@@ -531,6 +544,12 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
     payments: model.payments,
   });
   const purchasedAt = new Date(model.purchasedAt);
+  const visibleItems = model.adjustment
+    ? model.items.filter((item) => item.role !== "replacement")
+    : model.items;
+  const replacementItems = model.adjustment
+    ? model.items.filter((item) => item.role === "replacement")
+    : [];
 
   const logoDimensions =
     logoDataUrl &&
@@ -582,9 +601,12 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
         </View>
 
         <View style={styles.centerBlock}>
-          {model.status && model.status !== "issued" ? (
-            <Text style={styles.statusLabel}>
-              {formatReceiptStatusLabel(model.status)}
+          {model.statusLabel ? (
+            <Text style={styles.statusLabel}>{model.statusLabel}</Text>
+          ) : null}
+          {model.adjustment ? (
+            <Text style={styles.referenceLine}>
+              Original receipt {model.adjustment.originalReceiptNumber}
             </Text>
           ) : null}
           <View style={[styles.paidPill, { backgroundColor: pill.bg }]}>
@@ -605,7 +627,32 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
         <View style={styles.dashedLine} />
 
         <View style={styles.itemsContainer}>
-          {model.items.map((item, index) => {
+          {model.adjustment && model.adjustment.returned.length > 0 ? (
+            <View>
+              <Text style={styles.sectionLabel}>Returned</Text>
+              {model.adjustment.returned.map((item) => (
+                <View
+                  key={`${item.name}-${item.quantity}`}
+                  style={styles.itemRow}
+                  wrap={false}
+                >
+                  <View style={styles.itemDetails}>
+                    <View style={styles.itemNamePriceContainer}>
+                      <Text style={styles.itemName}>{item.name}</Text>
+                      <Text style={styles.itemTotalPrice}>
+                        {formatCurrencyForPdf(item.amount, model.currency)}
+                      </Text>
+                    </View>
+                    <Text style={styles.itemQtyPrice}>Qty {item.quantity}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          ) : null}
+          {model.adjustment && visibleItems.length > 0 ? (
+            <Text style={styles.sectionLabel}>Remaining</Text>
+          ) : null}
+          {visibleItems.map((item, index) => {
             const originalPrice = item.originalPrice ?? item.price;
             const discounted = isLineItemDiscounted(originalPrice, item.price);
             const {
@@ -691,6 +738,30 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
               </View>
             );
           })}
+          {replacementItems.length > 0 ? (
+            <View>
+              <Text style={styles.sectionLabel}>Replacement</Text>
+              {replacementItems.map((item) => (
+                <View key={item.id} style={styles.itemRow} wrap={false}>
+                  <View style={styles.itemDetails}>
+                    <View style={styles.itemNamePriceContainer}>
+                      <Text style={styles.itemName}>{item.name}</Text>
+                      <Text style={styles.itemTotalPrice}>
+                        {formatCurrencyForPdf(
+                          item.price * item.quantity,
+                          model.currency,
+                        )}
+                      </Text>
+                    </View>
+                    <Text style={styles.itemQtyPrice}>
+                      {item.quantity} ×{" "}
+                      {formatCurrencyForPdf(item.price, model.currency)}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.totalsBox} wrap={false}>
@@ -710,8 +781,32 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
               </View>
             </>
           ) : null}
+          {model.adjustment && model.adjustment.refundAmount > 0 ? (
+            <View style={styles.metaRow}>
+              <Text style={styles.metaLabel}>Refund</Text>
+              <Text style={styles.metaValue}>
+                {formatCurrencyForPdf(
+                  model.adjustment.refundAmount,
+                  model.currency,
+                )}
+              </Text>
+            </View>
+          ) : null}
+          {model.adjustment && model.adjustment.additionalPayment > 0 ? (
+            <View style={styles.metaRow}>
+              <Text style={styles.metaLabel}>Additional payment</Text>
+              <Text style={styles.metaValue}>
+                {formatCurrencyForPdf(
+                  model.adjustment.additionalPayment,
+                  model.currency,
+                )}
+              </Text>
+            </View>
+          ) : null}
           <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Total</Text>
+            <Text style={styles.totalLabel}>
+              {model.adjustment ? "Final total" : "Total"}
+            </Text>
             <Text style={styles.totalValue}>
               {formatCurrencyForPdf(total, model.currency)}
             </Text>

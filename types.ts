@@ -16,6 +16,7 @@ export interface LineItem {
   discountEnabled?: boolean;
   /** True when price comes from the store catalog and should not be edited */
   priceFixed?: boolean;
+  role?: "sale" | "remaining" | "replacement" | null;
 }
 
 export interface ReceiptData {
@@ -89,6 +90,15 @@ export interface ReceiptData {
   redeemRewards?: boolean;
   /** Applied loyalty discount on the draft or issued receipt. */
   loyaltyDiscount?: number;
+  /** Present on issued receipts that are, or were adjusted by, a return or exchange. */
+  adjustment?: {
+    kind: "return" | "exchange" | null;
+    refundAmount: string;
+    additionalPayment: string;
+    originalReceipt: { receiptNumber: string } | null;
+    adjustments: Array<{ adjustmentKind: "return" | "exchange" }>;
+    returnedItems: Array<{ name: string; quantity: number; amount: string }>;
+  } | null;
 }
 
 export const INITIAL_RECEIPT_DATA: ReceiptData = {

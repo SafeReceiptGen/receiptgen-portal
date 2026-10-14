@@ -47,9 +47,13 @@ export default async function ReturnRequestServerPage({
   }
 
   let activeReturnId: string | null = null;
+  let availableByLineId: Record<string, number> | undefined;
   try {
     const eligibility = await returnsApi.getEligibility(token);
     activeReturnId = eligibility.activeReturn?.id ?? null;
+    availableByLineId = Object.fromEntries(
+      eligibility.items.map((item) => [item.id, item.returnable]),
+    );
   } catch {
     // Ignore eligibility fetch failures; submit still enforces the lock.
   }
@@ -60,5 +64,11 @@ export default async function ReturnRequestServerPage({
     );
   }
 
-  return <ReturnRequestClient receipt={receipt} receiptId={token} />;
+  return (
+    <ReturnRequestClient
+      receipt={receipt}
+      receiptId={token}
+      availableByLineId={availableByLineId}
+    />
+  );
 }

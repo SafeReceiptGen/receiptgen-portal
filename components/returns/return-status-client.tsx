@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MOCK_PUDO_POINTS } from "@/lib/mock-data";
 import {
@@ -9,6 +10,8 @@ import {
   ReturnRequest,
 } from "@/types/returns";
 import {
+  isCustomerReturnClosed,
+  isExchangeRefundType,
   processedOutcomeHeadline,
   resolveCustomerReturnPhase,
 } from "@/lib/return-customer-status";
@@ -44,6 +47,15 @@ export default function ReturnStatusClient({
 }) {
   void returnId;
   const router = useRouter();
+  const isClosed = !returnData || isCustomerReturnClosed(returnData.status);
+
+  useEffect(() => {
+    if (isClosed) return;
+    const timer = window.setInterval(() => {
+      router.refresh();
+    }, 15_000);
+    return () => window.clearInterval(timer);
+  }, [isClosed, router]);
 
   // ─── Not Found ────────────────────────────────────────────────────────────
   if (!returnData) {
@@ -69,6 +81,7 @@ export default function ReturnStatusClient({
     );
   }
 
+  const exchange = isExchangeRefundType(returnData.refundTypeCode);
   const phase = resolveCustomerReturnPhase(
     returnData.status,
     returnData.refundTypeCode,
@@ -85,6 +98,13 @@ export default function ReturnStatusClient({
   const pudoPoint = MOCK_PUDO_POINTS.find(
     (p) => p.id === returnData.logistics.pudoPointId,
   );
+  const pudoLabel =
+    returnData.logistics.method === "DROP_OFF"
+      ? pudoPoint?.name ?? returnData.logistics.pudoPointId?.trim()
+      : undefined;
+  const dropOffPlace = [returnData.storeName?.trim(), returnData.storeAddress?.trim()]
+    .filter((part) => part)
+    .join(", ");
 
   // Latest activity
   const latestActivity =
@@ -124,7 +144,7 @@ export default function ReturnStatusClient({
             <div className="flex items-start justify-between">
               <div>
                 <h1 className="text-xl font-bold tracking-tight text-slate-900 font-display dark:text-white">
-                  Return Status
+                  {exchange ? "Exchange status" : "Return status"}
                 </h1>
                 <p className="mt-0.5 text-xs text-slate-500 dark:text-white/50">
                   {returnData.returnNumber}
@@ -191,7 +211,11 @@ export default function ReturnStatusClient({
                     {processedOutcomeHeadline(returnData.refundTypeCode)}
                   </h2>
                   <p className="mt-1 text-xs text-slate-500 dark:text-white/50">
-                    Your return is complete.
+                    {returnData.withRetailerAt
+                      ? exchange
+                        ? "The store confirmed it received the item. Your exchange is processed."
+                        : "The store confirmed it received the item. Your refund is processed."
+                      : "Your return is complete."}
                   </p>
                 </>
               ) : isApprovedOnly ? (
@@ -305,12 +329,20 @@ export default function ReturnStatusClient({
 
               {/* Rejection reason */}
               {isRefunded && returnData.adjustmentReceipt ? (
-                <div className="mt-4">
+                <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-left dark:border-white/10 dark:bg-white/5">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                    Your updated receipt is ready
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-white/50">
+                    {returnData.adjustmentReceipt.adjustmentKind === "exchange"
+                      ? "This exchange receipt is the final record of the purchase."
+                      : "This return receipt is the final record of the purchase."}
+                  </p>
                   <Link
                     href={`/receipt/${returnData.adjustmentReceipt.qrCodeToken}`}
-                    className="text-sm font-semibold text-slate-900 underline underline-offset-2 dark:text-white"
+                    className="mt-3 inline-flex text-sm font-semibold text-slate-900 underline underline-offset-2 dark:text-white"
                   >
-                    View receipt {returnData.adjustmentReceipt.receiptNumber}
+                    Open {returnData.adjustmentReceipt.receiptNumber}
                   </Link>
                 </div>
               ) : null}
@@ -437,23 +469,27 @@ export default function ReturnStatusClient({
             {/* Logistics */}
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-white/50 mb-2">
-                Return Method
+                Fulfillment method
               </h3>
               <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-white/80">
                 <MapPin size={14} className="text-primary dark:text-blue-400" />
                 <span className="font-medium">
                   {LOGISTICS_METHOD_LABELS[returnData.logistics.method]}
-                  {returnData.logistics.method === "DROP_OFF" &&
-                    pudoPoint &&
-                    ` — ${pudoPoint.name}`}
+                  {pudoLabel ? ` — ${pudoLabel}` : ""}
                   {returnData.logistics.method === "RETAILER_DROPOFF"
                     ? " — Free"
                     : ""}
                 </span>
               </div>
+              {returnData.logistics.method === "DROP_OFF" && pudoPoint?.address ? (
+                <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-white/60">
+                  {pudoPoint.address}
+                </p>
+              ) : null}
               {returnData.logistics.method === "RETAILER_DROPOFF" && (
                 <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-white/60">
-                  Drop the items at {returnData.retailerName}. Service fee: Free
+                  Drop the items at {dropOffPlace || returnData.retailerName}.
+                  Service fee: Free
                 </p>
               )}
               {returnData.logistics.method === "HOME_PICKUP" &&

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { returnableUnits } from "@/types/returns";
 
 // Base schemas
 const ReturnItemSchema = z
@@ -10,9 +11,19 @@ const ReturnItemSchema = z
     price: z.number().min(0),
     selected: z.boolean(),
     returnQuantity: z.number().int().optional(),
+    availableQuantity: z.number().int().optional(),
   })
   .superRefine((data, ctx) => {
-    if (!data.selected || data.quantity <= 1) return;
+    const available = returnableUnits(data);
+    if (data.selected && available < 1) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "This item has already been returned.",
+        path: ["selected"],
+      });
+      return;
+    }
+    if (!data.selected || available <= 1) return;
     const rq = data.returnQuantity;
     if (rq == null) {
       ctx.addIssue({
@@ -38,10 +49,10 @@ const ReturnItemSchema = z
       });
       return;
     }
-    if (rq > data.quantity) {
+    if (rq > available) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Quantity cannot exceed the purchased amount (${data.quantity}).`,
+        message: `Quantity cannot exceed the amount that can still be returned (${available}).`,
         path: ["returnQuantity"],
       });
     }

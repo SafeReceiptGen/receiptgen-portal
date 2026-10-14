@@ -34,9 +34,20 @@ export interface ReturnItem {
   /** Listed price before discount; equals price when not discounted. */
   originalPrice?: number;
   selected: boolean;
-  /** Units the customer is returning; required when `quantity` > 1 and line is selected. */
+  /** Units the customer is returning; required when more than one unit can still be returned. */
   returnQuantity?: number;
+  /** Units still available to return. Omitted means the full purchased quantity. */
+  availableQuantity?: number;
   role?: "sale" | "remaining" | "replacement";
+}
+
+/** Units that can still be requested on this line. */
+export function returnableUnits(
+  item: Pick<ReturnItem, "quantity" | "availableQuantity">,
+): number {
+  const cap = item.availableQuantity ?? item.quantity;
+  if (!Number.isFinite(cap)) return Math.max(0, Math.trunc(item.quantity));
+  return Math.max(0, Math.min(Math.trunc(item.quantity), Math.trunc(cap)));
 }
 
 export interface PudoPoint {
@@ -87,6 +98,10 @@ export interface ReturnRequest {
   receiptQrToken?: string;
   retailerName: string;
   retailerLogo?: string;
+  /** Branch name for retailer drop-off. */
+  storeName?: string;
+  /** Branch address for retailer drop-off. */
+  storeAddress?: string;
   customerName: string;
   customerEmail?: string;
   customerPhone?: string;
