@@ -5,27 +5,15 @@ import { getSessionCookie } from "better-auth/cookies";
 export async function proxy(request: NextRequest) {
   const sessionCookie = getSessionCookie(request);
   const path = request.nextUrl.pathname;
-  const authPaths = [
-    "/login",
-    "/signup",
-    "/forgot-password", //TODO
-    "/reset-password", // andd TODO as well
-  ];
-  const isAuthPath = authPaths.includes(path);
-  // Define paths that require authentication
   const isProtectedRoute =
     path.startsWith("/dashboard") || path.startsWith("/onboarding");
 
-  // Optimistic check for session cookie
+  // A cookie only proves someone signed in. Retailer onboarding is checked
+  // in the dashboard layout, which can read retailerId.
   if (isProtectedRoute && !sessionCookie) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", path + request.nextUrl.search);
     return NextResponse.redirect(loginUrl);
-  }
-
-  if (isAuthPath && sessionCookie) {
-    const homeURL = new URL("/dashboard", request.url);
-    return NextResponse.redirect(homeURL);
   }
 
   return NextResponse.next();

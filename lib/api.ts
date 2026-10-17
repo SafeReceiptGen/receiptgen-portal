@@ -167,7 +167,17 @@ export interface LoyaltyDashboardSummary {
   topReturningCustomers: LoyaltyReturningCustomer[];
 }
 
+export interface DashboardHome {
+  stats: DashboardStats;
+  loyaltyProgram: LoyaltyProgram;
+  loyaltySummary: LoyaltyDashboardSummary;
+}
+
 export const dashboardApi = {
+  getHome: (range: "7d" | "30d" = "30d") =>
+    request<DashboardHome>(
+      `/dashboard/home?range=${encodeURIComponent(range)}`,
+    ),
   getStats: (range: "7d" | "30d" = "30d") =>
     request<DashboardStats>(
       `/dashboard/stats?range=${encodeURIComponent(range)}`,

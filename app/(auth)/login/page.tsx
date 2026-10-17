@@ -75,7 +75,7 @@ export default function Login() {
       const { email, password } = result.data;
 
       try {
-        const { error: signInErr } = await authClient.signIn.email({
+        const { data, error: signInErr } = await authClient.signIn.email({
           email,
           password,
         });
@@ -89,6 +89,9 @@ export default function Login() {
           setAuthError(message);
           return { ...result, success: false };
         }
+
+        navigate.push(data?.user.retailerId ? "/dashboard" : "/onboarding");
+        return { ...result, success: true };
       } catch (e: unknown) {
         console.error("Sign in error:", e);
         shakeForm();
@@ -98,9 +101,6 @@ export default function Login() {
         );
         return { ...result, success: false };
       }
-
-      navigate.push("/dashboard");
-      return { ...result, success: true };
     },
     { success: false, errors: null, data: null },
   );
@@ -109,11 +109,15 @@ export default function Login() {
     setIsGoogleLoading(true);
     setAuthError(null);
     try {
+      const appOrigin = (
+        process.env.NEXT_PUBLIC_APP_URL ||
+        process.env.NEXT_PUBLIC_URL ||
+        "https://getsafereceipts.com"
+      ).replace(/\/$/, "");
+
       await authClient.signIn.social({
         provider: "google",
-        callbackURL:
-          process.env.NEXT_PUBLIC_URL ||
-          "https://getsafereceipts.com" + "/dashboard",
+        callbackURL: `${appOrigin}/onboarding`,
       });
     } catch (err: unknown) {
       setAuthError(
