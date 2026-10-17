@@ -1,39 +1,23 @@
-import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { LoyaltySummary } from "@/components/dashboard/loyalty-summary";
 import { SectionCards } from "@/components/section-cards";
-import { getQueryClient } from "@/lib/query-client";
-import {
-  dashboardStatsQueryOptions,
-  loyaltySummaryQueryOptions,
-} from "@/lib/queries/dashboard";
-import { loyaltyQueryOptions } from "@/lib/queries/retailer";
 import { DashboardViewTracker } from "./dashboard-view-tracker";
 
-export default async function Page() {
-  const queryClient = getQueryClient();
-  await Promise.all([
-    queryClient.prefetchQuery(dashboardStatsQueryOptions("30d")),
-    queryClient.prefetchQuery(loyaltyQueryOptions),
-    queryClient.prefetchQuery(loyaltySummaryQueryOptions()),
-  ]);
-
+export default function Page() {
   return (
     <>
       <DashboardViewTracker />
-      <HydrationBoundary state={dehydrate(queryClient)}>
-        <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-2">
-            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-              <SectionCards />
-              <div className="px-4 lg:px-6">
-                <ChartAreaInteractive />
-              </div>
-              <LoyaltySummary />
+      <div className="flex flex-1 flex-col">
+        <div className="@container/main flex flex-1 flex-col gap-2">
+          <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+            <SectionCards />
+            <div className="px-4 lg:px-6">
+              <ChartAreaInteractive />
             </div>
+            <LoyaltySummary />
           </div>
         </div>
-      </HydrationBoundary>
+      </div>
     </>
   );
 }

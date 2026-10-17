@@ -28,6 +28,8 @@ export default function Header({
     };
   }, [isMobileMenuOpen]);
 
+  const accountHref = userSession?.user.retailerId ? "/dashboard" : "/onboarding";
+
   return (
     <>
       <style>{`
@@ -116,7 +118,7 @@ export default function Header({
               //   name={userSession.user.name}
               // />
               <Link
-                href="/dashboard"
+                href={accountHref}
                 className="mobile-item w-full rounded-2xl border bg-primary py-4 text-center text-lg font-medium text-white transition-colors duration-200 hover:bg-foreground/5 active:scale-95"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
@@ -183,6 +185,7 @@ export default function Header({
               <AvatarDropdown
                 image={userSession.user.image}
                 name={userSession.user.name}
+                href={accountHref}
               />
             ) : (
               <>

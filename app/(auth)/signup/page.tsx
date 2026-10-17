@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useState, useActionState } from "react";
+import React, { useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ArrowRight, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input-2";
 import { MagneticButton } from "@/components/landing/v2/MagneticButton";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { validateSignupAction, AuthActionState } from "../actions";
+import { signupSchema } from "../auth-schemas";
 import { trackEvent } from "@/lib/analytics";
 
 export default function Signup() {
@@ -17,7 +17,12 @@ export default function Signup() {
   const rightPanelRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<
+    string,
+    string[] | undefined
+  > | null>(null);
   const navigate = useRouter();
 
   const { contextSafe } = useGSAP(
@@ -65,73 +70,77 @@ export default function Signup() {
     );
   });
 
-  const [state, formAction, pending] = useActionState(
-    async (
-      prevState: AuthActionState,
-      formData: FormData,
-    ): Promise<AuthActionState> => {
-      setAuthError(null);
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setAuthError(null);
 
-      const result = await validateSignupAction(prevState, formData);
+    const formData = new FormData(event.currentTarget);
+    const parsed = signupSchema.safeParse({
+      firstName: formData.get("firstName"),
+      lastName: formData.get("lastName"),
+      email: formData.get("email"),
+      password: formData.get("password"),
+    });
 
-      if (!result.success) {
+    if (!parsed.success) {
+      setFieldErrors(parsed.error.flatten().fieldErrors);
+      setAuthError("Please fix the errors below.");
+      shakeForm();
+      return;
+    }
+
+    setFieldErrors(null);
+    const { email, password, firstName, lastName } = parsed.data;
+
+    trackEvent("sign_up_attempt", { method: "email" });
+    setIsSubmitting(true);
+
+    try {
+      const { error: signUpErr } = await authClient.signUp.email({
+        email,
+        password,
+        name: `${firstName} ${lastName}`,
+      });
+
+      if (signUpErr) {
         shakeForm();
-        return result;
-      }
 
-      const { email, password, firstName, lastName } = result.data;
+        const message =
+          signUpErr.code === "USER_ALREADY_EXISTS"
+            ? "An account with this email already exists."
+            : signUpErr.code === "PASSWORD_TOO_SHORT"
+              ? "Password must be at least 8 characters."
+              : (signUpErr.message ?? "Sign up failed. Please try again.");
 
-      trackEvent("sign_up_attempt", { method: "email" });
-
-      try {
-        const { error: signUpErr } = await authClient.signUp.email({
-          email,
-          password,
-          name: `${firstName} ${lastName}`,
-        });
-
-        if (signUpErr) {
-          shakeForm();
-
-          const message =
-            signUpErr.code === "USER_ALREADY_EXISTS"
-              ? "An account with this email already exists."
-              : signUpErr.code === "PASSWORD_TOO_SHORT"
-                ? "Password must be at least 8 characters."
-                : (signUpErr.message ?? "Sign up failed. Please try again.");
-
-          setAuthError(message);
-
-          trackEvent("sign_up_error", {
-            method: "email",
-            error_code: String(signUpErr.code ?? "unknown"),
-          });
-
-          return { ...result, success: false };
-        }
-      } catch (e: unknown) {
-        console.error("Sign up error:", e);
-        shakeForm();
+        setAuthError(message);
+        setIsSubmitting(false);
 
         trackEvent("sign_up_error", {
           method: "email",
-          error_code: "network_or_exception",
+          error_code: String(signUpErr.code ?? "unknown"),
         });
-
-        setAuthError(
-          (e as Error).message ||
-            "Failed to connect to the server. Please check your connection and try again.",
-        );
-
-        return { ...result, success: false };
+        return;
       }
+    } catch (e: unknown) {
+      console.error("Sign up error:", e);
+      shakeForm();
+      setIsSubmitting(false);
 
-      trackEvent("sign_up", { method: "email" });
-      navigate.push("/onboarding");
-      return { ...result, success: true };
-    },
-    { success: false, errors: null, data: null },
-  );
+      trackEvent("sign_up_error", {
+        method: "email",
+        error_code: "network_or_exception",
+      });
+
+      setAuthError(
+        (e as Error).message ||
+          "Failed to connect to the server. Please check your connection and try again.",
+      );
+      return;
+    }
+
+    trackEvent("sign_up", { method: "email" });
+    navigate.push("/onboarding");
+  };
 
   const handleGoogleSignup = async () => {
     trackEvent("sign_up_attempt", { method: "google" });
@@ -162,8 +171,8 @@ export default function Signup() {
     }
   };
 
-  const isLoading = pending || isGoogleLoading;
-  const generalError = authError || state?.message;
+  const isLoading = isSubmitting || isGoogleLoading;
+  const generalError = authError;
 
   return (
     <div
@@ -287,7 +296,7 @@ export default function Signup() {
 
           <form
             ref={formRef}
-            action={formAction}
+            onSubmit={handleSubmit}
             className="flex flex-col gap-4"
           >
             <div className="stagger-item flex gap-4">
@@ -299,11 +308,10 @@ export default function Signup() {
                   label="First Name"
                   required
                   disabled={isLoading}
-                  defaultValue={(state.data?.firstName as string) || ""}
                 />
-                {state.errors?.firstName && (
+                {fieldErrors?.firstName?.[0] && (
                   <p className="mt-1 text-xs text-destructive">
-                    {state.errors.firstName[0]}
+                    {fieldErrors.firstName[0]}
                   </p>
                 )}
               </div>
@@ -316,11 +324,10 @@ export default function Signup() {
                   label="Last Name"
                   required
                   disabled={isLoading}
-                  defaultValue={(state.data?.lastName as string) || ""}
                 />
-                {state.errors?.lastName && (
+                {fieldErrors?.lastName?.[0] && (
                   <p className="mt-1 text-xs text-destructive">
-                    {state.errors.lastName[0]}
+                    {fieldErrors.lastName[0]}
                   </p>
                 )}
               </div>
@@ -334,11 +341,10 @@ export default function Signup() {
                 label="Work Email"
                 required
                 disabled={isLoading}
-                defaultValue={(state.data?.email as string) || ""}
               />
-              {state.errors?.email && (
+              {fieldErrors?.email?.[0] && (
                 <p className="mt-1 text-xs text-destructive">
-                  {state.errors.email[0]}
+                  {fieldErrors.email[0]}
                 </p>
               )}
             </div>
@@ -351,11 +357,10 @@ export default function Signup() {
                 label="Password (min. 8 characters)"
                 required
                 disabled={isLoading}
-                defaultValue={(state.data?.password as string) || ""}
               />
-              {state.errors?.password && (
+              {fieldErrors?.password?.[0] && (
                 <p className="mt-1 text-xs text-destructive">
-                  {state.errors.password[0]}
+                  {fieldErrors.password[0]}
                 </p>
               )}
             </div>
