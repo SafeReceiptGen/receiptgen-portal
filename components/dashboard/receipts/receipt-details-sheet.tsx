@@ -607,11 +607,6 @@ export function ReceiptDetailsSheet({
                         Customer
                       </div>
                       <div className="font-semibold">{receipt.customer.name}</div>
-                      {receipt.customer.phone ? (
-                        <div className="text-zinc-500">
-                          {receipt.customer.phone}
-                        </div>
-                      ) : null}
                     </div>
                   ) : null}
 

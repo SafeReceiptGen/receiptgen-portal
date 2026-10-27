@@ -108,7 +108,6 @@ export type ReceiptCardModel = {
   receiptNumber: string;
   purchasedAt: string;
   customerName: string;
-  customerPhone: string;
   items: ReceiptCardItem[];
   currency: string;
   paymentMethod: string;
@@ -225,7 +224,6 @@ export function receiptForReturnToCardModel(
     receiptNumber: receipt.receiptNumber,
     purchasedAt: receipt.purchasedAt,
     customerName: receipt.customerName,
-    customerPhone: receipt.customerPhone?.trim() ?? "",
     items: receipt.items.map((item) => ({
       id: item.id,
       name: item.name,
@@ -286,7 +284,6 @@ export function receiptDataToCardModel(data: ReceiptData): ReceiptCardModel {
     receiptNumber: data.receiptNumber,
     purchasedAt: data.date,
     customerName: data.customerName,
-    customerPhone: data.customerPhone?.trim() ?? "",
     items: data.items.map((item) => ({
       id: item.id,
       name: item.name,
