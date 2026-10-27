@@ -49,7 +49,6 @@ export function mapToReceiptForReturn(
     retailerLogoUrl: receipt.retailerLogoUrl ?? null,
     storePhone: receipt.storePhone?.trim() ?? "",
     customerName: receipt.customerName?.trim() ?? "",
-    customerPhone: receipt.customerPhone?.trim() ?? "",
     items: receipt.items.map((item) => ({
       id: item.id,
       name: item.name,

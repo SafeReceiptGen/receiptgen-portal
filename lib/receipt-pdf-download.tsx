@@ -207,7 +207,8 @@ export function mapSingleReceiptToReceiptData(
     qrCodeToken: receipt.qrCodeToken,
     qrUrl,
     customerName: receipt.customer?.name ?? "",
-    customerPhone: receipt.customer?.phone ?? "",
+    // Receipt documents do not show the customer phone.
+    customerPhone: "",
     returnWindow: policy.returnWindow,
     customReturnWindow: policy.customReturnWindow,
     returnCondition: policy.returnCondition,

@@ -236,6 +236,8 @@ function loyaltyActivityLabel(type: CustomerLoyaltyActivity["type"]): string {
       return "Redeemed";
     case "adjust":
       return "Adjusted";
+    case "reversal":
+      return "Reversed";
     default: {
       const unreachable: never = type;
       return unreachable;
@@ -254,6 +256,8 @@ function formatActivityPoints(
       return `−${points}`;
     case "adjust":
       return points > 0 ? `+${points}` : String(points);
+    case "reversal":
+      return `−${points}`;
     default: {
       const unreachable: never = type;
       return unreachable;
@@ -269,6 +273,8 @@ function loyaltyActivityTone(type: CustomerLoyaltyActivity["type"]): string {
       return "text-amber-800 dark:text-amber-300";
     case "adjust":
       return "text-slate-700 dark:text-white";
+    case "reversal":
+      return "text-rose-700 dark:text-rose-300";
     default: {
       const unreachable: never = type;
       return unreachable;

@@ -220,7 +220,7 @@ export interface CustomerReceiptSummary {
 
 export interface CustomerLoyaltyActivity {
   id: string;
-  type: "earn" | "redeem" | "adjust";
+  type: "earn" | "redeem" | "adjust" | "reversal";
   points: number;
   balanceAfter: number;
   createdAt: string;
@@ -1020,7 +1020,6 @@ export interface VerifiedReceipt {
   storeName: string;
   storePhone?: string | null;
   customerName?: string | null;
-  customerPhone?: string | null;
   /** Brand / trading name (`retailers.name`) — primary identity on receipts. */
   retailerName?: string | null;
   retailerLogoUrl?: string | null;

@@ -141,12 +141,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#0f172a",
   },
-  customerPhone: {
-    fontSize: 11,
-    textAlign: "center",
-    color: "#64748b",
-    marginTop: 4,
-  },
   dashedLine: {
     borderBottomWidth: 1.5,
     borderBottomColor: "#e2e8f0",
@@ -619,9 +613,6 @@ export const ReceiptPDF: React.FC<ReceiptPDFProps> = ({
             Thank you for your purchase!
             {model.customerName ? `, ${model.customerName}` : ""}!
           </Text>
-          {model.customerPhone ? (
-            <Text style={styles.customerPhone}>{model.customerPhone}</Text>
-          ) : null}
         </View>
 
         <View style={styles.dashedLine} />

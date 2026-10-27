@@ -252,11 +252,6 @@ export function ReceiptCard({ model, footerSlot, className }: ReceiptCardProps) 
             Thank you for your purchase!
             {model.customerName ? `, ${model.customerName}` : ""}!
           </h2>
-          {model.customerPhone ? (
-            <p className="mt-1 text-sm font-medium text-slate-500">
-              {model.customerPhone}
-            </p>
-          ) : null}
         </div>
 
         <div className="absolute bottom-0 left-3 right-3 border-b-2 border-dashed border-slate-200/80" />
