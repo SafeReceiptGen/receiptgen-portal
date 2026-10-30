@@ -88,6 +88,12 @@ export const ReturnFlowSchema = z.object({
   // Step 4: Eligibility
   isEligible: z.boolean().nullable(),
 
+  // Coming-soon interest. Not the booked fulfillment method.
+  interests: z.object({
+    dropOff: z.boolean(),
+    homePickup: z.boolean(),
+  }),
+
   // Step 5: Logistics
   logistics: z
     .object({
@@ -134,8 +140,12 @@ export const defaultReturnFlowValues: Partial<ReturnFlowFormData> = {
   description: "",
   photos: [],
   isEligible: null,
+  interests: {
+    dropOff: false,
+    homePickup: false,
+  },
   logistics: {
-    method: "HOME_PICKUP",
+    method: "RETAILER_DROPOFF",
     pudoPointId: "",
     timeSlot: "",
     phoneCountry: "GH",

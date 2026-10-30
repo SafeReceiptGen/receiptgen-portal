@@ -8,23 +8,50 @@ import {
   type ReturnEligibilityResponse,
 } from "@/lib/api";
 import { returnReasonToApi } from "@/lib/return-mappers";
-import {
-  logisticsMethodToApi,
-  logisticsServiceFee,
-} from "@/types/returns";
+export type SubmitReturnResult =
+  | { ok: true; id: string; returnNumber: string }
+  | {
+      ok: false;
+      message: string;
+      retryable: boolean;
+      existingReturnId?: string;
+      existingReturnNumber?: string;
+    };
+
+function failureFrom(error: unknown, fallback: string): SubmitReturnResult {
+  if (error instanceof ApiRequestError) {
+    const payload = error.data as
+      | { returnRequest?: { id?: string; returnNumber?: string } }
+      | undefined;
+    const existingReturnId = payload?.returnRequest?.id;
+    return {
+      ok: false,
+      message: error.message || fallback,
+      retryable: !existingReturnId && (error.status === 0 || error.status >= 500),
+      existingReturnId,
+      existingReturnNumber: payload?.returnRequest?.returnNumber,
+    };
+  }
+  if (error instanceof Error) {
+    return { ok: false, message: error.message, retryable: false };
+  }
+  return { ok: false, message: fallback, retryable: false };
+}
 
 /**
  * Submits a return request to the backend with full wizard parity:
  * reason, description, uploaded photo URLs, logistics, service fee.
+ * The booked method is always retailer drop-off. Interests are separate.
  */
 export async function submitReturnRequest(
   data: ReturnFlowFormData,
   receiptToken: string,
-): Promise<{ id: string; returnNumber: string }> {
+  idempotencyKey: string,
+): Promise<SubmitReturnResult> {
   const selectedItems = data.items.filter((i) => i.selected);
 
   if (selectedItems.length === 0) {
-    throw new Error("No items selected for return");
+    return { ok: false, message: "No items selected for return", retryable: false };
   }
 
   let photoUrls: string[] | undefined;
@@ -32,96 +59,87 @@ export async function submitReturnRequest(
     try {
       photoUrls = await uploadReturnPhotosFromDataUrls(data.photos);
     } catch (e) {
-      if (e instanceof ApiRequestError) {
-        throw new Error(e.message);
-      }
-      throw e;
+      return failureFrom(e, "Could not upload photos. Please try again.");
     }
   }
 
   const logistics = data.logistics;
-  const fee = logisticsServiceFee(logistics.method);
 
   if (!data.reason) {
-    throw new Error("Return reason is required");
+    return { ok: false, message: "Return reason is required", retryable: false };
   }
 
-  const method = logisticsMethodToApi(logistics.method);
+  const interests: Array<"drop_off" | "home_pickup"> = [];
+  if (data.interests?.dropOff) interests.push("drop_off");
+  if (data.interests?.homePickup) interests.push("home_pickup");
 
-  const logisticsPayload = {
-    method,
-    pudoPointId:
-      method === "drop_off" ? logistics.pudoPointId?.trim() || undefined : undefined,
-    timeSlot: logistics.timeSlot,
-    phoneNumber: logistics.phoneNumber,
-    phoneCountry: logistics.phoneCountry,
-    ...(logistics.method === "HOME_PICKUP"
-      ? {
-          pickupAddress: {
-            line1: logistics.pickupAddress.address.trim(),
-            city: "",
-            region: "",
-            postalCode: undefined,
-            landmark: logistics.pickupAddress.landmark?.trim() || undefined,
-            latitude: logistics.pickupAddress.latitude,
-            longitude: logistics.pickupAddress.longitude,
-          },
-          parcel: {
-            packageCount: 1,
-            description: logistics.parcel.description.trim(),
-          },
-        }
-      : {}),
-  };
+  const items: { lineItemId: string; quantity: number }[] = [];
+  for (const item of selectedItems) {
+    const qty = item.quantity === 1 ? 1 : item.returnQuantity;
+    if (qty == null) {
+      return {
+        ok: false,
+        message: "Return quantity is required for each selected line.",
+        retryable: false,
+      };
+    }
+    if (qty < 0) {
+      return {
+        ok: false,
+        message: "Return quantity cannot be negative.",
+        retryable: false,
+      };
+    }
+    if (qty < 1) {
+      return {
+        ok: false,
+        message: "Return quantity must be at least 1 for each selected line.",
+        retryable: false,
+      };
+    }
+    const available = item.availableQuantity ?? item.quantity;
+    if (available < 1) {
+      return {
+        ok: false,
+        message: `"${item.name}" has already been returned.`,
+        retryable: false,
+      };
+    }
+    if (qty > available) {
+      return {
+        ok: false,
+        message: `Return quantity cannot exceed the amount that can still be returned (${available}).`,
+        retryable: false,
+      };
+    }
+    items.push({ lineItemId: item.id, quantity: qty });
+  }
 
   const payload = {
     receiptToken,
-    items: selectedItems.map((item) => {
-      const qty =
-        item.quantity === 1 ? 1 : item.returnQuantity;
-      if (qty == null) {
-        throw new Error("Return quantity is required for each selected line.");
-      }
-      if (qty < 0) {
-        throw new Error("Return quantity cannot be negative.");
-      }
-      if (qty < 1) {
-        throw new Error(
-          "Return quantity must be at least 1 for each selected line.",
-        );
-      }
-      const available = item.availableQuantity ?? item.quantity;
-      if (available < 1) {
-        throw new Error(`"${item.name}" has already been returned.`);
-      }
-      if (qty > available) {
-        throw new Error(
-          `Return quantity cannot exceed the amount that can still be returned (${available}).`,
-        );
-      }
-      return {
-        lineItemId: item.id,
-        quantity: qty,
-      };
-    }),
+    items,
     reason: returnReasonToApi(data.reason),
     description: data.description?.trim() || undefined,
     photoUrls: photoUrls?.length ? photoUrls : undefined,
-    logistics: logisticsPayload,
-    serviceFee: fee,
+    logistics: {
+      method: "retailer_dropoff" as const,
+      timeSlot: logistics.timeSlot,
+      phoneNumber: logistics.phoneNumber,
+      phoneCountry: logistics.phoneCountry,
+    },
+    interests: interests.length > 0 ? interests : undefined,
+    serviceFee: 0,
   };
 
   try {
-    const { returnRequest } = await returnsApi.submit(payload);
+    const { returnRequest } = await returnsApi.submit(payload, idempotencyKey);
     return {
+      ok: true,
       id: returnRequest.id,
       returnNumber: returnRequest.returnNumber,
     };
   } catch (error) {
-    if (error instanceof ApiRequestError) {
-      throw new Error(error.message);
-    }
-    throw error;
+    return failureFrom(error, "Failed to submit return request. Please try again.");
   }
 }
 
