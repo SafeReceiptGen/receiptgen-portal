@@ -298,6 +298,16 @@ export default function Onboarding() {
       shakeForm();
       return;
     }
+    if (stores.some((s) => !s.phone.trim())) {
+      setError("Every location must have a phone number.");
+      shakeForm();
+      return;
+    }
+    if (stores.some((s) => !s.address.trim())) {
+      setError("Every location must have an address.");
+      shakeForm();
+      return;
+    }
 
     setIsLoading(true);
 
@@ -306,8 +316,8 @@ export default function Onboarding() {
         businessName,
         stores: stores.map((s) => ({
           name: s.name,
-          phone: s.phone || undefined,
-          address: s.address || undefined,
+          phone: s.phone.trim(),
+          address: s.address.trim(),
           returnWindow: s.policy.returnWindow,
           returnCondition: s.policy.returnCondition,
           refundType: s.policy.refundType,
@@ -538,12 +548,11 @@ export default function Onboarding() {
                           <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-foreground/35 mb-1">
                             <Phone size={10} />
                             Phone{" "}
-                            <span className="text-foreground/20 normal-case font-normal tracking-normal">
-                              (optional)
-                            </span>
+                            <span className="ml-0.5 text-destructive">*</span>
                           </div>
                           <input
                             type="tel"
+                            required
                             disabled={isLoading}
                             value={store.phone}
                             onChange={(e) =>
@@ -559,12 +568,11 @@ export default function Onboarding() {
                           <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-foreground/35 mb-1">
                             <MapPin size={10} />
                             Address{" "}
-                            <span className="text-foreground/20 normal-case font-normal tracking-normal">
-                              (optional)
-                            </span>
+                            <span className="ml-0.5 text-destructive">*</span>
                           </div>
                           <input
                             type="text"
+                            required
                             disabled={isLoading}
                             value={store.address}
                             onChange={(e) =>
