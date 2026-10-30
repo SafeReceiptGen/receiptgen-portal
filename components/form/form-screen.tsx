@@ -27,6 +27,24 @@ import { trackCtaClick } from "@/lib/analytics";
 
 const LS_KEY = "sr_drafts";
 const MAX_DRAFTS = 20;
+const RECEIPT_IDEMPOTENCY_STORAGE_KEY = "sr_receipt_idempotency_key";
+
+function readStoredReceiptKey(): string | null {
+  try {
+    return sessionStorage.getItem(RECEIPT_IDEMPOTENCY_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredReceiptKey(key: string | null) {
+  try {
+    if (key) sessionStorage.setItem(RECEIPT_IDEMPOTENCY_STORAGE_KEY, key);
+    else sessionStorage.removeItem(RECEIPT_IDEMPOTENCY_STORAGE_KEY);
+  } catch {
+    // sessionStorage may be unavailable in private browsing.
+  }
+}
 
 const initialActionState: ActionState = { success: false, message: "" };
 
@@ -63,6 +81,8 @@ export default function ReceiptFormScreen({
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string>("");
   const [guestSaved, setGuestSaved] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
+  const idempotencyKeyRef = useRef<string | null>(null);
+  const [generateLocked, setGenerateLocked] = useState(false);
   
   const { stores, isLoading: storesLoading } = useStores(isAuthenticated);
 
@@ -98,12 +118,33 @@ export default function ReceiptFormScreen({
     data.amountPaid,
   ]);
 
+  useEffect(() => {
+    idempotencyKeyRef.current = readStoredReceiptKey();
+  }, []);
+
+  const ensureReceiptKey = () => {
+    if (idempotencyKeyRef.current) return idempotencyKeyRef.current;
+    const key = crypto.randomUUID();
+    idempotencyKeyRef.current = key;
+    writeStoredReceiptKey(key);
+    return key;
+  };
+
+  const beginGenerate = () => {
+    ensureReceiptKey();
+    setGenerateLocked(true);
+  };
+
   // ── Server action (authenticated only) ──────────────────────────────────
-  const boundAction = generateReceipt.bind(null, data);
   const [state, formAction, pending] = useActionState(
-    boundAction,
+    (prev: ActionState, formData: FormData) => {
+      const key = ensureReceiptKey();
+      setGenerateLocked(true);
+      return generateReceipt(data, key, prev, formData);
+    },
     initialActionState,
   );
+  const generating = pending || generateLocked;
 
   // When server action succeeds: update qr fields then capture
   useEffect(() => {
@@ -123,6 +164,22 @@ export default function ReceiptFormScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
+  useEffect(() => {
+    if (pending || state.success || !state.message) return;
+    if (!state.retryable) {
+      idempotencyKeyRef.current = null;
+      writeStoredReceiptKey(null);
+    }
+    setGenerateLocked(false);
+  }, [pending, state]);
+
+  useEffect(() => {
+    if (!showConversionDialog) return;
+    idempotencyKeyRef.current = null;
+    writeStoredReceiptKey(null);
+    setGenerateLocked(false);
+  }, [showConversionDialog]);
+
   // ── Guest: save to localStorage ──────────────────────────────────────────
   const handleGuestSave = () => {
     trackCtaClick("save_download");
@@ -137,6 +194,7 @@ export default function ReceiptFormScreen({
   const captureReceipt = async () => {
     if (!receiptRef.current || !html2canvas) {
       console.error("Capture target or library not found");
+      setGenerateLocked(false);
       return;
     }
     try {
@@ -151,6 +209,7 @@ export default function ReceiptFormScreen({
       setShowConversionDialog(true);
     } catch (err) {
       console.error("Download failed:", err);
+      setGenerateLocked(false);
     }
   };
 
@@ -185,14 +244,17 @@ export default function ReceiptFormScreen({
     <form
       action={formAction}
       className="w-full"
-      onSubmit={() => trackCtaClick("generate_receipt")}
+      onSubmit={() => {
+        beginGenerate();
+        trackCtaClick("generate_receipt");
+      }}
     >
       <button
         type="submit"
-        disabled={pending}
+        disabled={generating}
         className="group w-full flex flex-1 items-center justify-center gap-2 rounded-xl bg-linear-to-b from-blue-600 to-blue-700 py-2.5 text-sm font-semibold text-white shadow-[0_18px_45px_rgba(37,99,235,0.28)] ring-1 ring-black/5 transition-all hover:from-blue-500 hover:to-blue-700 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed dark:from-blue-500 dark:ring-white/10 dark:hover:from-blue-400"
       >
-        {pending ? (
+        {generating ? (
           <>
             <Loader2 size={16} className="animate-spin opacity-95" />
             Generating…
@@ -256,6 +318,8 @@ export default function ReceiptFormScreen({
             onChange={setData}
             formAction={formAction}
             pending={pending}
+            generateLocked={generateLocked}
+            onGenerateStart={beginGenerate}
             actionState={state}
             isAuthenticated={isAuthenticated}
             onGuestSave={handleGuestSave}

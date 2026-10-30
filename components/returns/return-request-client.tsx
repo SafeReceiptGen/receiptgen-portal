@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { MOCK_PUDO_POINTS } from "@/lib/mock-data";
 import {
   submitReturnRequest,
   fetchReturnEligibility,
@@ -22,8 +22,7 @@ import { ItemSelector } from "@/components/returns/item-selector";
 import { ReasonSelect } from "@/components/returns/reason-select";
 import { PhotoUpload } from "@/components/returns/photo-upload";
 import { ReceiptSheet } from "@/components/returns/receipt-sheet";
-import { LocationPicker } from "@/components/returns/location-picker";
-import { formatPickupAddressDisplay } from "@/lib/format-pickup-address";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currency";
 import {
@@ -38,7 +37,6 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
-  MapPin,
   Phone,
   Package,
   ShieldCheck,
@@ -53,6 +51,23 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+function idempotencyStorageKey(receiptId: string) {
+  return `return_submit_key_${receiptId}`;
+}
+
+function getOrCreateIdempotencyKey(receiptId: string) {
+  const storageKey = idempotencyStorageKey(receiptId);
+  const existing = sessionStorage.getItem(storageKey);
+  if (existing) return existing;
+  const key = crypto.randomUUID();
+  sessionStorage.setItem(storageKey, key);
+  return key;
+}
+
+function clearIdempotencyKey(receiptId: string) {
+  sessionStorage.removeItem(idempotencyStorageKey(receiptId));
+}
 
 const STEPS = [
   "Select Items",
@@ -140,6 +155,7 @@ export default function ReturnRequestClient({
   availableByLineId?: Record<string, number>;
 }) {
   const STORAGE_KEY = `return_flow_${receiptId}`;
+  const router = useRouter();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [receiptSheetOpen, setReceiptSheetOpen] = useState(false);
@@ -204,6 +220,7 @@ export default function ReturnRequestClient({
         const logisticsMerged = {
           ...baseL,
           ...parsedData.logistics,
+          method: "RETAILER_DROPOFF" as const,
           pickupAddress: migratedPickup,
           parcel: migratedParcel,
         };
@@ -279,7 +296,15 @@ export default function ReturnRequestClient({
     0,
   );
   const logistics = watch("logistics") || defaultReturnFlowValues.logistics!;
+  const interests = watch("interests") ?? {
+    dropOff: false,
+    homePickup: false,
+  };
   const fee = logisticsServiceFee(logistics.method);
+  const interestLabels = [
+    interests.dropOff ? "PUDO Point Drop-Off" : null,
+    interests.homePickup ? "Home Pickup" : null,
+  ].filter((label): label is string => label != null);
   const dropOffLocation =
     receipt.storeLocation?.trim() || receipt.storeName;
   const isEligible = watch("isEligible");
@@ -352,17 +377,28 @@ export default function ReturnRequestClient({
   const onSubmit = async () => {
     setIsSubmitting(true);
     setSubmitError(null);
+    const idempotencyKey = getOrCreateIdempotencyKey(receiptId);
     try {
       const data = getValues();
-      setSubmittedLogisticsMethod(data.logistics.method);
-      const { id, returnNumber: rn } = await submitReturnRequest(
-        data,
-        receiptId,
-      );
-      setNewReturnId(id);
-      setReturnNumber(rn);
+      setSubmittedLogisticsMethod("RETAILER_DROPOFF");
+      const result = await submitReturnRequest(data, receiptId, idempotencyKey);
+      if (!result.ok) {
+        if (result.existingReturnId) {
+          clearIdempotencyKey(receiptId);
+          localStorage.removeItem(STORAGE_KEY);
+          router.push(
+            `/return/${result.existingReturnId}?token=${encodeURIComponent(receiptId)}`,
+          );
+          return;
+        }
+        if (!result.retryable) clearIdempotencyKey(receiptId);
+        setSubmitError(result.message);
+        return;
+      }
+      setNewReturnId(result.id);
+      setReturnNumber(result.returnNumber);
       setIsSubmitted(true);
-      // Clear draft on success
+      clearIdempotencyKey(receiptId);
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
       console.error("Failed to submit return request:", error);
@@ -575,125 +611,13 @@ export default function ReturnRequestClient({
             <div className="space-y-6 animate-in slide-in-from-right-4 fade-in duration-300">
               <div>
                 <Label className="text-xs font-medium text-slate-600 dark:text-white/60">Return Method</Label>
-                <div className="mt-2 grid gap-2">
-                  {(["HOME_PICKUP", "DROP_OFF", "RETAILER_DROPOFF"] as LogisticsMethod[]).map((method) => (
-                    <button
-                      key={method}
-                      type="button"
-                      onClick={() => {
-                        setValue("logistics.method", method, { shouldValidate: true });
-                        if (method !== "DROP_OFF") setValue("logistics.pudoPointId", "");
-                      }}
-                      className={cn("flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left text-sm font-medium transition-all", logistics.method === method ? "border-primary bg-primary/5 text-primary ring-1 ring-primary/20" : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 dark:border-white/10 dark:bg-white/4 dark:text-white/60")}
-                    >
-                      <span>{LOGISTICS_METHOD_LABELS[method]}</span>
-                      {method === "RETAILER_DROPOFF" ? (
-                        <span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-700 dark:bg-green-500/15 dark:text-green-300">
-                          Free
-                        </span>
-                      ) : null}
-                    </button>
-                  ))}
+                <div className="mt-2 flex items-center justify-between gap-3 rounded-lg border border-primary bg-primary/5 px-4 py-3 text-sm font-medium text-primary ring-1 ring-primary/20">
+                  <span>{LOGISTICS_METHOD_LABELS.RETAILER_DROPOFF}</span>
+                  <span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-700 dark:bg-green-500/15 dark:text-green-300">
+                    Free
+                  </span>
                 </div>
-              </div>
-
-              {logistics.method === "HOME_PICKUP" && (
-                <div className="space-y-4 animate-in slide-in-from-top-2 fade-in duration-200">
-                  <LocationPicker
-                    address={logistics.pickupAddress?.address ?? ""}
-                    landmark={logistics.pickupAddress?.landmark ?? ""}
-                    latitude={logistics.pickupAddress?.latitude}
-                    longitude={logistics.pickupAddress?.longitude}
-                    onAddressChange={(v) =>
-                      setValue("logistics.pickupAddress.address", v, {
-                        shouldValidate: true,
-                      })
-                    }
-                    onLandmarkChange={(v) =>
-                      setValue("logistics.pickupAddress.landmark", v, {
-                        shouldValidate: true,
-                      })
-                    }
-                    onLocationChange={(lat, lng) => {
-                      setValue("logistics.pickupAddress.latitude", lat, {
-                        shouldValidate: true,
-                      });
-                      setValue("logistics.pickupAddress.longitude", lng, {
-                        shouldValidate: true,
-                      });
-                    }}
-                    onLocationClear={() => {
-                      setValue("logistics.pickupAddress.latitude", undefined, {
-                        shouldValidate: true,
-                      });
-                      setValue("logistics.pickupAddress.longitude", undefined, {
-                        shouldValidate: true,
-                      });
-                    }}
-                    addressError={
-                      form.formState.errors.logistics?.pickupAddress?.address
-                        ?.message
-                    }
-                  />
-                  <div>
-                    <Label className="text-xs font-medium text-slate-600 dark:text-white/60">
-                      <Package
-                        size={12}
-                        className="mr-1 inline text-primary dark:text-blue-400"
-                      />
-                      What are you returning?
-                    </Label>
-                    <Input
-                      placeholder="Short description for the courier"
-                      value={logistics.parcel?.description ?? ""}
-                      onChange={(e) =>
-                        setValue(
-                          "logistics.parcel.description",
-                          e.target.value,
-                          { shouldValidate: true },
-                        )
-                      }
-                      className="mt-2 bg-slate-50 border-slate-200 text-slate-900 dark:bg-white/5 dark:border-white/10 dark:text-white"
-                    />
-                    {form.formState.errors.logistics?.parcel?.description && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {
-                          form.formState.errors.logistics.parcel.description
-                            .message
-                        }
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {logistics.method === "DROP_OFF" && (
-                <div className="space-y-2 animate-in slide-in-from-top-2 fade-in duration-200">
-                  <Label className="text-xs font-medium text-slate-600 dark:text-white/60"><MapPin size={12} className="inline mr-1 text-primary dark:text-blue-400" /> Nearest PUDO Point</Label>
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 pb-1">
-                    {MOCK_PUDO_POINTS.map((point) => (
-                      <button
-                        key={point.id}
-                        type="button"
-                        onClick={() => setValue("logistics.pudoPointId", point.id, { shouldValidate: true })}
-                        className={cn("flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all", logistics.pudoPointId === point.id ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-slate-200 hover:border-slate-300 dark:border-white/10")}
-                      >
-                         <div className={cn("flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 transition-all", logistics.pudoPointId === point.id ? "border-primary bg-primary" : "border-slate-300 dark:border-white/20")}>
-                          {logistics.pudoPointId === point.id && <CheckCircle2 size={10} className="text-white" strokeWidth={3} />}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-slate-900 dark:text-white">{point.name}</p>
-                          <p className="text-xs text-slate-500 dark:text-white/50">{point.address}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                  {form.formState.errors.logistics?.pudoPointId && <p className="text-red-500 text-xs">{form.formState.errors.logistics.pudoPointId.message}</p>}
-                </div>
-              )}
-
-              {logistics.method === "RETAILER_DROPOFF" && (
-                <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 animate-in slide-in-from-top-2 fade-in duration-200 dark:border-white/10 dark:bg-white/4 dark:text-white/60">
+                <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-white/10 dark:bg-white/4 dark:text-white/60">
                   <p>
                     Bring the items to{" "}
                     <span className="font-medium text-slate-900 dark:text-white">
@@ -705,7 +629,54 @@ export default function ReturnRequestClient({
                     <p className="mt-1 text-xs">Store phone: {receipt.storePhone}</p>
                   ) : null}
                 </div>
-              )}
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-xs font-medium text-slate-600 dark:text-white/60">Coming soon</Label>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-white/50">
+                    Optional. Checking a box tells us you are interested. It is not a booking and does not change how this return is fulfilled.
+                  </p>
+                </div>
+                <label className="flex items-start gap-3 rounded-lg border border-slate-200 px-4 py-3 dark:border-white/10">
+                  <Checkbox
+                    checked={interests.dropOff}
+                    onCheckedChange={(checked) =>
+                      setValue("interests.dropOff", checked === true, {
+                        shouldValidate: true,
+                      })
+                    }
+                    className="mt-0.5"
+                  />
+                  <span>
+                    <span className="block text-sm font-medium text-slate-900 dark:text-white">
+                      PUDO Point Drop-Off — Coming soon
+                    </span>
+                    <span className="mt-0.5 block text-xs text-slate-500 dark:text-white/50">
+                      Unavailable. This does not schedule a drop-off.
+                    </span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-3 rounded-lg border border-slate-200 px-4 py-3 dark:border-white/10">
+                  <Checkbox
+                    checked={interests.homePickup}
+                    onCheckedChange={(checked) =>
+                      setValue("interests.homePickup", checked === true, {
+                        shouldValidate: true,
+                      })
+                    }
+                    className="mt-0.5"
+                  />
+                  <span>
+                    <span className="block text-sm font-medium text-slate-900 dark:text-white">
+                      Home Pickup — Coming soon
+                    </span>
+                    <span className="mt-0.5 block text-xs text-slate-500 dark:text-white/50">
+                      Unavailable. This does not schedule a pickup.
+                    </span>
+                  </span>
+                </label>
+              </div>
 
               <div className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 dark:bg-white/4">
                 <span className="text-xs font-medium text-slate-600 dark:text-white/60">Service Fee</span>
@@ -840,26 +811,17 @@ export default function ReturnRequestClient({
                   </button>
                 </div>
                 <p className="text-sm font-medium text-slate-700 dark:text-white/80">
-                  {LOGISTICS_METHOD_LABELS[logistics.method]}
-                  {logistics.method === "DROP_OFF" && logistics.pudoPointId && ` — ${MOCK_PUDO_POINTS.find((p) => p.id === logistics.pudoPointId)?.name}`}
-                  {logistics.method === "RETAILER_DROPOFF" ? " — Free" : ""}
+                  {LOGISTICS_METHOD_LABELS.RETAILER_DROPOFF} · Free
                 </p>
-                {logistics.method === "RETAILER_DROPOFF" && (
-                  <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-white/55">
-                    Drop off at {dropOffLocation}
-                    {receipt.storePhone?.trim() ? ` · ${receipt.storePhone}` : ""}
-                  </p>
-                )}
-                {logistics.method === "HOME_PICKUP" && logistics.pickupAddress && (
-                  <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-white/55">
-                    {formatPickupAddressDisplay(logistics.pickupAddress)}
-                  </p>
-                )}
-                {logistics.method === "HOME_PICKUP" && logistics.parcel && (
+                <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-white/55">
+                  Drop off at {dropOffLocation}
+                  {receipt.storePhone?.trim() ? ` · ${receipt.storePhone}` : ""}
+                </p>
+                {interestLabels.length > 0 ? (
                   <p className="mt-2 text-xs text-slate-500 dark:text-white/50">
-                    {logistics.parcel.description}
+                    Interest only: {interestLabels.join(", ")}. This is not a booking.
                   </p>
-                )}
+                ) : null}
                 <p className="mt-2 text-xs text-slate-500 dark:text-white/50">
                   {logistics.timeSlot} · {logistics.phoneCountry} {logistics.phoneNumber}
                 </p>

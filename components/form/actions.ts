@@ -150,6 +150,8 @@ export type ActionState = {
   /** Full customer-facing verification URL. */
   qrUrl?: string;
   errors?: Record<string, string[] | undefined>;
+  /** Keep the idempotency key so a retry returns the original receipt. */
+  retryable?: boolean;
 };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
@@ -180,6 +182,7 @@ type CreateReceiptApiEnvelope = {
 
 export async function generateReceipt(
   receiptData: ReceiptData,
+  idempotencyKey: string,
   prevState: ActionState,
   _formData: FormData,
 ): Promise<ActionState> {
@@ -196,6 +199,7 @@ export async function generateReceipt(
         success: false,
         message: firstError || "Please check your form for errors.",
         errors: fieldErrors,
+        retryable: false,
       };
     }
 
@@ -206,6 +210,7 @@ export async function generateReceipt(
         success: false,
         message:
           "Select a store from your account before generating. Complete onboarding or pick a store in the form.",
+        retryable: false,
       };
     }
 
@@ -230,6 +235,7 @@ export async function generateReceipt(
       headers: {
         "Content-Type": "application/json",
         Cookie: cookieString,
+        "Idempotency-Key": idempotencyKey,
       },
       credentials: "include",
       body: JSON.stringify({
@@ -271,6 +277,7 @@ export async function generateReceipt(
           (typeof raw.message === "string" && raw.message) ||
           (raw as { error?: string }).error ||
           "Failed to save receipt. Please try again.",
+        retryable: response.status >= 500,
       };
     }
 
@@ -288,6 +295,7 @@ export async function generateReceipt(
         success: false,
         message:
           "Receipt was created but no verification link was returned. Check API configuration.",
+        retryable: true,
       };
     }
 
@@ -364,6 +372,7 @@ export async function generateReceipt(
         error instanceof Error
           ? error.message
           : "Something went wrong. Please try again.",
+      retryable: true,
     };
   }
 }
