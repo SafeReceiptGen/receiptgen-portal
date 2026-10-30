@@ -6,7 +6,13 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 export type ServerRequestResult<T> =
   | { error: false; data: T; totalCount?: number }
-  | { error: true; message: string; status: number; details?: Record<string, string[]> };
+  | {
+      error: true;
+      message: string;
+      status: number;
+      details?: Record<string, string[]>;
+      data?: unknown;
+    };
 
 export interface SerializableRequestOptions {
   method?: string;
@@ -46,6 +52,7 @@ export async function serverRequest<T>(
         message: json.message ?? "Request failed",
         status: res.status,
         details: json.data,
+        data: json.data,
       };
     }
 

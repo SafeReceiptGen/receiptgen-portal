@@ -26,16 +26,19 @@ interface ApiError {
 class ApiRequestError extends Error {
   status: number;
   details?: Record<string, string[]>;
+  data?: unknown;
 
   constructor(
     message: string,
     status: number,
     details?: Record<string, string[]>,
+    data?: unknown,
   ) {
     super(message);
     this.name = "ApiRequestError";
     this.status = status;
     this.details = details;
+    this.data = data;
   }
 }
 
@@ -45,7 +48,12 @@ async function request<T>(
 ): Promise<T> {
   const result = await serverRequest<T>(path, options);
   if (result.error) {
-    throw new ApiRequestError(result.message, result.status, result.details);
+    throw new ApiRequestError(
+      result.message,
+      result.status,
+      result.details,
+      result.data,
+    );
   }
   return result.data;
 }
@@ -56,7 +64,12 @@ async function requestWithTotalCount<T>(
 ): Promise<{ data: T; totalCount?: number }> {
   const result = await serverRequest<T>(path, options);
   if (result.error) {
-    throw new ApiRequestError(result.message, result.status, result.details);
+    throw new ApiRequestError(
+      result.message,
+      result.status,
+      result.details,
+      result.data,
+    );
   }
   return { data: result.data, totalCount: result.totalCount };
 }
@@ -751,6 +764,8 @@ export interface SubmitReturnPayload {
       weightKg?: number;
     };
   };
+  /** Coming-soon methods. Not a booking and not `logistics.method`. */
+  interests?: Array<"drop_off" | "home_pickup">;
   serviceFee?: number;
 }
 
@@ -874,12 +889,13 @@ export async function uploadRetailerLogo(
 }
 
 export const returnsApi = {
-  submit: (payload: SubmitReturnPayload) =>
+  submit: (payload: SubmitReturnPayload, idempotencyKey: string) =>
     request<{
       returnRequest: { id: string; returnNumber: string; status: string };
     }>("/returns", {
       method: "POST",
       body: JSON.stringify(payload),
+      headers: { "Idempotency-Key": idempotencyKey },
     }),
 
   getEligibility: (receiptToken: string) =>

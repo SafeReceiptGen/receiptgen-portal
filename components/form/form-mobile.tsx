@@ -60,6 +60,8 @@ interface MobileWizardProps {
   onChange: (data: ReceiptData) => void;
   formAction: (payload: FormData) => void;
   pending: boolean;
+  generateLocked: boolean;
+  onGenerateStart: () => void;
   actionState: ActionState;
   isAuthenticated: boolean;
   onGuestSave: () => void;
@@ -105,6 +107,8 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
   onChange,
   formAction,
   pending,
+  generateLocked,
+  onGenerateStart,
   actionState,
   isAuthenticated,
   onGuestSave,
@@ -1103,14 +1107,17 @@ export const MobileWizard: React.FC<MobileWizardProps> = ({
             <form
               action={formAction}
               className="flex-1"
-              onSubmit={() => trackCtaClick("generate_receipt")}
+              onSubmit={() => {
+                onGenerateStart();
+                trackCtaClick("generate_receipt");
+              }}
             >
               <button
                 type="submit"
-                disabled={pending}
+                disabled={pending || generateLocked}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-4 text-lg font-bold text-white shadow-lg ring-1 ring-black/5 disabled:opacity-60 disabled:cursor-not-allowed dark:bg-white dark:text-[#071427]"
               >
-                {pending ? (
+                {pending || generateLocked ? (
                   <>
                     <Loader2 size={20} className="animate-spin" />
                     Generating…
