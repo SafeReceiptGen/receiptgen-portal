@@ -177,9 +177,6 @@ export default function Onboarding() {
 
   const { contextSafe } = useGSAP(
     () => {
-      // Don't run entrance animation until we're actually showing the content
-      if (isPending) return;
-
       const tl = gsap.timeline();
       tl.fromTo(
         leftPanelRef.current,
@@ -205,7 +202,7 @@ export default function Onboarding() {
         { scaleX: 1, duration: 1.4, ease: "power3.out", delay: 0.3 },
       );
     },
-    { scope: containerRef, dependencies: [isPending] },
+    { scope: containerRef },
   );
   const shakeForm = contextSafe(() => {
     gsap.fromTo(
@@ -301,20 +298,34 @@ export default function Onboarding() {
       shakeForm();
       return;
     }
+    if (stores.some((s) => !s.phone.trim())) {
+      setError("Every location must have a phone number.");
+      shakeForm();
+      return;
+    }
+    if (stores.some((s) => !s.address.trim())) {
+      setError("Every location must have an address.");
+      shakeForm();
+      return;
+    }
 
     setIsLoading(true);
 
     try {
-      const res = await retailerApi.onboard({
+      await retailerApi.onboard({
         businessName,
         stores: stores.map((s) => ({
           name: s.name,
-          phone: s.phone || undefined,
-          address: s.address || undefined,
+          phone: s.phone.trim(),
+          address: s.address.trim(),
           returnWindow: s.policy.returnWindow,
           returnCondition: s.policy.returnCondition,
           refundType: s.policy.refundType,
         })),
+      });
+
+      await authClient.getSession({
+        query: { disableCookieCache: true },
       });
 
       gsap.to(formRef.current, {
@@ -335,31 +346,6 @@ export default function Onboarding() {
       shakeForm();
     }
   };
-
-  if (isPending) {
-    return (
-      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-6">
-          <div className="relative flex h-16 w-16 items-center justify-center">
-            {/* Outer ring */}
-            <div className="absolute inset-0 animate-[spin_3s_linear_infinite] rounded-full border border-primary/20" />
-            {/* Inner dashed/spinning ring */}
-            <div className="absolute inset-2 animate-[spin_1s_ease-in-out_infinite] rounded-full border-2 border-primary border-t-transparent border-l-transparent" />
-            {/* Center dot */}
-            <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-          </div>
-          <div className="flex flex-col items-center gap-1">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-foreground/40 font-mono">
-              Authenticating
-            </p>
-            <p className="text-[10px] text-foreground/25 font-mono">
-              Verifying credentials
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
@@ -562,12 +548,11 @@ export default function Onboarding() {
                           <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-foreground/35 mb-1">
                             <Phone size={10} />
                             Phone{" "}
-                            <span className="text-foreground/20 normal-case font-normal tracking-normal">
-                              (optional)
-                            </span>
+                            <span className="ml-0.5 text-destructive">*</span>
                           </div>
                           <input
                             type="tel"
+                            required
                             disabled={isLoading}
                             value={store.phone}
                             onChange={(e) =>
@@ -583,12 +568,11 @@ export default function Onboarding() {
                           <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-foreground/35 mb-1">
                             <MapPin size={10} />
                             Address{" "}
-                            <span className="text-foreground/20 normal-case font-normal tracking-normal">
-                              (optional)
-                            </span>
+                            <span className="ml-0.5 text-destructive">*</span>
                           </div>
                           <input
                             type="text"
+                            required
                             disabled={isLoading}
                             value={store.address}
                             onChange={(e) =>

@@ -14,9 +14,11 @@ import { signOutAndRedirect } from "@/lib/sign-out-client";
 export function AvatarDropdown({
   image,
   name,
+  href = "/onboarding",
 }: {
   image: string | null | undefined;
   name: string;
+  href?: string;
 }) {
   return (
     <DropdownMenu>
@@ -31,7 +33,7 @@ export function AvatarDropdown({
       <DropdownMenuContent className="w-32">
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href="/dashboard">Dashboard</Link>
+            <Link href={href}>Dashboard</Link>
           </DropdownMenuItem>
           {/* <DropdownMenuItem>Billing</DropdownMenuItem>
           <DropdownMenuItem>Settings</DropdownMenuItem> */}

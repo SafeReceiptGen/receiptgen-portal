@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { LoyaltyProgram, retailerApi } from "@/lib/api";
+import { dashboardHomeQueryKey } from "@/lib/queries/dashboard";
 import { loyaltyQueryOptions } from "@/lib/queries/retailer";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -112,6 +113,7 @@ export function StoreLoyaltyForm() {
     onSuccess: (data) => {
       queryClient.setQueryData(loyaltyQueryOptions.queryKey, data.loyaltyProgram);
       queryClient.invalidateQueries({ queryKey: loyaltyQueryOptions.queryKey });
+      queryClient.invalidateQueries({ queryKey: dashboardHomeQueryKey });
       form.reset(toFormValues(data.loyaltyProgram));
       toast.success("Loyalty program saved.");
     },

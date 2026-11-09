@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import { loyaltySummaryQueryOptions } from "@/lib/queries/dashboard";
-import { loyaltyQueryOptions } from "@/lib/queries/retailer";
+import { dashboardHomeQueryOptions } from "@/lib/queries/dashboard";
 
 function formatInt(n: number): string {
   return n.toLocaleString();
@@ -61,25 +60,15 @@ function Metric({
 }
 
 export function LoyaltySummary() {
-  const program = useQuery(loyaltyQueryOptions);
-  const summary = useQuery({
-    ...loyaltySummaryQueryOptions(),
-    enabled: program.data?.enabled === true,
-  });
+  const home = useQuery(dashboardHomeQueryOptions("30d"));
 
-  if (program.isPending) return <LoyaltySkeleton />;
-  if (program.isError || !program.data?.enabled) return null;
+  if (home.isPending) return <LoyaltySkeleton />;
+  if (home.isError || !home.data.loyaltyProgram.enabled) return null;
 
-  if (summary.isPending) return <LoyaltySkeleton />;
-
-  const members = summary.isError ? null : summary.data.members;
-  const totalPointsIssued = summary.isError ? null : summary.data.totalPointsIssued;
-  const totalPointsRedeemed = summary.isError
-    ? null
-    : summary.data.totalPointsRedeemed;
-  const topReturningCustomers = summary.isError
-    ? null
-    : summary.data.topReturningCustomers;
+  const members = home.data.loyaltySummary.members;
+  const totalPointsIssued = home.data.loyaltySummary.totalPointsIssued;
+  const totalPointsRedeemed = home.data.loyaltySummary.totalPointsRedeemed;
+  const topReturningCustomers = home.data.loyaltySummary.topReturningCustomers;
 
   return (
     <section className="px-4 lg:px-6" aria-labelledby="loyalty-summary-heading">
@@ -105,9 +94,7 @@ export function LoyaltySummary() {
 
           <div>
             <p className="text-xs text-muted-foreground">Returning customers</p>
-            {topReturningCustomers === null ? (
-              <p className="mt-2 text-sm text-muted-foreground">—</p>
-            ) : topReturningCustomers.length === 0 ? (
+            {topReturningCustomers.length === 0 ? (
               <p className="mt-2 text-sm text-muted-foreground">
                 No one with two or more visits yet.
               </p>

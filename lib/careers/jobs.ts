@@ -14,7 +14,7 @@ export type Job = {
   description: string;
 };
 
-export const CAREERS_EMAIL = "getsafereceipts@gmail.com";
+export const CAREERS_EMAIL = "jobs@getsafereceipts.com";
 
 /** Add openings here. An empty array shows the empty-state copy on /careers. */
 export const jobs: Job[] = [

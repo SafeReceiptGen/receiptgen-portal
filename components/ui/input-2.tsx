@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -12,10 +13,15 @@ export const Input: React.FC<InputProps> = ({
   className,
   defaultValue,
   id,
+  type = "text",
+  disabled,
   ...props
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [hasValue, setHasValue] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const isPassword = type === "password";
+  const inputType = isPassword && passwordVisible ? "text" : type;
   const labelRef = useRef<HTMLLabelElement>(null);
   const lineRef = useRef<HTMLDivElement>(null);
 
@@ -70,9 +76,15 @@ export const Input: React.FC<InputProps> = ({
         {label}
       </label>
       <input
+        {...props}
         id={id}
+        type={inputType}
         defaultValue={defaultValue}
-        className="w-full border-b border-foreground/20 bg-transparent py-3 text-foreground outline-none transition-colors hover:border-foreground/40"
+        disabled={disabled}
+        className={cn(
+          "w-full border-b border-foreground/20 bg-transparent py-3 text-foreground outline-none transition-colors hover:border-foreground/40",
+          isPassword && "pr-9",
+        )}
         onFocus={(e) => {
           setIsFocused(true);
           props.onFocus?.(e);
@@ -86,8 +98,23 @@ export const Input: React.FC<InputProps> = ({
           setHasValue(e.target.value.length > 0);
           props.onChange?.(e);
         }}
-        {...props}
       />
+      {isPassword ? (
+        <button
+          type="button"
+          disabled={disabled}
+          aria-label={passwordVisible ? "Hide password" : "Show password"}
+          aria-pressed={passwordVisible}
+          onClick={() => setPasswordVisible((visible) => !visible)}
+          className="absolute bottom-3 right-0 text-foreground/45 transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+        >
+          {passwordVisible ? (
+            <EyeOff size={18} aria-hidden="true" />
+          ) : (
+            <Eye size={18} aria-hidden="true" />
+          )}
+        </button>
+      ) : null}
       <div
         ref={lineRef}
         className="absolute bottom-0 left-0 h-[2px] w-full origin-left scale-x-0 bg-primary"

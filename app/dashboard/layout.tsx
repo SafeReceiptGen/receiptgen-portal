@@ -1,10 +1,20 @@
+import { redirect } from "next/navigation";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { getServerSession } from "@/lib/get-server-session";
+import { getFreshServerSession } from "@/lib/get-server-session";
 
 async function layout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession();
+  const session = await getFreshServerSession();
+
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  if (!session.user.retailerId) {
+    redirect("/onboarding");
+  }
+
   return (
     <SidebarProvider
       style={
