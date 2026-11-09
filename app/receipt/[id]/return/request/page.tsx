@@ -48,8 +48,10 @@ export default async function ReturnRequestServerPage({
 
   let activeReturnId: string | null = null;
   let availableByLineId: Record<string, number> | undefined;
+  let photoRequired = true;
   try {
     const eligibility = await returnsApi.getEligibility(token);
+    photoRequired = eligibility.photoRequired === true;
     activeReturnId = eligibility.activeReturn?.id ?? null;
     availableByLineId = Object.fromEntries(
       eligibility.items.map((item) => [item.id, item.returnable]),
@@ -69,6 +71,7 @@ export default async function ReturnRequestServerPage({
       receipt={receipt}
       receiptId={token}
       availableByLineId={availableByLineId}
+      photoRequired={photoRequired}
     />
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,13 +20,13 @@ import {
 } from "@/types/returns";
 import { ItemSelector } from "@/components/returns/item-selector";
 import { ReasonSelect } from "@/components/returns/reason-select";
-import { PhotoUpload } from "@/components/returns/photo-upload";
+import { ItemPhotoCapture } from "@/components/returns/item-photo-capture";
 import { ReceiptSheet } from "@/components/returns/receipt-sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currency";
 import {
-  ReturnFlowSchema,
+  createReturnFlowSchema,
   ReturnFlowFormData,
   defaultReturnFlowValues,
 } from "@/lib/validations/return-schema";
@@ -148,11 +148,14 @@ export default function ReturnRequestClient({
   receipt,
   receiptId,
   availableByLineId,
+  photoRequired,
 }: {
   receipt: ReceiptForReturn | undefined;
   receiptId: string;
   /** Remaining units per line. Omitted when eligibility could not be loaded. */
   availableByLineId?: Record<string, number>;
+  /** From GET /returns/eligibility. Production requires a live item photo. */
+  photoRequired: boolean;
 }) {
   const STORAGE_KEY = `return_flow_${receiptId}`;
   const router = useRouter();
@@ -170,8 +173,13 @@ export default function ReturnRequestClient({
   const [submittedLogisticsMethod, setSubmittedLogisticsMethod] =
     useState<LogisticsMethod | null>(null);
 
+  const returnSchema = useMemo(
+    () => createReturnFlowSchema(photoRequired),
+    [photoRequired],
+  );
+
   const form = useForm<ReturnFlowFormData>({
-    resolver: zodResolver(ReturnFlowSchema),
+    resolver: zodResolver(returnSchema),
     defaultValues: defaultReturnFlowValues as ReturnFlowFormData,
     mode: "onChange",
   });
@@ -225,11 +233,17 @@ export default function ReturnRequestClient({
           parcel: migratedParcel,
         };
         for (const key of Object.keys(parsedData) as (keyof ReturnFlowFormData)[]) {
-          if (key === "logistics" || key === "items") continue;
+          if (key === "logistics" || key === "items" || key === "photos") continue;
           if (parsedData[key] !== undefined) {
             setValue(key, parsedData[key] as never, { shouldValidate: false });
           }
         }
+        const savedPhotos = Array.isArray(parsedData.photos)
+          ? parsedData.photos
+              .filter((photo): photo is string => typeof photo === "string" && photo.length > 0)
+              .slice(0, 1)
+          : [];
+        setValue("photos", savedPhotos, { shouldValidate: false });
         setValue("logistics", logisticsMerged, { shouldValidate: false });
         if (parsedData.items && parsedData.items.length > 0) {
           setValue(
@@ -307,6 +321,9 @@ export default function ReturnRequestClient({
   ].filter((label): label is string => label != null);
   const dropOffLocation =
     receipt.storeLocation?.trim() || receipt.storeName;
+  const photos = watch("photos") ?? [];
+  const capturedPhoto = photos.find((photo) => photo.trim().length > 0) ?? null;
+  const photoMissing = photoRequired && !capturedPhoto;
   const isEligible = watch("isEligible");
 
   const checkEligibilityFromApi = async () => {
@@ -549,19 +566,28 @@ export default function ReturnRequestClient({
             </div>
           )}
 
-          {/* Step 3: Photo Upload */}
+          {/* Step 3: Live item photo */}
           {currentStep === 2 && (
             <div className="animate-in slide-in-from-right-4 fade-in duration-300">
               <p className="mb-4 text-sm text-slate-600 dark:text-white/60">
-                Upload photos of the item condition. This helps us process your return faster.
+                Take a photo of the item with your camera so the store can check its condition.
               </p>
               <Controller
                 control={form.control}
                 name="photos"
                 render={({ field }) => (
-                  <PhotoUpload photos={field.value || []} onPhotosChange={field.onChange} />
+                  <ItemPhotoCapture
+                    photo={field.value?.find((item) => item.length > 0) ?? null}
+                    required={photoRequired}
+                    onPhotoChange={(next) => field.onChange(next ? [next] : [])}
+                  />
                 )}
               />
+              {form.formState.errors.photos?.message ? (
+                <p className="mt-2 text-xs text-red-500">
+                  {form.formState.errors.photos.message}
+                </p>
+              ) : null}
             </div>
           )}
 
@@ -789,7 +815,7 @@ export default function ReturnRequestClient({
                       onClick={() => goToStepFromReview(2)}
                       className="text-xs font-medium text-primary transition-colors hover:text-primary/80 dark:text-blue-400 dark:hover:text-blue-300"
                     >
-                      Edit photos
+                      Edit photo
                     </button>
                   </div>
                 </div>
@@ -797,6 +823,16 @@ export default function ReturnRequestClient({
                   {watch("reason") ? watch("reason")!.replace(/_/g, " ") : "—"}
                 </p>
                 {watch("description") && <p className="mt-1 text-xs text-slate-500 dark:text-white/50">"{watch("description")}"</p>}
+                {capturedPhoto ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={capturedPhoto}
+                    alt="Item being returned"
+                    className="mt-3 h-24 w-24 rounded-lg object-cover"
+                  />
+                ) : (
+                  <p className="mt-2 text-xs text-slate-500 dark:text-white/50">No item photo</p>
+                )}
               </div>
 
               <div className="rounded-lg border border-slate-200 p-4 dark:border-white/10">
@@ -867,8 +903,9 @@ export default function ReturnRequestClient({
              <button
               type="button"
               onClick={attemptNextStep}
+              disabled={currentStep === 2 && photoMissing}
               className={cn(
-                "flex flex-1 items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold shadow-lg ring-1 transition-all active:scale-[0.99]",
+                "flex flex-1 items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold shadow-lg ring-1 transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60",
                 currentStep === 3 && isEligible === null
                   ? "bg-primary text-white ring-black/5 hover:bg-primary-dark shadow-blue-500/20 dark:ring-white/10"
                   : "bg-slate-900 text-white ring-black/5 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:ring-white/10 dark:hover:bg-white/90"
@@ -886,7 +923,7 @@ export default function ReturnRequestClient({
             <button
               type="button"
               onClick={form.handleSubmit(onSubmit)}
-              disabled={isSubmitting || !isValid}
+              disabled={isSubmitting || !isValid || photoMissing}
               className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-white shadow-lg ring-1 ring-black/5 transition-all hover:bg-primary-dark active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed dark:ring-white/10"
             >
               {isSubmitting ? <><Loader2 size={16} className="animate-spin" /> Processing…</> : <>Submit</>}
