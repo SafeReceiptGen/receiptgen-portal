@@ -742,6 +742,11 @@ export interface SubmitReturnPayload {
     | "other";
   description?: string;
   photoUrls?: string[];
+  returnPhoto?: {
+    url: string;
+    capturedAt: string;
+    signature: string;
+  };
   logistics?: {
     method: "home_pickup" | "drop_off" | "retailer_dropoff";
     pudoPointId?: string;
@@ -796,6 +801,8 @@ export interface ReturnEligibilityResponse {
     deadlineDate: string | null;
     daysRemaining: number | null;
   } | null;
+  /** True when the API requires a live camera photo before submit. */
+  photoRequired: boolean;
   items: Array<{
     id: string;
     name: string;
@@ -836,7 +843,13 @@ export interface RetailerReturnBundle {
     returnItem: Record<string, unknown>;
     lineItem: Record<string, unknown>;
   }>;
-  photos: Array<{ id: string; url: string; sortOrder: number }>;
+  photos: Array<{
+    id: string;
+    url: string;
+    sortOrder: number;
+    capturedAt?: string | null;
+    createdAt?: string | null;
+  }>;
   payments: Record<string, unknown>[];
 }
 
@@ -852,29 +865,31 @@ async function requestWithoutJsonBody<T>(
   return result.data;
 }
 
+export interface UploadedReturnPhoto {
+  url: string;
+  capturedAt: string;
+  signature: string;
+}
+
 /**
- * Upload return photos (multipart). Call before POST /returns with returned URLs in `photoUrls`.
+ * Upload one live return photo (multipart). Call before POST /returns.
  */
-export async function uploadReturnPhotosFromDataUrls(
-  dataUrls: string[],
-): Promise<string[]> {
-  if (dataUrls.length === 0) return [];
-  const form = new FormData();
-  for (let i = 0; i < dataUrls.length; i++) {
-    const url = dataUrls[i];
-    const m = /^data:(.+?);base64,(.+)$/.exec(url);
-    if (!m) continue;
-    const mime = m[1] || "image/jpeg";
-    const buf = Buffer.from(m[2], "base64");
-    const blob = new Blob([buf], { type: mime });
-    form.append("photos", blob, `photo-${i}.jpg`);
+export async function uploadReturnPhotoFromDataUrl(
+  dataUrl: string,
+  receiptToken: string,
+): Promise<UploadedReturnPhoto> {
+  const match = /^data:(.+?);base64,(.+)$/.exec(dataUrl);
+  if (!match) {
+    throw new Error("The item photo could not be read. Take it again.");
   }
-  const data = await requestWithoutJsonBody<{ urls: string[] }>(
-    "/uploads/return-photos",
-    form,
-    { method: "POST" },
-  );
-  return data.urls;
+  const mime = match[1] || "image/jpeg";
+  const buf = Buffer.from(match[2], "base64");
+  const form = new FormData();
+  form.append("receiptToken", receiptToken);
+  form.append("photo", new Blob([buf], { type: mime }), "item.jpg");
+  return requestWithoutJsonBody<UploadedReturnPhoto>("/uploads/return-photos", form, {
+    method: "POST",
+  });
 }
 
 /** Multipart upload for retailer-wide brand logo (auth required). */

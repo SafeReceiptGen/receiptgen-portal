@@ -3,9 +3,10 @@
 import type { ReturnFlowFormData } from "@/lib/validations/return-schema";
 import {
   returnsApi,
-  uploadReturnPhotosFromDataUrls,
+  uploadReturnPhotoFromDataUrl,
   ApiRequestError,
   type ReturnEligibilityResponse,
+  type UploadedReturnPhoto,
 } from "@/lib/api";
 import { returnReasonToApi } from "@/lib/return-mappers";
 export type SubmitReturnResult =
@@ -54,12 +55,13 @@ export async function submitReturnRequest(
     return { ok: false, message: "No items selected for return", retryable: false };
   }
 
-  let photoUrls: string[] | undefined;
-  if (data.photos?.length) {
+  const capturedPhoto = data.photos?.find((photo) => photo.trim().length > 0);
+  let returnPhoto: UploadedReturnPhoto | undefined;
+  if (capturedPhoto) {
     try {
-      photoUrls = await uploadReturnPhotosFromDataUrls(data.photos);
+      returnPhoto = await uploadReturnPhotoFromDataUrl(capturedPhoto, receiptToken);
     } catch (e) {
-      return failureFrom(e, "Could not upload photos. Please try again.");
+      return failureFrom(e, "Could not upload the item photo. Please try again.");
     }
   }
 
@@ -120,7 +122,8 @@ export async function submitReturnRequest(
     items,
     reason: returnReasonToApi(data.reason),
     description: data.description?.trim() || undefined,
-    photoUrls: photoUrls?.length ? photoUrls : undefined,
+    photoUrls: returnPhoto ? [returnPhoto.url] : undefined,
+    returnPhoto,
     logistics: {
       method: "retailer_dropoff" as const,
       timeSlot: logistics.timeSlot,

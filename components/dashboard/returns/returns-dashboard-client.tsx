@@ -211,7 +211,26 @@ function ReturnRowCells({
   );
 }
 
-function EvidenceGrid({ photos }: { photos: { id: string; url: string }[] }) {
+function evidenceCapturedAt(photo: {
+  capturedAt?: string | null;
+  createdAt?: string | null;
+}): Date | null {
+  const raw = photo.capturedAt ?? photo.createdAt;
+  if (!raw) return null;
+  const date = new Date(raw);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function EvidenceGrid({
+  photos,
+}: {
+  photos: {
+    id: string;
+    url: string;
+    capturedAt?: string | null;
+    createdAt?: string | null;
+  }[];
+}) {
   if (!photos.length) {
     return (
       <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-10 text-muted-foreground">
@@ -223,27 +242,35 @@ function EvidenceGrid({ photos }: { photos: { id: string; url: string }[] }) {
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      {photos.map((p) => (
-        <div
-          key={p.id}
-          className="overflow-hidden rounded-xl border bg-muted/30"
-        >
-          {isVideoEvidenceUrl(p.url) ? (
-            <video
-              src={p.url}
-              controls
-              className="max-h-56 w-full object-contain"
-            />
-          ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={p.url}
-              alt="Return evidence"
-              className="max-h-56 w-full object-contain"
-            />
-          )}
-        </div>
-      ))}
+      {photos.map((p) => {
+        const capturedAt = evidenceCapturedAt(p);
+        return (
+          <div
+            key={p.id}
+            className="overflow-hidden rounded-xl border bg-muted/30"
+          >
+            {isVideoEvidenceUrl(p.url) ? (
+              <video
+                src={p.url}
+                controls
+                className="max-h-56 w-full object-contain"
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={p.url}
+                alt="Return evidence"
+                className="max-h-56 w-full object-contain"
+              />
+            )}
+            {capturedAt ? (
+              <p className="px-3 py-2 text-xs text-muted-foreground">
+                Captured {format(capturedAt, "PPp")}
+              </p>
+            ) : null}
+          </div>
+        );
+      })}
     </div>
   );
 }
