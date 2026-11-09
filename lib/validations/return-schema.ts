@@ -70,67 +70,86 @@ const parcelSchema = z.object({
   description: z.string().max(1000),
 });
 
-export const ReturnFlowSchema = z.object({
-  // Step 1: Items
-  items: z.array(ReturnItemSchema).refine((items) => items.some((item) => item.selected), {
-    message: "You must select at least one item to return.",
-  }),
-
-  // Step 2: Reason
-  reason: z.enum(["DEFECTIVE", "WRONG_ITEM", "CHANGED_MIND", "DAMAGED_IN_DELIVERY", "OTHER"], {
-    message: "Please select a reason for your return.",
-  }),
-  description: z.string().max(500, "Description must be less than 500 characters.").optional(),
-
-  // Step 3: Photos
-  photos: z.array(z.string()).max(5, "You can upload a maximum of 5 photos.").optional(),
-
-  // Step 4: Eligibility
-  isEligible: z.boolean().nullable(),
-
-  // Coming-soon interest. Not the booked fulfillment method.
-  interests: z.object({
-    dropOff: z.boolean(),
-    homePickup: z.boolean(),
-  }),
-
-  // Step 5: Logistics
-  logistics: z
+export function createReturnFlowSchema(photoRequired: boolean) {
+  return z
     .object({
-      method: z.enum(["HOME_PICKUP", "DROP_OFF", "RETAILER_DROPOFF"]),
-      pudoPointId: z.string().optional(),
-      timeSlot: z.string().min(1, "Please select a time slot."),
-      phoneCountry: z.string().min(2),
-      phoneNumber: z.string().min(8, "Phone number must be at least 8 characters."),
-      pickupAddress: pickupAddressSchema,
-      parcel: parcelSchema,
+      // Step 1: Items
+      items: z.array(ReturnItemSchema).refine((items) => items.some((item) => item.selected), {
+        message: "You must select at least one item to return.",
+      }),
+
+      // Step 2: Reason
+      reason: z.enum(["DEFECTIVE", "WRONG_ITEM", "CHANGED_MIND", "DAMAGED_IN_DELIVERY", "OTHER"], {
+        message: "Please select a reason for your return.",
+      }),
+      description: z.string().max(500, "Description must be less than 500 characters.").optional(),
+
+      // Step 3: One live camera photo
+      photos: z
+        .array(z.string())
+        .max(1, "Only one item photo is allowed.")
+        .optional(),
+
+      // Step 4: Eligibility
+      isEligible: z.boolean().nullable(),
+
+      // Coming-soon interest. Not the booked fulfillment method.
+      interests: z.object({
+        dropOff: z.boolean(),
+        homePickup: z.boolean(),
+      }),
+
+      // Step 5: Logistics
+      logistics: z
+        .object({
+          method: z.enum(["HOME_PICKUP", "DROP_OFF", "RETAILER_DROPOFF"]),
+          pudoPointId: z.string().optional(),
+          timeSlot: z.string().min(1, "Please select a time slot."),
+          phoneCountry: z.string().min(2),
+          phoneNumber: z.string().min(8, "Phone number must be at least 8 characters."),
+          pickupAddress: pickupAddressSchema,
+          parcel: parcelSchema,
+        })
+        .superRefine((data, ctx) => {
+          if (data.method === "DROP_OFF" && !data.pudoPointId?.trim()) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: "Please select a drop-off point.",
+              path: ["pudoPointId"],
+            });
+          }
+          if (data.method === "HOME_PICKUP") {
+            if (!data.pickupAddress.address.trim()) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Enter a pickup address or use the map.",
+                path: ["pickupAddress", "address"],
+              });
+            }
+            if (!data.parcel.description.trim()) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Describe what you are returning (helps the courier).",
+                path: ["parcel", "description"],
+              });
+            }
+          }
+        }),
     })
     .superRefine((data, ctx) => {
-      if (data.method === "DROP_OFF" && !data.pudoPointId?.trim()) {
+      if (!photoRequired) return;
+      const photo = data.photos?.find((item) => item.trim().length > 0);
+      if (!photo) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Please select a drop-off point.",
-          path: ["pudoPointId"],
+          message: "Take a photo of the item before continuing.",
+          path: ["photos"],
         });
       }
-      if (data.method === "HOME_PICKUP") {
-        if (!data.pickupAddress.address.trim()) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Enter a pickup address or use the map.",
-            path: ["pickupAddress", "address"],
-          });
-        }
-        if (!data.parcel.description.trim()) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Describe what you are returning (helps the courier).",
-            path: ["parcel", "description"],
-          });
-        }
-      }
-    }),
-});
+    });
+}
+
+export const ReturnFlowSchema = createReturnFlowSchema(false);
 
 export type ReturnFlowFormData = z.infer<typeof ReturnFlowSchema>;
 
