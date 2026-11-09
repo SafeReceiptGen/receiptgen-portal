@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { QRCodeCanvas } from "qrcode.react";
 import { useExpandableScreen } from "@/components/ui/expandable-screen";
+import { rewritePortalUrl } from "@/lib/portal-public-url";
+import { usePortalPublicOrigin } from "@/lib/use-portal-public-origin";
 
 export default function ConversionDialog({
   onClose,
@@ -50,6 +52,12 @@ export default function ConversionDialog({
   const pathname = usePathname();
   const queryClient = useQueryClient();
   const { collapse } = useExpandableScreen();
+  const portalOrigin = usePortalPublicOrigin();
+  const dynamicQrUrl = receiptData?.qrUrl?.trim()
+    ? rewritePortalUrl(receiptData.qrUrl.trim(), portalOrigin)
+    : qrCodeToken
+      ? `${portalOrigin}/receipt/${qrCodeToken}`
+      : "";
 
   const goToDashboard = () => {
     onClose();
@@ -138,8 +146,8 @@ export default function ConversionDialog({
   });
 
   function copyLink() {
-    if (!receiptData?.qrUrl) return;
-    navigator.clipboard.writeText(receiptData.qrUrl);
+    if (!dynamicQrUrl) return;
+    navigator.clipboard.writeText(dynamicQrUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -152,8 +160,7 @@ export default function ConversionDialog({
           await navigator.share({
             title: "Your SafeReceipt",
             text: "Here is your digital receipt",
-            // url: `${process.env.NEXT_PUBLIC_URL}/receipt/${qrCodeToken}`, --gotta pass the qrCodeToken well to component to use this
-            url: receiptData.qrUrl,
+            url: dynamicQrUrl,
           });
         } else {
           // Fallback to sharing the image if no URL is provided
@@ -167,7 +174,7 @@ export default function ConversionDialog({
     } else {
       // Fallback for browsers that don't support native share
       if (receiptData) {
-        navigator.clipboard.writeText(receiptData.qrUrl).then(() => {
+        navigator.clipboard.writeText(dynamicQrUrl).then(() => {
           alert("Sharing not supported. Link copied to clipboard instead!");
         });
       } else {
@@ -184,13 +191,6 @@ export default function ConversionDialog({
   };
 
   const qrCanvasRef = React.useRef<HTMLCanvasElement>(null);
-
-  // Prefer the server-built verification URL; fall back to composing from the bare token.
-  const dynamicQrUrl =
-    receiptData?.qrUrl?.trim() ||
-    (qrCodeToken
-      ? `${process.env.NEXT_PUBLIC_URL || "http://localhost:3000"}/receipt/${qrCodeToken}`
-      : "");
 
   const handleDownloadPDF = async () => {
     if (!receiptData) return;

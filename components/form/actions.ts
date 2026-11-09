@@ -1,11 +1,14 @@
 "use server";
 
 import { z } from "zod";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { ReceiptData } from "@/types";
 import { ReceiptForReturn } from "@/types/returns";
 import { addMockReceipt } from "@/lib/mock-data";
-import { portalPublicOrigin } from "@/lib/portal-public-url";
+import {
+  originForPortalHost,
+  portalPublicOrigin,
+} from "@/lib/portal-public-url";
 import {
   balanceDueFrom,
   deriveReceiptPaymentStatus,
@@ -285,9 +288,15 @@ export async function generateReceipt(
     const receipt = data?.receipt;
     const qrCodeToken = receipt?.qrCodeToken;
 
+    const headerList = await headers();
+    const requestOrigin =
+      originForPortalHost(
+        headerList.get("x-forwarded-host") ?? headerList.get("host"),
+        headerList.get("x-forwarded-proto"),
+      ) ?? portalPublicOrigin();
     const qrUrl =
       qrCodeToken != null && qrCodeToken.length > 0
-        ? `${portalPublicOrigin()}/receipt/${qrCodeToken}`
+        ? `${requestOrigin}/receipt/${qrCodeToken}`
         : data?.qrUrl?.trim() || undefined;
 
     if (!qrUrl) {

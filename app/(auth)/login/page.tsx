@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input-2";
 import Link from "next/link";
 import { MagneticButton } from "@/components/landing/v2/MagneticButton";
 import { authClient } from "@/lib/auth-client";
+import { currentPortalOrigin } from "@/lib/portal-public-url";
 import { validateLoginAction, AuthActionState } from "../actions";
 
 export default function Login() {
@@ -111,9 +112,7 @@ export default function Login() {
     try {
       await authClient.signIn.social({
         provider: "google",
-        callbackURL:
-          process.env.NEXT_PUBLIC_URL ||
-          "https://getsafereceipts.com" + "/dashboard",
+        callbackURL: `${currentPortalOrigin()}/dashboard`,
       });
     } catch (err: unknown) {
       setAuthError(
