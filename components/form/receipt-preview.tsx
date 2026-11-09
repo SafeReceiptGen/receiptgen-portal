@@ -3,7 +3,8 @@ import { QRCodeSVG } from "qrcode.react";
 import { ReceiptData } from "@/types";
 import { ReceiptCard } from "@/components/receipt/receipt-card";
 import { receiptDataToCardModel } from "@/lib/receipt-card-model";
-import { portalPublicOrigin } from "@/lib/portal-public-url";
+import { rewritePortalUrl } from "@/lib/portal-public-url";
+import { usePortalPublicOrigin } from "@/lib/use-portal-public-origin";
 
 interface ReceiptPreviewProps {
   data: ReceiptData;
@@ -19,13 +20,14 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
 }) => {
   const model = useMemo(() => receiptDataToCardModel(data), [data]);
 
+  const portalOrigin = usePortalPublicOrigin();
   const dynamicQrUrl = useMemo(() => {
-    if (data.qrUrl?.trim()) return data.qrUrl.trim();
-    if (data.qrCodeToken?.trim()) {
-      return `${portalPublicOrigin()}/receipt/${data.qrCodeToken.trim()}`;
-    }
+    const token = data.qrCodeToken?.trim();
+    if (token) return `${portalOrigin}/receipt/${token}`;
+    const existing = data.qrUrl?.trim();
+    if (existing) return rewritePortalUrl(existing, portalOrigin);
     return "";
-  }, [data.qrUrl, data.qrCodeToken]);
+  }, [data.qrUrl, data.qrCodeToken, portalOrigin]);
 
   const footerSlot = (
     <div className="w-full">

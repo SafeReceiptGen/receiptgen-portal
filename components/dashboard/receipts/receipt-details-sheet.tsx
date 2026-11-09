@@ -25,6 +25,7 @@ import { AdjustmentSummary } from "@/components/receipts/adjustment-summary";
 import { ReceiptCard } from "@/components/receipt/receipt-card";
 import { ReceiptDocumentsSwitcher } from "@/components/receipt/receipt-documents-switcher";
 import { RECEIPT_LOGO_SLOT_PX } from "@/lib/receipt-logo-display";
+import { usePortalPublicOrigin } from "@/lib/use-portal-public-origin";
 import {
   discountReasonLabel,
   getLineItemDiscountTotals,
@@ -175,9 +176,12 @@ export function ReceiptDetailsSheet({
     }
   };
 
-  const dynamicQrUrl = receipt?.qrCodeToken?.trim()
-    ? `${process.env.NEXT_PUBLIC_URL || "http://localhost:3000"}/receipt/${receipt.qrCodeToken}`
+  const portalOrigin = usePortalPublicOrigin();
+  const receiptToken = receipt?.qrCodeToken?.trim() ?? "";
+  const dynamicQrUrl = receiptToken
+    ? `${portalOrigin}/receipt/${receiptToken}`
     : "";
+  const receiptPath = receiptToken ? `/receipt/${receiptToken}` : "";
 
   const downloadReceiptData = useMemo(() => {
     if (!receipt) return null;
@@ -347,7 +351,7 @@ export function ReceiptDetailsSheet({
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <a
-                      href={dynamicQrUrl}
+                      href={receiptPath}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="min-w-0 flex-1 basis-24 truncate font-mono text-xs text-blue-600 hover:underline"
@@ -363,7 +367,7 @@ export function ReceiptDetailsSheet({
                       asChild
                     >
                       <a
-                        href={dynamicQrUrl}
+                        href={receiptPath}
                         target="_blank"
                         rel="noopener noreferrer"
                       >

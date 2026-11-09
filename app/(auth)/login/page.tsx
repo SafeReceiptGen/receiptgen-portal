@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input-2";
 import Link from "next/link";
 import { MagneticButton } from "@/components/landing/v2/MagneticButton";
 import { authClient } from "@/lib/auth-client";
+import { currentPortalOrigin } from "@/lib/portal-public-url";
 import { validateLoginAction, AuthActionState } from "../actions";
 
 export default function Login() {
@@ -117,7 +118,7 @@ export default function Login() {
 
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: `${appOrigin}/onboarding`,
+        callbackURL: `${currentPortalOrigin()}/onboarding`,
       });
     } catch (err: unknown) {
       setAuthError(

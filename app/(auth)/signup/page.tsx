@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input-2";
 import { MagneticButton } from "@/components/landing/v2/MagneticButton";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { currentPortalOrigin } from "@/lib/portal-public-url";
 import { signupSchema } from "../auth-schemas";
 import { trackEvent } from "@/lib/analytics";
 
@@ -150,9 +151,7 @@ export default function Signup() {
     try {
       await authClient.signIn.social({
         provider: "google",
-        callbackURL:
-          (process.env.NEXT_PUBLIC_APP_URL || "https://getsafereceipts.com") +
-          "/onboarding",
+        callbackURL: `${currentPortalOrigin()}/onboarding`,
       });
     } catch (err: unknown) {
       trackEvent("sign_up_error", {
