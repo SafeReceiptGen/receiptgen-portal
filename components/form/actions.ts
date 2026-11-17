@@ -10,6 +10,7 @@ import {
   balanceDueFrom,
   deriveReceiptPaymentStatus,
 } from "@/lib/receipt-payment";
+import { receiptDateIssue } from "@/lib/receipt-datetime";
 
 // Zod schema — most fields are optional, validation is lenient
 const discountReasonSchema = z.enum([
@@ -125,6 +126,14 @@ const receiptSchema = z
     loyaltyDiscount: z.number().min(0).optional(),
   })
   .superRefine((data, ctx) => {
+    const dateIssue = receiptDateIssue(data.date);
+    if (dateIssue) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["date"],
+        message: dateIssue,
+      });
+    }
     if (data.amountPaid === undefined) return;
     const total = data.items.reduce(
       (sum, item) => sum + item.price * item.quantity,
